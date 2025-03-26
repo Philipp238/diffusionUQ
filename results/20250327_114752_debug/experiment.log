@@ -1,0 +1,15 @@
+INFO:root:Starting the logger.
+INFO:root:Using cuda.
+INFO:root:: mem (CPU python)=515.47265625MB; mem (CPU total)=3313.8828125MB
+INFO:root:############### Starting experiment with config file debug.ini ###############
+INFO:root:###1 out of 1 data set parameter combinations ###
+INFO:root:Data parameters: {'dataset_name': 'x-squared', 'max_dataset_size': 524288}
+INFO:root:After loading the datasets: mem (CPU python)=522.26171875MB; mem (CPU total)=3316.8359375MB
+INFO:root:###1 out of 9 training parameter combinations ###
+INFO:root:Training parameters: {'seed': 1234, 'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'batch_size': 32768, 'n_epochs': 40, 'early_stopping': 10, 'init': 'default', 'learning_rate': 0.001, 'lr_schedule': 'step', 'optimizer': 'adam', 'gradient_clipping': 1, 'data_loader_pin_memory': False, 'data_loader_num_workers': 0, 'distributed_training': False, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.01, 'dropout': 0.001, 'hidden_dim': 64, 'n_layers': 3, 'concat_condition_diffusion': False}
+INFO:root:After creating the dataloaders: mem (CPU python)=548.328125MB; mem (CPU total)=3335.97265625MB
+INFO:root:NumberParameters: 16961
+INFO:root:GPU memory allocated: 2097152
+INFO:root:After setting up the model: mem (CPU python)=637.59375MB; mem (CPU total)=3418.64453125MB
+INFO:root:Training starts now.
+INFO:root:At the start of the epoch: mem (CPU python)=679.26953125MB; mem (CPU total)=3445.421875MB

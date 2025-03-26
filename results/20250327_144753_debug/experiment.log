@@ -1,0 +1,735 @@
+INFO:root:Starting the logger.
+INFO:root:Using cuda.
+INFO:root:: mem (CPU python)=519.7265625MB; mem (CPU total)=3659.9140625MB
+INFO:root:############### Starting experiment with config file debug.ini ###############
+INFO:root:###1 out of 1 data set parameter combinations ###
+INFO:root:Data parameters: {'dataset_name': 'x-squared', 'max_dataset_size': 32768}
+INFO:root:After loading the datasets: mem (CPU python)=521.7109375MB; mem (CPU total)=3660.40625MB
+INFO:root:###1 out of 9 training parameter combinations ###
+INFO:root:Training parameters: {'report_every': 20, 'seed': 1234, 'model': 'MLP', 'uncertainty_quantification': 'dropout', 'batch_size': 32768, 'n_epochs': 200, 'early_stopping': 100, 'init': 'default', 'learning_rate': 0.001, 'lr_schedule': 'step', 'optimizer': 'adam', 'gradient_clipping': 1, 'data_loader_pin_memory': False, 'data_loader_num_workers': 0, 'distributed_training': False, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.01, 'dropout': 0.001, 'hidden_dim': 64, 'n_layers': 3, 'concat_condition_diffusion': False}
+INFO:root:After creating the dataloaders: mem (CPU python)=524.671875MB; mem (CPU total)=3661.8828125MB
+INFO:root:NumberParameters: 12673
+INFO:root:GPU memory allocated: 2097152
+INFO:root:After setting up the model: mem (CPU python)=618.2890625MB; mem (CPU total)=3744.3984375MB
+INFO:root:Training starts now.
+INFO:root:At the start of the epoch: mem (CPU python)=619.109375MB; mem (CPU total)=3744.64453125MB
+INFO:root:At the start of the epoch: mem (CPU python)=792.5390625MB; mem (CPU total)=3865.609375MB
+INFO:root:At the start of the epoch: mem (CPU python)=819.96484375MB; mem (CPU total)=3894.51171875MB
+INFO:root:At the start of the epoch: mem (CPU python)=820.61328125MB; mem (CPU total)=3894.98828125MB
+INFO:root:At the start of the epoch: mem (CPU python)=820.61328125MB; mem (CPU total)=3895.234375MB
+INFO:root:At the start of the epoch: mem (CPU python)=820.61328125MB; mem (CPU total)=3895.44921875MB
+INFO:root:At the start of the epoch: mem (CPU python)=820.61328125MB; mem (CPU total)=3895.44921875MB
+INFO:root:At the start of the epoch: mem (CPU python)=820.61328125MB; mem (CPU total)=3826.02734375MB
+INFO:root:At the start of the epoch: mem (CPU python)=820.61328125MB; mem (CPU total)=3826.02734375MB
+INFO:root:At the start of the epoch: mem (CPU python)=820.61328125MB; mem (CPU total)=3826.02734375MB
+INFO:root:At the start of the epoch: mem (CPU python)=820.61328125MB; mem (CPU total)=3826.02734375MB
+INFO:root:At the start of the epoch: mem (CPU python)=820.61328125MB; mem (CPU total)=3826.02734375MB
+INFO:root:At the start of the epoch: mem (CPU python)=820.61328125MB; mem (CPU total)=3823.703125MB
+INFO:root:At the start of the epoch: mem (CPU python)=820.61328125MB; mem (CPU total)=3817.55859375MB
+INFO:root:At the start of the epoch: mem (CPU python)=820.61328125MB; mem (CPU total)=3817.55859375MB
+INFO:root:At the start of the epoch: mem (CPU python)=820.61328125MB; mem (CPU total)=3819.0703125MB
+INFO:root:At the start of the epoch: mem (CPU python)=820.61328125MB; mem (CPU total)=3819.0703125MB
+INFO:root:At the start of the epoch: mem (CPU python)=820.61328125MB; mem (CPU total)=3819.546875MB
+INFO:root:At the start of the epoch: mem (CPU python)=820.61328125MB; mem (CPU total)=3819.546875MB
+INFO:root:At the start of the epoch: mem (CPU python)=820.61328125MB; mem (CPU total)=3819.59765625MB
+INFO:root:[   20] Training loss: 205.11247177, Validation loss: 6.45287247, Valdiation loss EMA: 6.47952042
+INFO:root:At the start of the epoch: mem (CPU python)=820.61328125MB; mem (CPU total)=3819.59765625MB
+INFO:root:At the start of the epoch: mem (CPU python)=824.9140625MB; mem (CPU total)=3822.98828125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.29296875MB; mem (CPU total)=3823.48046875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.29296875MB; mem (CPU total)=3824.44140625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.29296875MB; mem (CPU total)=3824.44140625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.29296875MB; mem (CPU total)=3824.44140625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.29296875MB; mem (CPU total)=3824.4375MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.29296875MB; mem (CPU total)=3824.4375MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.29296875MB; mem (CPU total)=3824.4375MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.29296875MB; mem (CPU total)=3824.4375MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.29296875MB; mem (CPU total)=3824.4375MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.29296875MB; mem (CPU total)=3824.4375MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.29296875MB; mem (CPU total)=3824.4375MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.29296875MB; mem (CPU total)=3824.14453125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.29296875MB; mem (CPU total)=3824.14453125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.29296875MB; mem (CPU total)=3824.14453125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.3046875MB; mem (CPU total)=3824.14453125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.3046875MB; mem (CPU total)=3824.14453125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.3046875MB; mem (CPU total)=3824.14453125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.3046875MB; mem (CPU total)=3824.14453125MB
+INFO:root:[   40] Training loss: 64.74402542, Validation loss: 2.05564728, Valdiation loss EMA: 1.87815113
+INFO:root:At the start of the epoch: mem (CPU python)=825.3046875MB; mem (CPU total)=3823.61328125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.3046875MB; mem (CPU total)=3823.61328125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.3046875MB; mem (CPU total)=3823.61328125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.3046875MB; mem (CPU total)=3822.875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.3046875MB; mem (CPU total)=3822.875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.3046875MB; mem (CPU total)=3822.875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.3046875MB; mem (CPU total)=3822.875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.3046875MB; mem (CPU total)=3822.875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.3046875MB; mem (CPU total)=3822.875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.3046875MB; mem (CPU total)=3822.875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.3046875MB; mem (CPU total)=3822.875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.3046875MB; mem (CPU total)=3822.875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.3046875MB; mem (CPU total)=3822.875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.3046875MB; mem (CPU total)=3822.875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.3046875MB; mem (CPU total)=3822.875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.3046875MB; mem (CPU total)=3822.875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3822.875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3822.875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3822.875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3822.875MB
+INFO:root:[   60] Training loss: 37.70009613, Validation loss: 1.65186005, Valdiation loss EMA: 1.50418968
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3822.875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3820.16796875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3820.16796875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3819.18359375MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3819.18359375MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3819.18359375MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3819.1796875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3819.1796875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3819.17578125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3819.17578125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3819.17578125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3819.17578125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3819.17578125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3819.17578125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3819.15625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3819.15625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3819.15625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3819.15625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3819.15625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3819.15625MB
+INFO:root:[   80] Training loss: 29.23743820, Validation loss: 1.30739651, Valdiation loss EMA: 1.11727257
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3819.375MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3819.375MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3819.375MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3819.375MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3819.375MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3819.375MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3818.390625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3818.390625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3818.390625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3818.390625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3818.390625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3818.390625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3818.390625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.30859375MB; mem (CPU total)=3818.390625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.3125MB; mem (CPU total)=3818.390625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.32421875MB; mem (CPU total)=3818.390625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.32421875MB; mem (CPU total)=3818.390625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.32421875MB; mem (CPU total)=3818.390625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.32421875MB; mem (CPU total)=3818.390625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.32421875MB; mem (CPU total)=3818.390625MB
+INFO:root:[  100] Training loss: 21.72522326, Validation loss: 0.84072504, Valdiation loss EMA: 0.73309631
+INFO:root:At the start of the epoch: mem (CPU python)=825.32421875MB; mem (CPU total)=3818.609375MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.32421875MB; mem (CPU total)=3657.81640625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.32421875MB; mem (CPU total)=3657.81640625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.32421875MB; mem (CPU total)=3657.81640625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.32421875MB; mem (CPU total)=3657.41015625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.32421875MB; mem (CPU total)=3641.6015625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.32421875MB; mem (CPU total)=3641.3515625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.32421875MB; mem (CPU total)=3641.3515625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.32421875MB; mem (CPU total)=3641.3515625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.32421875MB; mem (CPU total)=3641.3515625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.32421875MB; mem (CPU total)=3641.37109375MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.32421875MB; mem (CPU total)=3640.6640625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.32421875MB; mem (CPU total)=3640.6640625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.32421875MB; mem (CPU total)=3640.6640625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.32421875MB; mem (CPU total)=3640.6640625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.32421875MB; mem (CPU total)=3640.6640625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.32421875MB; mem (CPU total)=3640.6640625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.33984375MB; mem (CPU total)=3640.6640625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.33984375MB; mem (CPU total)=3640.6640625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.33984375MB; mem (CPU total)=3640.6640625MB
+INFO:root:[  120] Training loss: 14.23000679, Validation loss: 0.51615658, Valdiation loss EMA: 0.37344434
+INFO:root:At the start of the epoch: mem (CPU python)=825.33984375MB; mem (CPU total)=3640.6640625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.33984375MB; mem (CPU total)=3640.6640625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.33984375MB; mem (CPU total)=3640.6640625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3638.94140625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3638.94140625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3638.94140625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3638.203125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3638.203125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3638.203125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3638.203125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3638.203125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3638.203125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3638.203125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3638.203125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3638.203125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3638.203125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3638.203125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3638.203125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3638.203125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3638.203125MB
+INFO:root:[  140] Training loss: 8.27511191, Validation loss: 0.28052323, Valdiation loss EMA: 0.15798122
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3638.203125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3638.203125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3638.203125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3638.44921875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3638.44921875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.50390625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.5MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.5MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.4609375MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.70703125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.70703125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.70703125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.70703125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.70703125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.70703125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.70703125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.953125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.953125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.953125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.953125MB
+INFO:root:[  160] Training loss: 5.28337038, Validation loss: 0.21222842, Valdiation loss EMA: 0.06954747
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.953125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3638.4140625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3638.4140625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.46875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.46875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.46875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.71484375MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.71484375MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.67578125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.67578125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.67578125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.67578125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.67578125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.67578125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.67578125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.921875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.921875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.921875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3638.16796875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3638.16796875MB
+INFO:root:[  180] Training loss: 4.04728730, Validation loss: 0.18235857, Valdiation loss EMA: 0.03362929
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3638.16796875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3638.16796875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3638.4140625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3638.4140625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3638.41015625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3638.41015625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3638.41015625MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.46484375MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.95703125MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.671875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.671875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.671875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.671875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.671875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.671875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.671875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.91796875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.91796875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.91796875MB
+INFO:root:At the start of the epoch: mem (CPU python)=825.34375MB; mem (CPU total)=3637.91796875MB
+INFO:root:[  200] Training loss: 3.48103849, Validation loss: 0.14884952, Valdiation loss EMA: 0.01971578
+INFO:root:After finishing all epochs: mem (CPU python)=825.34375MB; mem (CPU total)=3638.13671875MB
+INFO:root:Training the model took 29.014s.
+INFO:root:Emptying the cuda cache took 0.001s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification dropout
+INFO:root:Evaluating the model on Train data.
+INFO:root:MSETrain: 0.55045
+INFO:root:EnergyScoreTrain: 0.32483
+INFO:root:CRPSTrain: 0.31908
+INFO:root:Evaluating the model on Validation data.
+INFO:root:MSEValidation: 0.41644
+INFO:root:EnergyScoreValidation: 0.32434
+INFO:root:CRPSValidation: 0.31851
+INFO:root:Evaluating the model on Test data.
+INFO:root:MSETest: 0.4407
+INFO:root:EnergyScoreTest: 0.32433
+INFO:root:CRPSTest: 0.31854
+INFO:root:After validation: mem (CPU python)=909.1171875MB; mem (CPU total)=3697.53515625MB
+INFO:root:###2 out of 9 training parameter combinations ###
+INFO:root:Training parameters: {'report_every': 20, 'seed': 1234, 'model': 'MLP', 'uncertainty_quantification': 'dropout', 'batch_size': 32768, 'n_epochs': 200, 'early_stopping': 100, 'init': 'default', 'learning_rate': 0.001, 'lr_schedule': 'step', 'optimizer': 'adam', 'gradient_clipping': 1, 'data_loader_pin_memory': False, 'data_loader_num_workers': 0, 'distributed_training': False, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.01, 'dropout': 0.005, 'hidden_dim': 64, 'n_layers': 3, 'concat_condition_diffusion': False}
+INFO:root:After creating the dataloaders: mem (CPU python)=909.1171875MB; mem (CPU total)=3697.53515625MB
+INFO:root:NumberParameters: 12673
+INFO:root:GPU memory allocated: 44040192
+INFO:root:After setting up the model: mem (CPU python)=909.1171875MB; mem (CPU total)=3697.53515625MB
+INFO:root:Training starts now.
+INFO:root:At the start of the epoch: mem (CPU python)=909.1171875MB; mem (CPU total)=3697.53515625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.7265625MB; mem (CPU total)=3699.2578125MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.7265625MB; mem (CPU total)=3699.25390625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3699.25390625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3699.25390625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3699.5MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3699.5MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3702.17578125MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3701.9296875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3701.9296875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3701.9296875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3701.9296875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3703.359375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3703.359375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3703.359375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3703.60546875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3703.60546875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3703.60546875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3703.60546875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3703.60546875MB
+INFO:root:[   20] Training loss: 205.11247177, Validation loss: 6.45287247, Valdiation loss EMA: 6.47952042
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3703.57421875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3703.8203125MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.01171875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.01171875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.01171875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.01171875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.2578125MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.2578125MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.2578125MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.2578125MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.2578125MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.2578125MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.2578125MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.50390625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.50390625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.50390625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.50390625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.50390625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.50390625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.50390625MB
+INFO:root:[   40] Training loss: 64.74402542, Validation loss: 2.05564728, Valdiation loss EMA: 1.87815113
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.75MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3703.80078125MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.046875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.046875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.046875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.29296875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.2890625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.24609375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.24609375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.24609375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.24609375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.4921875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.4921875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.4921875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.4921875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.4921875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.4921875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.73828125MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.73828125MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.73828125MB
+INFO:root:[   60] Training loss: 37.70009613, Validation loss: 1.65186005, Valdiation loss EMA: 1.50418968
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.73828125MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.48828125MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.48828125MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.2421875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.2421875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.2421875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.2421875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.2421875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.48828125MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.734375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.734375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.734375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.734375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.734375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.734375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.98046875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.98046875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3704.98046875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3705.2265625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.734375MB; mem (CPU total)=3705.2265625MB
+INFO:root:[   80] Training loss: 29.23743820, Validation loss: 1.30739651, Valdiation loss EMA: 1.11727257
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.2265625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3704.734375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3704.734375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.2265625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.2265625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.2265625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.47265625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.0MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3704.99609375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3704.73046875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3704.73046875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3704.73046875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3704.73046875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3704.73046875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3704.9765625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3704.9765625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3704.9765625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3704.9765625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3704.9765625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.22265625MB
+INFO:root:[  100] Training loss: 21.72522326, Validation loss: 0.84072504, Valdiation loss EMA: 0.73309631
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.44140625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3704.96875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3704.96875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3704.94921875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3704.94921875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3704.94921875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3704.94921875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3704.94921875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3704.94921875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3704.94921875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.44140625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.6875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.6875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.6875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.6875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.6875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.93359375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.93359375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.93359375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.93359375MB
+INFO:root:[  120] Training loss: 14.23000679, Validation loss: 0.51615658, Valdiation loss EMA: 0.37344434
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3706.15234375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.92578125MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.92578125MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.47265625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.1640625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.1640625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.1640625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.1640625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.1640625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.1640625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.1640625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.41015625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.41015625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.41015625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.65625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.65625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.65625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.65625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.65625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.65625MB
+INFO:root:[  140] Training loss: 8.27511191, Validation loss: 0.28052323, Valdiation loss EMA: 0.15798122
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.65625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.18359375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.18359375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.18359375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.18359375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.1640625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.41015625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.41015625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.65625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.65625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.65625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.65625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.90234375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.90234375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.90234375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.90234375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.90234375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.90234375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3706.1484375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3706.1484375MB
+INFO:root:[  160] Training loss: 5.28337038, Validation loss: 0.21222842, Valdiation loss EMA: 0.06954747
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3706.1171875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3706.1171875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3706.1171875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3706.11328125MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3706.11328125MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3706.11328125MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3706.11328125MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3706.359375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3706.359375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3706.359375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3706.60546875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3706.60546875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3706.60546875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3706.60546875MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.66015625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.66015625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.66015625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.66015625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.66015625MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.66015625MB
+INFO:root:[  180] Training loss: 4.04728730, Validation loss: 0.18235857, Valdiation loss EMA: 0.03362929
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3706.0859375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3706.0859375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3706.0859375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.83984375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.83984375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.83984375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.83984375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.83984375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.83984375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.83984375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3705.83984375MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3706.33203125MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3706.33203125MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3706.33203125MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3706.33203125MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3706.33203125MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3706.578125MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3706.578125MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3706.578125MB
+INFO:root:At the start of the epoch: mem (CPU python)=911.9921875MB; mem (CPU total)=3706.578125MB
+INFO:root:[  200] Training loss: 3.48103849, Validation loss: 0.14884952, Valdiation loss EMA: 0.01971578
+INFO:root:After finishing all epochs: mem (CPU python)=911.9921875MB; mem (CPU total)=3706.578125MB
+INFO:root:Training the model took 28.747s.
+INFO:root:Emptying the cuda cache took 0.001s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification dropout
+INFO:root:Evaluating the model on Train data.
+INFO:root:MSETrain: 0.55045
+INFO:root:EnergyScoreTrain: 0.32483
+INFO:root:CRPSTrain: 0.31908
+INFO:root:Evaluating the model on Validation data.
+INFO:root:MSEValidation: 0.41644
+INFO:root:EnergyScoreValidation: 0.32434
+INFO:root:CRPSValidation: 0.31851
+INFO:root:Evaluating the model on Test data.
+INFO:root:MSETest: 0.4407
+INFO:root:EnergyScoreTest: 0.32433
+INFO:root:CRPSTest: 0.31854
+INFO:root:After validation: mem (CPU python)=918.44140625MB; mem (CPU total)=3709.7109375MB
+INFO:root:###3 out of 9 training parameter combinations ###
+INFO:root:Training parameters: {'report_every': 20, 'seed': 1234, 'model': 'MLP', 'uncertainty_quantification': 'dropout', 'batch_size': 32768, 'n_epochs': 200, 'early_stopping': 100, 'init': 'default', 'learning_rate': 0.001, 'lr_schedule': 'step', 'optimizer': 'adam', 'gradient_clipping': 1, 'data_loader_pin_memory': False, 'data_loader_num_workers': 0, 'distributed_training': False, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.01, 'dropout': 0.01, 'hidden_dim': 64, 'n_layers': 3, 'concat_condition_diffusion': False}
+INFO:root:After creating the dataloaders: mem (CPU python)=918.44140625MB; mem (CPU total)=3709.7109375MB
+INFO:root:NumberParameters: 12673
+INFO:root:GPU memory allocated: 44040192
+INFO:root:After setting up the model: mem (CPU python)=918.44140625MB; mem (CPU total)=3709.7109375MB
+INFO:root:Training starts now.
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3709.7109375MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3709.95703125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3709.95703125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3709.9375MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3709.9375MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3710.67578125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3710.67578125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3711.4140625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3711.86328125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3711.86328125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3711.86328125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3711.86328125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3711.86328125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3711.86328125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3711.86328125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3712.57421875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3712.57421875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3712.57421875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3712.57421875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3712.57421875MB
+INFO:root:[   20] Training loss: 205.11247177, Validation loss: 6.45287247, Valdiation loss EMA: 6.47952042
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3712.984375MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3712.984375MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.23046875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.23046875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.23046875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.23046875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.23046875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.23046875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.23046875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.23046875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.47265625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.47265625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.47265625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.47265625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.47265625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.47265625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.47265625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.47265625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.22265625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.22265625MB
+INFO:root:[   40] Training loss: 64.74402542, Validation loss: 2.05564728, Valdiation loss EMA: 1.87815113
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.46875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.71484375MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.71484375MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.5078125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.5078125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.5078125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.71484375MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.71484375MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.71484375MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.71484375MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.71484375MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.71484375MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.71484375MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.9609375MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.9609375MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.9609375MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.9609375MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.9609375MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3714.20703125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3714.20703125MB
+INFO:root:[   60] Training loss: 37.70009613, Validation loss: 1.65186005, Valdiation loss EMA: 1.50418968
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3714.20703125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3714.20703125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3714.20703125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3714.6953125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3714.6953125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3714.6953125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3714.6953125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3714.6953125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3714.6953125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3714.6953125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3714.6953125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3714.6953125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3714.6953125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3714.6953125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3714.6953125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3714.6953125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3714.6953125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3714.6953125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3714.6953125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3714.67578125MB
+INFO:root:[   80] Training loss: 29.23743820, Validation loss: 1.30739651, Valdiation loss EMA: 1.11727257
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3714.67578125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3714.67578125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3714.68359375MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.1328125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.1328125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.1328125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.1328125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.37890625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.37890625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.37890625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.87109375MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.359375MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.359375MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.359375MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.359375MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.359375MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.359375MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.359375MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.60546875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.60546875MB
+INFO:root:[  100] Training loss: 21.72522326, Validation loss: 0.84072504, Valdiation loss EMA: 0.73309631
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.60546875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.6015625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.6015625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.0703125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.31640625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.578125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.578125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.08203125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.08203125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.08203125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.08203125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.08203125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.08203125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.08203125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.08203125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.57421875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.57421875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.57421875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.57421875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.57421875MB
+INFO:root:[  120] Training loss: 14.23000679, Validation loss: 0.51615658, Valdiation loss EMA: 0.37344434
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.57421875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.8203125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.8203125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.8203125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.8203125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.8203125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.8203125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.06640625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.06640625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.06640625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.06640625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.06640625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.06640625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.3125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.3125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.3125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.3125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.55859375MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.55859375MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.55859375MB
+INFO:root:[  140] Training loss: 8.27511191, Validation loss: 0.28052323, Valdiation loss EMA: 0.15798122
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.5546875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.5546875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.80078125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.0625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.0625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.0625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.0625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.0625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.0625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.0625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.0625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.0625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.0625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.5546875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.5546875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.5546875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.5546875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.5546875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.5546875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.81640625MB
+INFO:root:[  160] Training loss: 5.28337038, Validation loss: 0.21222842, Valdiation loss EMA: 0.06954747
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.81640625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.81640625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.81640625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.0625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.0625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.0625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.0625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.0625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.0625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.0625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.0625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.0625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.0625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3714.7421875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3714.7421875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.796875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.796875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.796875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3713.796875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3714.53125MB
+INFO:root:[  180] Training loss: 4.04728730, Validation loss: 0.18235857, Valdiation loss EMA: 0.03362929
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.484375MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.5390625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.20703125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.20703125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.20703125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.20703125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.69921875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.69921875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.69921875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.69921875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.69921875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.9453125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3715.9453125MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.6796875MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.15625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.15625MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.40234375MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.40234375MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.40234375MB
+INFO:root:At the start of the epoch: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.40234375MB
+INFO:root:[  200] Training loss: 3.48103849, Validation loss: 0.14884952, Valdiation loss EMA: 0.01971578
+INFO:root:After finishing all epochs: mem (CPU python)=918.44140625MB; mem (CPU total)=3716.40234375MB
+INFO:root:Training the model took 28.886s.
+INFO:root:Emptying the cuda cache took 0.001s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification dropout
+INFO:root:Evaluating the model on Train data.
+INFO:root:MSETrain: 0.55045
+INFO:root:EnergyScoreTrain: 0.32483
+INFO:root:CRPSTrain: 0.31908
+INFO:root:Evaluating the model on Validation data.
+INFO:root:MSEValidation: 0.41644
+INFO:root:EnergyScoreValidation: 0.32434
+INFO:root:CRPSValidation: 0.31851
+INFO:root:Evaluating the model on Test data.
+INFO:root:MSETest: 0.4407
+INFO:root:EnergyScoreTest: 0.32433
+INFO:root:CRPSTest: 0.31854
+INFO:root:After validation: mem (CPU python)=933.45703125MB; mem (CPU total)=3725.25MB
+INFO:root:###4 out of 9 training parameter combinations ###
+INFO:root:Training parameters: {'report_every': 20, 'seed': 1234, 'model': 'MLP', 'uncertainty_quantification': 'dropout', 'batch_size': 32768, 'n_epochs': 200, 'early_stopping': 100, 'init': 'default', 'learning_rate': 0.001, 'lr_schedule': 'step', 'optimizer': 'adam', 'gradient_clipping': 1, 'data_loader_pin_memory': False, 'data_loader_num_workers': 0, 'distributed_training': False, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.01, 'dropout': 0.02, 'hidden_dim': 64, 'n_layers': 3, 'concat_condition_diffusion': False}
+INFO:root:After creating the dataloaders: mem (CPU python)=933.45703125MB; mem (CPU total)=3725.49609375MB
+INFO:root:NumberParameters: 12673
+INFO:root:GPU memory allocated: 44040192
+INFO:root:After setting up the model: mem (CPU python)=933.45703125MB; mem (CPU total)=3725.49609375MB
+INFO:root:Training starts now.
+INFO:root:At the start of the epoch: mem (CPU python)=933.45703125MB; mem (CPU total)=3725.49609375MB
+INFO:root:At the start of the epoch: mem (CPU python)=933.45703125MB; mem (CPU total)=3725.73828125MB
+INFO:root:At the start of the epoch: mem (CPU python)=933.45703125MB; mem (CPU total)=3726.94921875MB
+INFO:root:At the start of the epoch: mem (CPU python)=933.45703125MB; mem (CPU total)=3727.1953125MB
+INFO:root:At the start of the epoch: mem (CPU python)=933.45703125MB; mem (CPU total)=3727.1953125MB
+INFO:root:At the start of the epoch: mem (CPU python)=933.45703125MB; mem (CPU total)=3727.1953125MB
+INFO:root:At the start of the epoch: mem (CPU python)=933.45703125MB; mem (CPU total)=3727.41015625MB
+INFO:root:At the start of the epoch: mem (CPU python)=933.45703125MB; mem (CPU total)=3727.625MB
+INFO:root:At the start of the epoch: mem (CPU python)=933.45703125MB; mem (CPU total)=3727.375MB
+INFO:root:At the start of the epoch: mem (CPU python)=933.45703125MB; mem (CPU total)=3727.62109375MB
+INFO:root:At the start of the epoch: mem (CPU python)=933.45703125MB; mem (CPU total)=3727.8671875MB
+INFO:root:At the start of the epoch: mem (CPU python)=933.45703125MB; mem (CPU total)=3727.8671875MB
+INFO:root:At the start of the epoch: mem (CPU python)=933.45703125MB; mem (CPU total)=3728.11328125MB
+INFO:root:At the start of the epoch: mem (CPU python)=933.45703125MB; mem (CPU total)=3728.11328125MB
+INFO:root:At the start of the epoch: mem (CPU python)=933.45703125MB; mem (CPU total)=3728.1328125MB
+INFO:root:At the start of the epoch: mem (CPU python)=933.45703125MB; mem (CPU total)=3728.3515625MB
+INFO:root:At the start of the epoch: mem (CPU python)=933.45703125MB; mem (CPU total)=3728.3515625MB
+INFO:root:At the start of the epoch: mem (CPU python)=933.45703125MB; mem (CPU total)=3728.30078125MB
+INFO:root:At the start of the epoch: mem (CPU python)=933.45703125MB; mem (CPU total)=3728.30078125MB

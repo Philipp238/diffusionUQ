@@ -1,0 +1,204 @@
+# Main function to run the experiments.
+
+import numpy as np
+import torch
+import gc
+from torch.utils.data import DataLoader, random_split
+import pandas as pd
+from time import time
+import os
+import sys
+import datetime
+import pathlib
+import logging
+import argparse
+import configparser
+import ast
+import shutil
+from data.data_utils import get_data
+from train import trainer, using
+from utils import train_utils
+from evaluate import start_evaluation
+# from models import LA_Wrapper
+
+# print(os.getcwd())
+# sys.path[0] = os.getcwd()
+# import utils
+
+torch.autograd.set_detect_anomaly(False)
+
+msg = 'Start main'
+
+# initialize parser
+parser = argparse.ArgumentParser(description=msg)
+default_config = 'debug.ini'
+
+parser.add_argument('-c', '--config', help='Name of the config file:', default=default_config)
+parser.add_argument('-f', '--results_folder', help='Name of the results folder (only use if you only want to evaluate the models):', default=None)
+args = parser.parse_args()
+
+config_name = args.config
+config = configparser.ConfigParser()
+config.read(os.path.join('config', config_name))
+results_path = config['META']['results_path']
+experiment_name = config['META']['experiment_name']
+
+if torch.cuda.is_available():
+    device = 'cuda'
+else:
+    device = 'cpu'
+print(f'Using {device}.')
+
+
+def construct_result_dict(entry_names, data_parameters_dict, training_parameters_dict):
+    results_dict = {**{key: [] for key in data_parameters_dict[0].keys()},
+                    **{key: [] for key in training_parameters_dict[0].keys()}}
+    for entry_name in entry_names:
+        results_dict[entry_name] = []
+    return results_dict
+
+def append_results_dict(results_dict, data_parameters, training_parameters, t_training):
+    for key in data_parameters.keys():
+        results_dict[key].append(data_parameters[key])
+    for key in training_parameters.keys():
+        results_dict[key].append(training_parameters[key])
+    results_dict['t_training'].append(t_training)
+    
+def get_weight_filenames_directory(directory):
+    # Get the names of all weight files in a directory 
+    filenames = [os.path.join(directory, filename) for filename in os.listdir(directory) if filename.endswith('.pt')]
+    filenames = [filename for filename in filenames if (not filename[:-3].endswith('la_state'))]
+    return filenames
+
+
+if __name__ == '__main__':
+    d_time = datetime.datetime.now().strftime('%Y%m%d_%H%M%S_')
+    directory = os.path.join(results_path, d_time + experiment_name)
+    pathlib.Path(directory).mkdir(parents=True, exist_ok=True)
+    shutil.copy(os.path.join('config', config_name), directory)
+    print(f'Created directory {directory}')
+
+    logging.basicConfig(filename=os.path.join(directory, 'experiment.log'), level=logging.INFO)
+    logging.info('Starting the logger.')
+    logging.debug(f'Directory: {directory}')
+    logging.debug(f'File: {__file__}')
+
+    logging.info(f'Using {device}.')
+    
+    logging.info(using(''))
+
+    logging.info(f'############### Starting experiment with config file {config_name} ###############')
+
+    training_parameters_dict = dict(config.items("TRAININGPARAMETERS"))
+    training_parameters_dict = {key: ast.literal_eval(training_parameters_dict[key]) for key in
+                                training_parameters_dict.keys()}
+    
+    # In case you ONLY want to validate all models in a certain directory:
+    # This prepares the filename_to_validate field in training_parameters_dict to contain the names of all weight files in the directory you want to validate
+    if config['META'].get('only_validate', None):
+        filename_to_validate = config['META']['only_validate']
+        if not filename_to_validate.endswith('.pt'):
+            filename_to_validate = get_weight_filenames_directory(os.path.join(results_path, filename_to_validate))
+        else:
+            filename_to_validate = os.path.join(results_path, filename_to_validate)
+        training_parameters_dict['filename_to_validate'] = filename_to_validate
+                
+    # except_keys for keys that are coming as a list for each training process
+    training_parameters_dict = train_utils.get_hyperparameters_combination(training_parameters_dict, 
+                                                                           except_keys=['uno_out_channels', 'uno_scalings', 'uno_n_modes'])
+    
+    data_parameters_dict = dict(config.items("DATAPARAMETERS"))
+    data_parameters_dict = {key: ast.literal_eval(data_parameters_dict[key]) for key in
+                            data_parameters_dict.keys()}
+    data_parameters_dict = train_utils.get_hyperparameters_combination(data_parameters_dict) # except_keys for keys that are coming as a list for each training process
+    
+    entry_names = ['t_training'] 
+    
+    results_dict = construct_result_dict(entry_names, data_parameters_dict, training_parameters_dict)
+    data_dir = config['META']['data_path']
+
+    for i, data_parameters in enumerate(data_parameters_dict):
+        logging.info(f"###{i + 1} out of {len(data_parameters_dict)} data set parameter combinations ###")
+        print(f'Data parameters: {data_parameters}')
+        logging.info(f'Data parameters: {data_parameters}')
+        
+        dataset_name = data_parameters['dataset_name']
+        dataset_size = data_parameters['max_dataset_size']
+        dataset, image_dim, label_dim = get_data(dataset_name, data_dir, dataset_size, image_size=None)
+        
+        logging.info(using('After loading the datasets'))
+
+        for i, training_parameters in enumerate(training_parameters_dict):
+            logging.info(f"###{i + 1} out of {len(training_parameters_dict)} training parameter combinations ###")
+            print(f'Training parameters: {training_parameters}')
+            logging.info(f'Training parameters: {training_parameters}')
+            
+            seed = training_parameters['seed']
+            np.random.seed(seed)
+            torch.manual_seed(seed)
+            
+            filename_ending = f"{data_parameters['dataset_name']}_{training_parameters['model']}_{training_parameters['uncertainty_quantification']}_"
+            
+            batch_size = training_parameters['batch_size']
+
+            training_dataset, validation_dataset, test_dataset = random_split(dataset, [0.8, 0.1, 0.1])
+            train_loader = DataLoader(training_dataset, batch_size=batch_size, shuffle=True)
+            val_loader = DataLoader(validation_dataset, batch_size=batch_size, shuffle=True)
+            logging.info(using('After creating the dataloaders'))
+                        
+            if training_parameters.get('filename_to_validate', None):
+                # In case you ONLY want to validate all models in a certain directory; loads the model (instead of training it)
+                # in_channels = next(iter(train_loader))[0].shape[1]
+                # out_channels = next(iter(train_loader))[1].shape[1]
+                
+                model = train_utils.setup_model(training_parameters, device, image_dim, label_dim)
+                filename = training_parameters['filename_to_validate']
+                if training_parameters['uncertainty_quantification'] == 'laplace':
+                    raise NotImplementedError('Laplace not implemented yet.')
+                    model = LA_Wrapper(
+                                model,
+                                n_samples=training_parameters["n_samples_uq"],
+                                method="last_layer",
+                                hessian_structure="full",
+                                optimize=True,
+                            )
+                train_utils.resume(model, filename)
+                t_training = -1
+            else:
+                # In case you want to train the models
+                t_0 = time()
+                d_time_train = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+                model, filename = trainer(train_loader, val_loader, directory=directory, training_parameters=training_parameters,
+                                          data_parameters = data_parameters, logging=logging, filename_ending=filename_ending, d_time=d_time_train,
+                                          image_dim=image_dim, label_dim=label_dim, results_dict=results_dict)
+                            
+                t_1 = time()
+                t_training = np.round(t_1 - t_0, 3)
+                logging.info(f'Training the model took {t_training}s.')
+                t_0 = time()
+                torch.cuda.empty_cache()
+                t_1 = time()
+                logging.info(f'Emptying the cuda cache took {np.round(t_1 - t_0, 3)}s.')
+            
+            eval_batch_size = max(batch_size // 4, 1)
+            
+            train_loader = DataLoader(training_dataset, batch_size=eval_batch_size, shuffle=True)
+            val_loader = DataLoader(validation_dataset, batch_size=eval_batch_size, shuffle=True)
+            test_loader = DataLoader(test_dataset, batch_size=eval_batch_size, shuffle=True)
+            
+            # Fix the seed again just that the evaluation without training yields the same results as training + evaluation
+            np.random.seed(seed)
+            torch.manual_seed(seed)
+            
+            start_evaluation(model, training_parameters, data_parameters, train_loader, val_loader, 
+                            test_loader, results_dict, device, logging, filename)
+                        
+            append_results_dict(results_dict, data_parameters, training_parameters, t_training)
+            results_pd = pd.DataFrame(results_dict)
+            results_pd.T.to_csv(os.path.join(directory, 'test.csv'))
+            
+            logging.info(using('After validation'))
+            
+            del model
+            torch.cuda.empty_cache()
+            gc.collect()

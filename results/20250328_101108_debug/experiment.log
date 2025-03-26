@@ -1,0 +1,76 @@
+INFO:root:Starting the logger.
+INFO:root:Using cuda.
+INFO:root:: mem (CPU python)=519.3671875MB; mem (CPU total)=3010.93359375MB
+INFO:root:############### Starting experiment with config file debug.ini ###############
+INFO:root:###1 out of 1 data set parameter combinations ###
+INFO:root:Data parameters: {'dataset_name': 'x-squared', 'max_dataset_size': 32768}
+INFO:root:After loading the datasets: mem (CPU python)=522.25MB; mem (CPU total)=3010.93359375MB
+INFO:root:###1 out of 6 training parameter combinations ###
+INFO:root:Training parameters: {'report_every': 25, 'seed': 1234, 'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'batch_size': 4096, 'n_epochs': 10000, 'early_stopping': 100, 'init': 'default', 'learning_rate': 0.001, 'lr_schedule': 'step', 'optimizer': 'adam', 'gradient_clipping': 1, 'data_loader_pin_memory': False, 'data_loader_num_workers': 0, 'distributed_training': False, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.01, 'dropout': 0.001, 'hidden_dim': 64, 'n_layers': 3, 'concat_condition_diffusion': False}
+INFO:root:After creating the dataloaders: mem (CPU python)=524.4609375MB; mem (CPU total)=3012.90234375MB
+INFO:root:NumberParameters: 16961
+INFO:root:GPU memory allocated: 2097152
+INFO:root:After setting up the model: mem (CPU python)=618.51953125MB; mem (CPU total)=3094.7265625MB
+INFO:root:Training starts now.
+INFO:root:[   25] Training loss: 0.46082192, Validation loss: 2567.88867188, Valdiation loss EMA: 2665.72631836
+INFO:root:[   50] Training loss: 0.26469719, Validation loss: 225.89273071, Valdiation loss EMA: 239.22158813
+INFO:root:[   75] Training loss: 0.23257366, Validation loss: 200.72680664, Valdiation loss EMA: 222.52664185
+INFO:root:[  100] Training loss: 0.25691086, Validation loss: 34.48316193, Valdiation loss EMA: 25.65862274
+INFO:root:[  125] Training loss: 0.18954627, Validation loss: 14.36135101, Valdiation loss EMA: 18.24987411
+INFO:root:[  150] Training loss: 0.20610252, Validation loss: 76.89572906, Valdiation loss EMA: 91.73039246
+INFO:root:[  175] Training loss: 0.20629863, Validation loss: 32.14863205, Valdiation loss EMA: 32.13869858
+INFO:root:[  200] Training loss: 0.21753175, Validation loss: 27.30004120, Valdiation loss EMA: 17.81852531
+INFO:root:[  225] Training loss: 0.20505673, Validation loss: 12.85264492, Valdiation loss EMA: 13.40185642
+INFO:root:[  250] Training loss: 0.18351352, Validation loss: 27.13430214, Valdiation loss EMA: 27.81274033
+INFO:root:[  275] Training loss: 0.20971812, Validation loss: 21.01807404, Valdiation loss EMA: 18.93629646
+INFO:root:[  300] Training loss: 0.15637126, Validation loss: 10.32559586, Valdiation loss EMA: 17.72789001
+INFO:root:[  325] Training loss: 0.17182280, Validation loss: 31.29963112, Valdiation loss EMA: 17.48590851
+INFO:root:[  350] Training loss: 0.18134045, Validation loss: 24.71158791, Valdiation loss EMA: 18.28224373
+INFO:root:[  375] Training loss: 0.19263944, Validation loss: 20.14169121, Valdiation loss EMA: 20.40197945
+INFO:root:[  400] Training loss: 0.15424210, Validation loss: 5.68403959, Valdiation loss EMA: 19.55219460
+INFO:root:[  425] Training loss: 0.17505869, Validation loss: 51.81079102, Valdiation loss EMA: 20.85834694
+INFO:root:[  450] Training loss: 0.17083644, Validation loss: 14.46368980, Valdiation loss EMA: 18.82622337
+INFO:root:[  475] Training loss: 0.15929414, Validation loss: 18.80532074, Valdiation loss EMA: 16.99205208
+INFO:root:EP 499: Early stopping
+INFO:root:After finishing all epochs: mem (CPU python)=892.52734375MB; mem (CPU total)=3306.26953125MB
+INFO:root:Training the model took 104.54s.
+INFO:root:Emptying the cuda cache took 0.001s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.
+INFO:root:MSETrain: 4.32578
+INFO:root:EnergyScoreTrain: 0.44368
+INFO:root:CRPSTrain: 0.44213
+INFO:root:Evaluating the model on Validation data.
+INFO:root:MSEValidation: 5.10915
+INFO:root:EnergyScoreValidation: 0.4876
+INFO:root:CRPSValidation: 0.4859
+INFO:root:Evaluating the model on Test data.
+INFO:root:MSETest: 3.01843
+INFO:root:EnergyScoreTest: 0.4183
+INFO:root:CRPSTest: 0.41681
+INFO:root:After validation: mem (CPU python)=956.2109375MB; mem (CPU total)=3380.90625MB
+INFO:root:###2 out of 6 training parameter combinations ###
+INFO:root:Training parameters: {'report_every': 25, 'seed': 1234, 'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'batch_size': 4096, 'n_epochs': 10000, 'early_stopping': 100, 'init': 'default', 'learning_rate': 0.001, 'lr_schedule': 'step', 'optimizer': 'adam', 'gradient_clipping': 1, 'data_loader_pin_memory': False, 'data_loader_num_workers': 0, 'distributed_training': False, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.01, 'dropout': 0.01, 'hidden_dim': 64, 'n_layers': 3, 'concat_condition_diffusion': False}
+INFO:root:After creating the dataloaders: mem (CPU python)=956.2109375MB; mem (CPU total)=3380.90625MB
+INFO:root:NumberParameters: 16961
+INFO:root:GPU memory allocated: 23068672
+INFO:root:After setting up the model: mem (CPU python)=956.2109375MB; mem (CPU total)=3380.90625MB
+INFO:root:Training starts now.
+INFO:root:[   25] Training loss: 0.46748337, Validation loss: 927.82855225, Valdiation loss EMA: 991.17578125
+INFO:root:[   50] Training loss: 0.27511641, Validation loss: 500.19873047, Valdiation loss EMA: 445.26196289
+INFO:root:[   75] Training loss: 0.23904295, Validation loss: 100.89978790, Valdiation loss EMA: 112.87682343
+INFO:root:[  100] Training loss: 0.23918867, Validation loss: 104.20919800, Valdiation loss EMA: 80.96257019
+INFO:root:[  125] Training loss: 0.19416204, Validation loss: 37.42619324, Valdiation loss EMA: 50.25993729
+INFO:root:[  150] Training loss: 0.22617402, Validation loss: 43.41218948, Valdiation loss EMA: 53.87902069
+INFO:root:[  175] Training loss: 0.20983575, Validation loss: 50.51514435, Valdiation loss EMA: 48.60435486
+INFO:root:[  200] Training loss: 0.21200408, Validation loss: 32.49635315, Valdiation loss EMA: 23.97755241
+INFO:root:[  225] Training loss: 0.20555132, Validation loss: 24.45680618, Valdiation loss EMA: 24.20312500
+INFO:root:[  250] Training loss: 0.19253416, Validation loss: 34.41233826, Valdiation loss EMA: 34.38261795
+INFO:root:[  275] Training loss: 0.21705255, Validation loss: 70.12040710, Valdiation loss EMA: 58.33510971
+INFO:root:[  300] Training loss: 0.17797157, Validation loss: 51.35150909, Valdiation loss EMA: 59.86468124
+INFO:root:EP 324: Early stopping
+INFO:root:After finishing all epochs: mem (CPU python)=956.2109375MB; mem (CPU total)=3377.3203125MB
+INFO:root:Training the model took 68.421s.
+INFO:root:Emptying the cuda cache took 0.001s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.

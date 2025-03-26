@@ -1,0 +1,6 @@
+INFO:root:Starting the logger.
+INFO:root:Using cuda.
+INFO:root:: mem (CPU python)=568.4296875MB; mem (CPU total)=3005.0625MB
+INFO:root:############### Starting experiment with config file debug.ini ###############
+INFO:root:###1 out of 1 data set parameter combinations ###
+INFO:root:Data parameters: {'dataset_name': 'uniform-regression', 'max_dataset_size': 4096}

@@ -1,0 +1,97 @@
+INFO:root:Starting the logger.
+INFO:root:Using cuda.
+INFO:root:: mem (CPU python)=516.11328125MB; mem (CPU total)=2961.78515625MB
+INFO:root:############### Starting experiment with config file debug.ini ###############
+INFO:root:###1 out of 1 data set parameter combinations ###
+INFO:root:Data parameters: {'dataset_name': 'uniform-regression', 'max_dataset_size': 4096}
+INFO:root:After loading the datasets: mem (CPU python)=518.61328125MB; mem (CPU total)=2961.78515625MB
+INFO:root:###1 out of 9 training parameter combinations ###
+INFO:root:Training parameters: {'seed': 1234, 'model': 'MLP', 'uncertainty_quantification': 'dropout', 'batch_size': 4096, 'n_epochs': 40, 'early_stopping': 10, 'init': 'default', 'learning_rate': 0.001, 'lr_schedule': 'step', 'optimizer': 'adam', 'gradient_clipping': 1, 'data_loader_pin_memory': False, 'data_loader_num_workers': 0, 'distributed_training': False, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.01, 'dropout': 0.001, 'hidden_dim': 64, 'n_layers': 3, 'concat_condition_diffusion': False}
+INFO:root:After creating the dataloaders: mem (CPU python)=520.01171875MB; mem (CPU total)=2962.27734375MB
+INFO:root:NumberParameters: 12673
+INFO:root:GPU memory allocated: 2097152
+INFO:root:After setting up the model: mem (CPU python)=613.25390625MB; mem (CPU total)=3044.796875MB
+INFO:root:Training starts now.
+INFO:root:At the start of the epoch: mem (CPU python)=613.25390625MB; mem (CPU total)=3044.796875MB
+INFO:root:[    1] Training loss: 26.82249832, Validation loss: 26.44388771, Valdiation loss EMA: 26.44388771
+INFO:root:At the start of the epoch: mem (CPU python)=774.3203125MB; mem (CPU total)=3156.40625MB
+INFO:root:[    2] Training loss: 25.66261101, Validation loss: 25.39460564, Valdiation loss EMA: 25.39460564
+INFO:root:At the start of the epoch: mem (CPU python)=774.4609375MB; mem (CPU total)=3157.8828125MB
+INFO:root:[    3] Training loss: 24.59624863, Validation loss: 24.43544197, Valdiation loss EMA: 24.43544197
+INFO:root:At the start of the epoch: mem (CPU python)=774.4609375MB; mem (CPU total)=3158.046875MB
+INFO:root:[    4] Training loss: 23.64236450, Validation loss: 23.53284645, Valdiation loss EMA: 23.53284645
+INFO:root:At the start of the epoch: mem (CPU python)=774.71875MB; mem (CPU total)=3158.046875MB
+INFO:root:[    5] Training loss: 22.76573372, Validation loss: 22.62560654, Valdiation loss EMA: 22.62560654
+INFO:root:At the start of the epoch: mem (CPU python)=774.71875MB; mem (CPU total)=3158.046875MB
+INFO:root:[    6] Training loss: 21.89910316, Validation loss: 21.65900803, Valdiation loss EMA: 21.65900803
+INFO:root:At the start of the epoch: mem (CPU python)=774.71875MB; mem (CPU total)=3158.29296875MB
+INFO:root:[    7] Training loss: 20.97936058, Validation loss: 20.61756706, Valdiation loss EMA: 20.61756706
+INFO:root:At the start of the epoch: mem (CPU python)=774.71875MB; mem (CPU total)=3158.29296875MB
+INFO:root:[    8] Training loss: 19.99108505, Validation loss: 19.45649529, Valdiation loss EMA: 19.45649529
+INFO:root:At the start of the epoch: mem (CPU python)=774.71875MB; mem (CPU total)=3158.51171875MB
+INFO:root:[    9] Training loss: 18.88722992, Validation loss: 18.17815399, Valdiation loss EMA: 18.17815399
+INFO:root:At the start of the epoch: mem (CPU python)=774.71875MB; mem (CPU total)=3158.7578125MB
+INFO:root:[   10] Training loss: 17.67079735, Validation loss: 16.78403664, Valdiation loss EMA: 16.78403664
+INFO:root:At the start of the epoch: mem (CPU python)=774.71875MB; mem (CPU total)=3158.28515625MB
+INFO:root:[   11] Training loss: 16.34643173, Validation loss: 15.27727032, Valdiation loss EMA: 15.27727032
+INFO:root:At the start of the epoch: mem (CPU python)=774.71875MB; mem (CPU total)=3158.5078125MB
+INFO:root:[   12] Training loss: 14.91154480, Validation loss: 13.65287018, Valdiation loss EMA: 13.65287018
+INFO:root:At the start of the epoch: mem (CPU python)=774.71875MB; mem (CPU total)=3158.5078125MB
+INFO:root:[   13] Training loss: 13.36403370, Validation loss: 11.92118931, Valdiation loss EMA: 11.92118931
+INFO:root:At the start of the epoch: mem (CPU python)=774.71875MB; mem (CPU total)=3159.0MB
+INFO:root:[   14] Training loss: 11.71154881, Validation loss: 10.11217976, Valdiation loss EMA: 10.11217976
+INFO:root:At the start of the epoch: mem (CPU python)=774.71875MB; mem (CPU total)=3159.1796875MB
+INFO:root:[   15] Training loss: 9.98456097, Validation loss: 8.28046608, Valdiation loss EMA: 8.28046608
+INFO:root:At the start of the epoch: mem (CPU python)=774.71875MB; mem (CPU total)=3159.421875MB
+INFO:root:[   16] Training loss: 8.23390484, Validation loss: 6.50791597, Valdiation loss EMA: 6.50791597
+INFO:root:At the start of the epoch: mem (CPU python)=774.71875MB; mem (CPU total)=3159.421875MB
+INFO:root:[   17] Training loss: 6.53592730, Validation loss: 4.83464766, Valdiation loss EMA: 4.83464766
+INFO:root:At the start of the epoch: mem (CPU python)=774.71875MB; mem (CPU total)=3159.421875MB
+INFO:root:[   18] Training loss: 4.92185307, Validation loss: 3.32683587, Valdiation loss EMA: 3.32683587
+INFO:root:At the start of the epoch: mem (CPU python)=774.71875MB; mem (CPU total)=3159.421875MB
+INFO:root:[   19] Training loss: 3.45604849, Validation loss: 2.08101630, Valdiation loss EMA: 2.08101630
+INFO:root:At the start of the epoch: mem (CPU python)=774.71875MB; mem (CPU total)=3159.66796875MB
+INFO:root:[   20] Training loss: 2.22601652, Validation loss: 1.18411291, Valdiation loss EMA: 1.18411291
+INFO:root:At the start of the epoch: mem (CPU python)=774.71875MB; mem (CPU total)=3159.66796875MB
+INFO:root:[   21] Training loss: 1.31076145, Validation loss: 0.71449381, Valdiation loss EMA: 0.71449381
+INFO:root:At the start of the epoch: mem (CPU python)=774.71875MB; mem (CPU total)=3159.66796875MB
+INFO:root:[   22] Training loss: 0.78598309, Validation loss: 0.68440837, Valdiation loss EMA: 0.68440837
+INFO:root:At the start of the epoch: mem (CPU python)=774.71875MB; mem (CPU total)=3159.9140625MB
+INFO:root:[   23] Training loss: 0.67125875, Validation loss: 0.98597008, Valdiation loss EMA: 0.98597008
+INFO:root:At the start of the epoch: mem (CPU python)=774.71875MB; mem (CPU total)=3159.9140625MB
+INFO:root:[   24] Training loss: 0.88142425, Validation loss: 1.41665769, Valdiation loss EMA: 1.41665769
+INFO:root:At the start of the epoch: mem (CPU python)=774.71875MB; mem (CPU total)=3159.9140625MB
+INFO:root:[   25] Training loss: 1.24683559, Validation loss: 1.78941596, Valdiation loss EMA: 1.78941596
+INFO:root:At the start of the epoch: mem (CPU python)=774.71875MB; mem (CPU total)=3159.9140625MB
+INFO:root:[   26] Training loss: 1.60315931, Validation loss: 1.99722290, Valdiation loss EMA: 1.99722290
+INFO:root:At the start of the epoch: mem (CPU python)=774.71875MB; mem (CPU total)=3159.9140625MB
+INFO:root:[   27] Training loss: 1.84325957, Validation loss: 2.00560760, Valdiation loss EMA: 2.00560760
+INFO:root:At the start of the epoch: mem (CPU python)=774.71875MB; mem (CPU total)=3159.9140625MB
+INFO:root:[   28] Training loss: 1.91416562, Validation loss: 1.83060896, Valdiation loss EMA: 1.83060896
+INFO:root:At the start of the epoch: mem (CPU python)=774.71875MB; mem (CPU total)=3159.9140625MB
+INFO:root:[   29] Training loss: 1.80720639, Validation loss: 1.52748609, Valdiation loss EMA: 1.52748609
+INFO:root:At the start of the epoch: mem (CPU python)=774.71875MB; mem (CPU total)=3159.9140625MB
+INFO:root:[   30] Training loss: 1.55820072, Validation loss: 1.17103827, Valdiation loss EMA: 1.17103827
+INFO:root:At the start of the epoch: mem (CPU python)=774.71875MB; mem (CPU total)=3160.16015625MB
+INFO:root:[   31] Training loss: 1.23241580, Validation loss: 0.83095109, Valdiation loss EMA: 0.83095109
+INFO:root:At the start of the epoch: mem (CPU python)=774.71875MB; mem (CPU total)=3160.16015625MB
+INFO:root:[   32] Training loss: 0.89892203, Validation loss: 0.55976027, Valdiation loss EMA: 0.55976027
+INFO:root:At the start of the epoch: mem (CPU python)=774.71875MB; mem (CPU total)=3160.37890625MB
+INFO:root:[   33] Training loss: 0.61598045, Validation loss: 0.37783739, Valdiation loss EMA: 0.37783739
+INFO:root:At the start of the epoch: mem (CPU python)=774.71875MB; mem (CPU total)=3159.640625MB
+INFO:root:[   34] Training loss: 0.41070935, Validation loss: 0.29250792, Valdiation loss EMA: 0.29250792
+INFO:root:At the start of the epoch: mem (CPU python)=774.71875MB; mem (CPU total)=3160.125MB
+INFO:root:[   35] Training loss: 0.29966491, Validation loss: 0.29543173, Valdiation loss EMA: 0.29543173
+INFO:root:At the start of the epoch: mem (CPU python)=774.71875MB; mem (CPU total)=3159.1796875MB
+INFO:root:[   36] Training loss: 0.28149521, Validation loss: 0.36092091, Valdiation loss EMA: 0.36092091
+INFO:root:At the start of the epoch: mem (CPU python)=774.71875MB; mem (CPU total)=3159.1796875MB
+INFO:root:[   37] Training loss: 0.33389598, Validation loss: 0.45445046, Valdiation loss EMA: 0.45445046
+INFO:root:At the start of the epoch: mem (CPU python)=774.71875MB; mem (CPU total)=3159.1796875MB
+INFO:root:[   38] Training loss: 0.42289403, Validation loss: 0.54518133, Valdiation loss EMA: 0.54518133
+INFO:root:At the start of the epoch: mem (CPU python)=774.71875MB; mem (CPU total)=3159.671875MB
+INFO:root:[   39] Training loss: 0.51644039, Validation loss: 0.60168606, Valdiation loss EMA: 0.60168606
+INFO:root:At the start of the epoch: mem (CPU python)=774.71875MB; mem (CPU total)=3159.671875MB
+INFO:root:[   40] Training loss: 0.58004457, Validation loss: 0.61255860, Valdiation loss EMA: 0.61255860
+INFO:root:After finishing all epochs: mem (CPU python)=774.71875MB; mem (CPU total)=3159.671875MB
+INFO:root:Training the model took 3.563s.
+INFO:root:Emptying the cuda cache took 0.0s.
