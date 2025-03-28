@@ -74,3 +74,11 @@ INFO:root:Training the model took 68.421s.
 INFO:root:Emptying the cuda cache took 0.001s.
 INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
 INFO:root:Evaluating the model on Train data.
+INFO:root:MSETrain: 11.37688
+INFO:root:EnergyScoreTrain: 0.26935
+INFO:root:CRPSTrain: 0.26751
+INFO:root:Evaluating the model on Validation data.
+INFO:root:MSEValidation: 27.93826
+INFO:root:EnergyScoreValidation: 0.34754
+INFO:root:CRPSValidation: 0.34548
+INFO:root:Evaluating the model on Test data.
