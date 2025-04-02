@@ -598,7 +598,7 @@ class Coverage(object):
             x = torch.mean(x, dim=0, keepdim=True)
         return x
 
-    def calculate_score(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+    def calculate_score(self, x: torch.Tensor, y: torch.Tensor, ensemble_dim: int=-1) -> torch.Tensor:
         """Calculates the Coverage probability between two tensors with respect to the significance level alpha.
 
         Args:
@@ -611,8 +611,8 @@ class Coverage(object):
         n_dims = len(x.shape) - 2
 
         # Calculate quantiles
-        q_lower = torch.quantile(x, self.alpha / 2, dim=-1)
-        q_upper = torch.quantile(x, 1 - self.alpha / 2, dim=-1)
+        q_lower = torch.quantile(x, self.alpha / 2, dim=ensemble_dim)
+        q_upper = torch.quantile(x, 1 - self.alpha / 2, dim=ensemble_dim)
 
         # Assert dimension and alpha
         assert q_lower.size() == y.size()

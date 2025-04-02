@@ -124,7 +124,7 @@ if __name__ == '__main__':
         
         dataset_name = data_parameters['dataset_name']
         dataset_size = data_parameters['max_dataset_size']
-        dataset, image_dim, label_dim = get_data(dataset_name, data_dir, dataset_size, image_size=None)
+        dataset, image_dim, label_dim = get_data(dataset_name, data_dir, dataset_size, data_parameters['standardize'], image_size=None)
         
         logging.info(using('After loading the datasets'))
 
@@ -140,10 +140,11 @@ if __name__ == '__main__':
             filename_ending = f"{data_parameters['dataset_name']}_{training_parameters['model']}_{training_parameters['uncertainty_quantification']}_"
             
             batch_size = training_parameters['batch_size']
-
+            eval_batch_size = training_parameters['eval_batch_size']
+            
             training_dataset, validation_dataset, test_dataset = random_split(dataset, [0.8, 0.1, 0.1])
             train_loader = DataLoader(training_dataset, batch_size=batch_size, shuffle=True)
-            val_loader = DataLoader(validation_dataset, batch_size=batch_size, shuffle=True)
+            val_loader = DataLoader(validation_dataset, batch_size=eval_batch_size, shuffle=True)
             logging.info(using('After creating the dataloaders'))
                         
             if training_parameters.get('filename_to_validate', None):
@@ -180,8 +181,6 @@ if __name__ == '__main__':
                 t_1 = time()
                 logging.info(f'Emptying the cuda cache took {np.round(t_1 - t_0, 3)}s.')
             
-            eval_batch_size = max(batch_size // 4, 1)
-            
             train_loader = DataLoader(training_dataset, batch_size=eval_batch_size, shuffle=True)
             val_loader = DataLoader(validation_dataset, batch_size=eval_batch_size, shuffle=True)
             test_loader = DataLoader(test_dataset, batch_size=eval_batch_size, shuffle=True)
@@ -190,15 +189,16 @@ if __name__ == '__main__':
             np.random.seed(seed)
             torch.manual_seed(seed)
             
-            start_evaluation(model, training_parameters, data_parameters, train_loader, val_loader, 
-                            test_loader, results_dict, device, logging, filename)
-                        
-            append_results_dict(results_dict, data_parameters, training_parameters, t_training)
-            results_pd = pd.DataFrame(results_dict)
-            results_pd.T.to_csv(os.path.join(directory, 'test.csv'))
-            
-            logging.info(using('After validation'))
-            
-            del model
-            torch.cuda.empty_cache()
-            gc.collect()
+            if training_parameters['evaluate']:
+                start_evaluation(model, training_parameters, data_parameters, train_loader, val_loader, 
+                                test_loader, results_dict, device, logging, filename)
+                            
+                append_results_dict(results_dict, data_parameters, training_parameters, t_training)
+                results_pd = pd.DataFrame(results_dict)
+                results_pd.T.to_csv(os.path.join(directory, 'test.csv'))
+                
+                logging.info(using('After validation'))
+                
+                del model
+                torch.cuda.empty_cache()
+                gc.collect()

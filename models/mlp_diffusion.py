@@ -20,10 +20,8 @@ class MLP_diffusion(nn.Module):
             super().__init__()
             self.concat = concat
             if self.concat:
-                input_dim = 2 * hidden_dim
-            else:
-                input_dim = hidden_dim
-            self.ff = nn.Linear(input_dim, hidden_dim)
+                hidden_dim = 2 * hidden_dim
+            self.ff = nn.Linear(hidden_dim, hidden_dim)
             self.act = nn.ReLU()
             self.dropout = nn.Dropout(dropout)
             
@@ -41,9 +39,12 @@ class MLP_diffusion(nn.Module):
         
         self.act = nn.ReLU()
         
-        self.blocks = Sequential2Inputs([MLP_diffusion.MLPBlock(hidden_dim, concat=concat, dropout=dropout) for _ in range(layers)])
+        self.blocks = Sequential2Inputs([MLP_diffusion.MLPBlock(hidden_dim, concat=concat, dropout=dropout) for _ in range(layers)], concat=concat)
         
-        self.output_projection = nn.Linear(hidden_dim, target_dim)
+        if concat:
+            self.output_projection = nn.Linear(2 * hidden_dim, target_dim)
+        else:
+            self.output_projection = nn.Linear(hidden_dim, target_dim)
 
     def pos_encoding(self, t, channels):
         inv_freq = 1.0 / (

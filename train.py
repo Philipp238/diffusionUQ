@@ -222,7 +222,7 @@ def trainer(
                         repeated_labels = labels.repeat_interleave(n_samples, dim=0)
                         sampled_images = diffusion.sample_low_dimensional(model, n=repeated_labels.shape[0], conditioning=repeated_labels)
                         sampled_images_ema = diffusion.sample_low_dimensional(ema_model, n=repeated_labels.shape[0], conditioning=repeated_labels)
-                        sampled_images = sampled_images.reshape(labels.shape[0], n_samples, labels.shape[1]).mean(dim=1)
+                        sampled_images = sampled_images.reshape(labels.shape[0], n_samples, images.shape[1]).mean(dim=1)
                         sampled_images_ema = sampled_images_ema.reshape(labels.shape[0], n_samples, images.shape[1]).mean(dim=1)
                     else:
                         sampled_images = model(labels)
@@ -263,7 +263,7 @@ def trainer(
             
             logging.info(
                     f"[{epoch + 1:5d}] Training loss: {training_loss_list[-1]:.8f}, Validation loss: "
-                    f"{validation_loss_list[-1]:.8f}, Valdiation loss EMA: {validation_loss_list_ema[-1]:.8f}"
+                    f"{validation_loss_list[-1]:.8f}, Validation loss EMA: {validation_loss_list_ema[-1]:.8f}"
                 )
         
     logging.info(using("After finishing all epochs"))
@@ -290,18 +290,19 @@ def trainer(
     # )
     plt.close()
     
-    labels = (torch.randn(1024, dtype=torch.float32, device=device) * 3 ).sort().values.unsqueeze(-1)
     
-    with torch.no_grad():
-        if uncertainty_quantification == 'diffusion':
-            sampled_images = diffusion.sample_low_dimensional(model, n=labels.shape[0], conditioning=labels).squeeze(1).to('cpu')
-        else:
-            sampled_images = model(labels).squeeze(1).to('cpu')
+    if data_parameters['dataset_name'] in ['x-squared', 'uniform-regression']:
+        labels = (torch.rand(1024, dtype=torch.float32, device=device) * 3 ).sort().values.unsqueeze(-1)
+        with torch.no_grad():
+            if uncertainty_quantification == 'diffusion':
+                sampled_images = diffusion.sample_low_dimensional(model, n=labels.shape[0], conditioning=labels).squeeze(1).to('cpu')
+            else:
+                sampled_images = model(labels).squeeze(1).to('cpu')
 
-        plt.plot(labels.cpu(), sampled_images, 'x')
+            plt.plot(labels.cpu(), sampled_images, 'x')
 
-        plt.savefig(os.path.join(directory, f"visualisation.png"))
-        plt.close()
+            plt.savefig(os.path.join(directory, f"Datetime_{d_time}_visualisation.png"))
+            plt.close()
 
     train_utils.checkpoint(model, filename)
 

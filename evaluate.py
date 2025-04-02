@@ -37,7 +37,7 @@ def generate_samples(
     elif uncertainty_quantification.startswith("scoring-rule"):
         out = model(a, n_samples=n_samples)
     elif uncertainty_quantification == 'deterministic':
-        out = generate_deterministic_samples(model, a, u.shape, n_samples=n_samples)
+        out = generate_deterministic_samples(model, a, n_samples=n_samples).permute(0, 2, 1)
     elif uncertainty_quantification == 'diffusion':
         out = generate_diffusion_samples_low_dimensional(model, labels=a, images_shape=u.shape, n_samples=n_samples).permute(0, 2, 1)
     return out
@@ -97,12 +97,12 @@ def evaluate(model, training_parameters: dict, loader, device):
             # gaussian_nll += (
             #     gaussian_nll_loss(predicted_images, images).item() * batch_size / len(loader.dataset)
             # )
-            # coverage += coverage_loss(predicted_images, images).item() * batch_size / len(loader.dataset)
+            coverage += coverage_loss(predicted_images, images, ensemble_dim=1).item() * batch_size / len(loader.dataset)
             # interval_width += (
             #     interval_width_loss(predicted_images, images).item() * batch_size / len(loader.dataset)
             # )
 
-    return mse, es, crps # , gaussian_nll, coverage, interval_width
+    return mse, es, crps, coverage # , gaussian_nll, , interval_width
 
 def start_evaluation(
     model,
@@ -168,7 +168,7 @@ def start_evaluation(
         logging.info(f"Evaluating the model on {name} data.")
 
 
-        mse, es, crps = evaluate(model, training_parameters, loader, device)
+        mse, es, crps, coverage = evaluate(model, training_parameters, loader, device)
         # mse, es, crps, gaussian_nll, coverage, int_width = evaluate(model, training_parameters, loader, device, domain_range)
 
         train_utils.log_and_save_evaluation(mse, "MSE" + name, results_dict, logging)
@@ -179,9 +179,9 @@ def start_evaluation(
         # train_utils.log_and_save_evaluation(
         #     gaussian_nll, "Gaussian NLL" + name, results_dict, logging
         # )
-        # train_utils.log_and_save_evaluation(
-        #     coverage, "Coverage" + name, results_dict, logging
-        # )
+        train_utils.log_and_save_evaluation(
+            coverage, "Coverage" + name, results_dict, logging
+        )
         # train_utils.log_and_save_evaluation(
         #     int_width, "IntervalWidth" + name, results_dict, logging
         # )

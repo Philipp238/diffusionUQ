@@ -98,7 +98,7 @@ def train(args):
                         else:
                             prediction = model(labels)                
                         validation_loss += mse(prediction, images).item()
-                        ema_validation_loss += mse(ema_prediction, images).item()
+                        # ema_validation_loss += mse(ema_prediction, images).item()
 
                     validation_loss /= len(validation_dataloader)
                     ema_validation_loss /= len(validation_dataloader)
@@ -155,7 +155,7 @@ def launch():
     args.batch_size = 4096 * 8
     args.batch_size_pred = 4096 * 8
     args.image_size = 1
-    args.dataset_name = 'uniform-regression'
+    args.dataset_name = 'housing_prices'
     args.conditioning = True
     args.run_name = args.dataset_name
     args.dataset_path = r"/home/groups/ai/scholl/diffusion/image-landscapes"
@@ -164,7 +164,7 @@ def launch():
     args.device = "cuda"
     args.lr = 1e-3
     args.layers = 3
-    args.diffusion = True
+    args.diffusion = False
     args.n_classes = 5
     train(args)
 
