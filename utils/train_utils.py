@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 import utils.losses as losses
-from models import MLP, MLP_diffusion, LA_Wrapper
+from models import MLP, MLP_diffusion, LA_Wrapper, MLP_CRPS_diffusion
 
 def log_and_save_evaluation(value: float, key: str, results_dict: dict, logging):
     """Method to log and save evaluation results.
@@ -111,6 +111,9 @@ def setup_model(training_parameters: dict, device, image_dim: int, label_dim: in
         hidden_model = None
     elif training_parameters["uncertainty_quantification"] == "diffusion":
         hidden_model = MLP_diffusion(target_dim=image_dim, conditioning_dim=label_dim, concat=training_parameters['concat_condition_diffusion'], 
+                                        hidden_dim=training_parameters['hidden_dim'], layers=training_parameters['n_layers'], dropout=training_parameters['dropout'])
+    elif training_parameters["uncertainty_quantification"] == "diffusion_crps":
+        hidden_model = MLP_CRPS_diffusion(target_dim=image_dim, conditioning_dim=label_dim, concat=training_parameters['concat_condition_diffusion'], 
                                         hidden_dim=training_parameters['hidden_dim'], layers=training_parameters['n_layers'], dropout=training_parameters['dropout'])
     else:
         hidden_model = MLP(target_dim=image_dim, conditioning_dim=label_dim, dropout=training_parameters['dropout'],

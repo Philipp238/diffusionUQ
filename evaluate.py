@@ -1,6 +1,12 @@
 import torch
 
-from models import generate_mcd_samples, generate_deterministic_samples, LA_Wrapper, generate_diffusion_samples_low_dimensional
+from models import (
+    generate_mcd_samples,
+    generate_deterministic_samples,
+    LA_Wrapper,
+    generate_diffusion_samples_low_dimensional,
+    generate_diffusion_samples_crps_low_dimensional,
+)
 from utils import losses, train_utils
 import numpy as np
 
@@ -31,20 +37,28 @@ def generate_samples(
     else:
         model.eval()
     if uncertainty_quantification == "dropout":
-        out = generate_mcd_samples(model, a, u.shape, n_samples=n_samples).permute(0, 2, 1)
+        out = generate_mcd_samples(model, a, u.shape, n_samples=n_samples).permute(
+            0, 2, 1
+        )
     elif uncertainty_quantification == "laplace":
         out = model.predictive_samples(a, n_samples=n_samples)
     elif uncertainty_quantification.startswith("scoring-rule"):
         out = model(a, n_samples=n_samples)
-    elif uncertainty_quantification == 'deterministic':
+    elif uncertainty_quantification == "deterministic":
         out = generate_deterministic_samples(model, a, u.shape, n_samples=n_samples)
-    elif uncertainty_quantification == 'diffusion':
-        out = generate_diffusion_samples_low_dimensional(model, labels=a, images_shape=u.shape, n_samples=n_samples).permute(0, 2, 1)
+    elif uncertainty_quantification == "diffusion":
+        out = generate_diffusion_samples_low_dimensional(
+            model, labels=a, images_shape=u.shape, n_samples=n_samples
+        ).permute(0, 2, 1)
+    elif uncertainty_quantification == "diffusion_crps":
+        out = generate_diffusion_samples_crps_low_dimensional(
+            model, labels=a, images_shape=u.shape, n_samples=n_samples
+        ).permute(0, 2, 1)
     return out
 
 
 def evaluate(model, training_parameters: dict, loader, device):
-    """ Method to evaluate the given model.
+    """Method to evaluate the given model.
 
     Args:
         model (_type_): Underlying model
@@ -86,38 +100,58 @@ def evaluate(model, training_parameters: dict, loader, device):
                 images,
                 training_parameters["n_samples_uq"],
             )
-            
+
             mse += (
-                mse_loss(predicted_images.mean(axis=1), images).item() * batch_size / len(loader.dataset)
+                mse_loss(predicted_images.mean(axis=1), images).item()
+                * batch_size
+                / len(loader.dataset)
             )
-            es += energy_score(images, predicted_images, backend='torch').mean().item() * batch_size / len(loader.dataset)
-            
-            
-            crps += crps_ensemble(images.cpu(), predicted_images.permute(0,2,1).cpu(), backend='torch').mean().item() * batch_size / len(loader.dataset)
+            es += (
+                energy_score(images, predicted_images, backend="torch").mean().item()
+                * batch_size
+                / len(loader.dataset)
+            )
+
+            crps += (
+                crps_ensemble(
+                    images.cpu(),
+                    predicted_images.permute(0, 2, 1).cpu(),
+                    backend="torch",
+                )
+                .mean()
+                .item()
+                * batch_size
+                / len(loader.dataset)
+            )
             # gaussian_nll += (
             #     gaussian_nll_loss(predicted_images, images).item() * batch_size / len(loader.dataset)
             # )
-            # coverage += coverage_loss(predicted_images, images).item() * batch_size / len(loader.dataset)
+            coverage += (
+                coverage_loss(predicted_images, images, ensemble_dim=1).item()
+                * batch_size
+                / len(loader.dataset)
+            )
             # interval_width += (
             #     interval_width_loss(predicted_images, images).item() * batch_size / len(loader.dataset)
             # )
 
-    return mse, es, crps # , gaussian_nll, coverage, interval_width
+    return mse, es, crps, coverage  # , gaussian_nll, coverage, interval_width
+
 
 def start_evaluation(
     model,
-    training_parameters:dict,
-    data_parameters:dict,
+    training_parameters: dict,
+    data_parameters: dict,
     train_loader,
     validation_loader,
     test_loader,
-    results_dict:dict,
+    results_dict: dict,
     device,
     logging,
-    filename:str,
+    filename: str,
     **kwargs,
 ):
-    """ Performs evaluation of the model on the given data sets.
+    """Performs evaluation of the model on the given data sets.
 
     Args:
         model (_type_): Underlying model
@@ -150,7 +184,9 @@ def start_evaluation(
             "Test": test_loader,
         }
 
-    if training_parameters["uncertainty_quantification"] == "laplace" and (not isinstance(model, LA_Wrapper)):
+    if training_parameters["uncertainty_quantification"] == "laplace" and (
+        not isinstance(model, LA_Wrapper)
+    ):
         model = LA_Wrapper(
             model,
             n_samples=training_parameters["n_samples_uq"],
@@ -167,8 +203,7 @@ def start_evaluation(
     for name, loader in data_loaders.items():
         logging.info(f"Evaluating the model on {name} data.")
 
-
-        mse, es, crps = evaluate(model, training_parameters, loader, device)
+        mse, es, crps, coverage = evaluate(model, training_parameters, loader, device)
         # mse, es, crps, gaussian_nll, coverage, int_width = evaluate(model, training_parameters, loader, device, domain_range)
 
         train_utils.log_and_save_evaluation(mse, "MSE" + name, results_dict, logging)
@@ -176,6 +211,10 @@ def start_evaluation(
             es, "EnergyScore" + name, results_dict, logging
         )
         train_utils.log_and_save_evaluation(crps, "CRPS" + name, results_dict, logging)
+        train_utils.log_and_save_evaluation(
+            coverage, "Coverage" + name, results_dict, logging
+        )
+
         # train_utils.log_and_save_evaluation(
         #     gaussian_nll, "Gaussian NLL" + name, results_dict, logging
         # )

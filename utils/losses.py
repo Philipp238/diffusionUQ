@@ -557,6 +557,8 @@ class GaussianNLL(object):
         return self.calculate_score(y_pred, y, **kwargs)
 
 
+
+
 class Coverage(object):
     """
     A class for calculating the Coverage probability between two tensors. The corresponding quantiles are calculated from the model predictions.
@@ -598,7 +600,7 @@ class Coverage(object):
             x = torch.mean(x, dim=0, keepdim=True)
         return x
 
-    def calculate_score(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+    def calculate_score(self, x: torch.Tensor, y: torch.Tensor, ensemble_dim: int=-1) -> torch.Tensor:
         """Calculates the Coverage probability between two tensors with respect to the significance level alpha.
 
         Args:
@@ -611,8 +613,8 @@ class Coverage(object):
         n_dims = len(x.shape) - 2
 
         # Calculate quantiles
-        q_lower = torch.quantile(x, self.alpha / 2, dim=-1)
-        q_upper = torch.quantile(x, 1 - self.alpha / 2, dim=-1)
+        q_lower = torch.quantile(x, self.alpha / 2, dim=ensemble_dim)
+        q_upper = torch.quantile(x, 1 - self.alpha / 2, dim=ensemble_dim)
 
         # Assert dimension and alpha
         assert q_lower.size() == y.size()
@@ -712,3 +714,53 @@ class IntervalWidth(object):
 
     def __call__(self, y_pred, y, **kwargs):
         return self.calculate_score(y_pred, y, **kwargs)
+
+
+
+class NormalCRPS(torch.nn.Module):
+    """Computes the continuous ranked probability score (CRPS)
+       for a predictive normal distribution and corresponding observations.
+
+    Args:
+        observation (torch.Tensor): Observed outcome. Shape = [batch_size, d0, .. dn].
+        mu (torch.Tensor): Predicted mu of normal distribution. Shape = [batch_size, d0, .. dn].
+        sigma (torch.Tensor): Predicted sigma of normal distribution. Shape = [batch_size, d0, .. dn].
+        reduce (bool, optional): Boolean value indicating whether reducing the loss to one value or to
+            a torch.Tensor with shape = `[batch_size]`.
+        reduction (str, optional): Specifies the reduction to apply to the output:
+            ``'mean'`` | ``'sum'``.
+    Raises:
+        ValueError: If sizes of target mu and sigma don't match.
+
+    Returns:
+        CRPS: 1-D float `torch.Tensor` with shape [batch_size] if reduction = True
+    """
+
+    def __init__(
+        self,
+        reduction: str = "mean",
+    ) -> None:
+        super().__init__()
+        self.reduction = reduction
+
+    def forward(
+        self,
+        observation: torch.Tensor,
+        pred: torch.Tensor
+    ) -> torch.Tensor:        
+        mu, sigma = torch.split(pred, 1, dim = -1)
+
+        # Use absolute value of sigma
+        sigma = torch.abs(sigma) + 1e-12
+        loc = (observation - mu) / sigma
+        cdf = 0.5 * (1 + torch.erf(loc / np.sqrt(2.0)))
+        pdf = 1 / (np.sqrt(2.0 * np.pi)) * torch.exp(-torch.pow(loc, 2) / 2.0)
+        crps = sigma * (loc * (2.0 * cdf - 1) + 2.0 * pdf - 1 / np.sqrt(np.pi))
+
+       # crps = torch.nn.functional.mse_loss(observation, mu)
+        if self.reduction == "sum":
+            return torch.sum(crps)
+        elif self.reduction == "mean":
+            return torch.mean(crps)
+        else:
+            return crps

@@ -4,7 +4,7 @@ import os
 import torch
 from torch import optim
 import matplotlib.pyplot as plt
-from utils import train_utils
+from utils import train_utils, losses
 import resource
 import psutil
 import gc
@@ -41,7 +41,7 @@ def train(net, optimizer, images, labels, criterion, gradient_clipping, uncertai
     """
     optimizer.zero_grad(set_to_none=True)        
     
-    if uncertainty_quantification == 'diffusion':
+    if uncertainty_quantification.startswith('diffusion'):
         assert not (diffusion is None)
         t = diffusion.sample_timesteps(images.shape[0]).to(device)
         x_t, noise = diffusion.noise_low_dimensional(images, t)
@@ -98,8 +98,12 @@ def trainer(
         assert not training_parameters["data_loader_pin_memory"]
 
     # criterion = train_utils.get_criterion(training_parameters, domain_range=None, d=image_dim, device=device)
-    
+    uncertainty_quantification = training_parameters["uncertainty_quantification"]
     criterion = torch.nn.MSELoss()
+    if uncertainty_quantification == "diffusion":
+        train_criterion = torch.nn.MSELoss()
+    elif uncertainty_quantification == "diffusion_crps":
+        train_criterion = losses.NormalCRPS()
     
     model = train_utils.setup_model(
         training_parameters, device, image_dim, label_dim
@@ -162,7 +166,7 @@ def trainer(
 
     # Additional parameters
     uncertainty_quantification = training_parameters["uncertainty_quantification"]
-    if uncertainty_quantification == 'diffusion':
+    if uncertainty_quantification.startswith("diffusion"):
         diffusion = Diffusion(img_size=image_dim, device=device)
     else:
         diffusion = None
@@ -187,7 +191,7 @@ def trainer(
                 optimizer,
                 images,
                 labels,
-                criterion,
+                train_criterion,
                 training_parameters["gradient_clipping"],
                 uncertainty_quantification=uncertainty_quantification,
                 ema=ema, 
@@ -222,6 +226,13 @@ def trainer(
                         repeated_labels = labels.repeat_interleave(n_samples, dim=0)
                         sampled_images = diffusion.sample_low_dimensional(model, n=repeated_labels.shape[0], conditioning=repeated_labels)
                         sampled_images_ema = diffusion.sample_low_dimensional(ema_model, n=repeated_labels.shape[0], conditioning=repeated_labels)
+                        sampled_images = sampled_images.reshape(labels.shape[0], n_samples, labels.shape[1]).mean(dim=1)
+                        sampled_images_ema = sampled_images_ema.reshape(labels.shape[0], n_samples, images.shape[1]).mean(dim=1)
+                    elif uncertainty_quantification == 'diffusion_crps':
+                        n_samples = 10
+                        repeated_labels = labels.repeat_interleave(n_samples, dim=0)
+                        sampled_images = diffusion.sample_crps_low_dimensional(model, n=repeated_labels.shape[0], conditioning=repeated_labels)
+                        sampled_images_ema = diffusion.sample_crps_low_dimensional(ema_model, n=repeated_labels.shape[0], conditioning=repeated_labels)
                         sampled_images = sampled_images.reshape(labels.shape[0], n_samples, labels.shape[1]).mean(dim=1)
                         sampled_images_ema = sampled_images_ema.reshape(labels.shape[0], n_samples, images.shape[1]).mean(dim=1)
                     else:
@@ -295,6 +306,8 @@ def trainer(
     with torch.no_grad():
         if uncertainty_quantification == 'diffusion':
             sampled_images = diffusion.sample_low_dimensional(model, n=labels.shape[0], conditioning=labels).squeeze(1).to('cpu')
+        elif uncertainty_quantification == 'diffusion_crps':
+            sampled_images = diffusion.sample_crps_low_dimensional(model, n=labels.shape[0], conditioning=labels).squeeze(1).to('cpu')
         else:
             sampled_images = model(labels).squeeze(1).to('cpu')
 

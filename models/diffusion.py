@@ -52,6 +52,39 @@ class Diffusion:
                 x = 1 / torch.sqrt(alpha) * (x - ((1 - alpha) / (torch.sqrt(1 - alpha_hat))) * predicted_noise) + torch.sqrt(beta) * noise
         model.train()
         return x
+    
+
+    def sample_crps_low_dimensional(self, model, n, conditioning=None, cfg_scale=1):
+        model.eval()
+        with torch.no_grad():
+            x = torch.randn((n, self.img_size)).to(self.device)
+            for i in reversed(range(1, self.noise_steps)):
+                t = (torch.ones(n) * i).long().to(self.device)
+                predicted_noise = model(x, t, conditioning)
+                predicted_mu, predicted_sigma = torch.split(predicted_noise,1, dim = -1)
+
+                if cfg_scale > 0:
+                    uncond_predicted_noise = model(x, t, None)
+                    uncond_predicted_mu, uncond_predicted_sigma = torch.split(uncond_predicted_noise,1, dim = -1)
+                    predicted_mu = torch.lerp(uncond_predicted_mu, predicted_mu, cfg_scale)
+                    predicted_sigma = torch.sqrt(torch.pow(uncond_predicted_sigma,2) + cfg_scale**2 * (torch.pow(predicted_sigma,2)+torch.pow(uncond_predicted_sigma,2)))
+                alpha = self.alpha[t][:, None]
+                alpha_hat = self.alpha_hat[t][:, None]
+                beta = self.beta[t][:, None]
+                if i > 1:
+                    noise = torch.randn_like(x)
+                else:
+                    noise = torch.zeros_like(x)
+
+                if i>1:
+                    predicted_noise = predicted_mu
+                else:
+                    predicted_noise = predicted_mu + predicted_sigma*torch.randn_like(x)
+
+
+                x = 1 / torch.sqrt(alpha) * (x - ((1 - alpha) / (torch.sqrt(1 - alpha_hat))) * predicted_noise) + torch.sqrt(beta) * noise
+        model.train()
+        return x
 
 
     def sample_images(self, model, n, labels=None, cfg_scale=3):
@@ -84,5 +117,15 @@ def generate_diffusion_samples_low_dimensional(model, labels, images_shape, n_sa
     for i in range(n_samples):
         with torch.no_grad():
             sampled_images[..., i] = diffusion.sample_low_dimensional(model, n=labels.shape[0], conditioning=labels).detach()
+    
+    return sampled_images    
+
+def generate_diffusion_samples_crps_low_dimensional(model, labels, images_shape, n_samples):
+    diffusion = Diffusion(img_size=images_shape[1], device=labels.device)
+    
+    sampled_images = torch.zeros(*images_shape, n_samples).to(labels.device)
+    for i in range(n_samples):
+        with torch.no_grad():
+            sampled_images[..., i] = diffusion.sample_crps_low_dimensional(model, n=labels.shape[0], conditioning=labels).detach()
     
     return sampled_images    

@@ -125,7 +125,7 @@ if __name__ == '__main__':
         dataset_name = data_parameters['dataset_name']
         dataset_size = data_parameters['max_dataset_size']
         dataset, image_dim, label_dim = get_data(dataset_name, data_dir, dataset_size, image_size=None)
-        
+
         logging.info(using('After loading the datasets'))
 
         for i, training_parameters in enumerate(training_parameters_dict):

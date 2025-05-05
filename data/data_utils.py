@@ -40,7 +40,7 @@ def get_data(dataset_name, dataset_path, dataset_size, image_size=None):
     elif dataset_name == 'x-squared':
         image_dim, label_dim = 1, 1
         x = (torch.randn(dataset_size, dtype=torch.float32) * 3)
-        y = x**2
+        y = x**2 + torch.randn_like(x)*torch.abs(x)*0.3
         dataset = RegressionDataset(images=y.unsqueeze(-1), labels=x.unsqueeze(-1), standardize=False)
     elif dataset_name == 'uniform-regression':
         labels = torch.randn(dataset_size, dtype=torch.float32) * 5

@@ -1,9 +1,9 @@
 from models.mlp import MLP
-from models.mlp_diffusion import MLP_diffusion
+from models.mlp_diffusion import MLP_diffusion, MLP_CRPS_diffusion
 from models.ema import EMA
 
 from models.mcdropout import generate_mcd_samples
 # from models.laplace import LA_Wrapper
 from models.deterministic import generate_deterministic_samples
-from models.diffusion import Diffusion, generate_diffusion_samples_low_dimensional
+from models.diffusion import Diffusion, generate_diffusion_samples_low_dimensional, generate_diffusion_samples_crps_low_dimensional
 from models.laplace import LA_Wrapper
