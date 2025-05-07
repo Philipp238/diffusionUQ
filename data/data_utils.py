@@ -3,7 +3,7 @@ from data.images import CustomImageDataset
 import torch
 import torchvision
 
-def get_data(dataset_name, dataset_path, dataset_size, standardize=False, image_size=None):
+def get_data(dataset_name, dataset_path, dataset_size, standardize=False, image_size=None, logging=None):
     if dataset_name in ['cifar', 'landscape']:
         error_msg = f'Images (datasets with target values that have shape with length > 1) ' + \
                      'are not implemented yet. TODO: image_dim and label_dim have to be shapes then.' + \
@@ -31,13 +31,97 @@ def get_data(dataset_name, dataset_path, dataset_size, standardize=False, image_
     if dataset_name == 'housing_prices':
         from sklearn.datasets import fetch_california_housing
         housing = fetch_california_housing()
-        images = torch.tensor(housing['target'], dtype=torch.float32).unsqueeze(-1)
-        labels = torch.tensor(housing['data'], dtype=torch.float32)
+        images = torch.tensor(housing['target'], dtype=torch.float32).unsqueeze(-1)  # (20640, 1)
+        labels = torch.tensor(housing['data'], dtype=torch.float32) # (20640, 8)
         image_dim, label_dim = 1, labels.shape[1]
         
         images = images[:dataset_size]
         labels = labels[:dataset_size]
 
+        dataset = RegressionDataset(images=images, labels=labels, standardize=standardize)
+    elif dataset_name == 'concrete':
+        from ucimlrepo import fetch_ucirepo 
+  
+        # fetch dataset 
+        yacht_hydrodynamics = fetch_ucirepo(id=165) # Concrete Compressive Strength dataset (https://archive.ics.uci.edu/dataset/165/concrete+compressive+strength)
+        
+        # data (as pandas dataframes) 
+        features = yacht_hydrodynamics.data.features 
+        targets = yacht_hydrodynamics.data.targets
+
+        # Convert to tensors
+        images = torch.tensor(targets.values, dtype=torch.float32)  # (N, 1)
+        labels = torch.tensor(features.values, dtype=torch.float32)               # (N, 8)
+
+        # Image and label dimensions
+        image_dim, label_dim = 1, labels.shape[1]
+
+        # Optional: select a subset
+        dataset_size = len(labels)  # or set to a smaller number like 1000
+        images = images[:dataset_size]
+        labels = labels[:dataset_size]
+
+        # Example flag for standardization (if your RegressionDataset uses this)
+        standardize = True
+
+        # Assume you have a custom RegressionDataset class
+        dataset = RegressionDataset(images=images, labels=labels, standardize=standardize)
+    elif dataset_name == 'power':
+        from ucimlrepo import fetch_ucirepo 
+  
+        # fetch dataset 
+        combined_cycle_power_plant = fetch_ucirepo(id=294) # Yacht Hydrodynamics (https://archive.ics.uci.edu/dataset/243/yacht+hydrodynamics)
+        
+        # data (as pandas dataframes) 
+        features = combined_cycle_power_plant.data.features 
+        targets = combined_cycle_power_plant.data.targets
+
+        # Convert to tensors
+        images = torch.tensor(targets.values, dtype=torch.float32)  # (N, 1)
+        labels = torch.tensor(features.values, dtype=torch.float32) # (N, 8)
+
+        # Image and label dimensions
+        image_dim, label_dim = 1, labels.shape[1]
+
+        # Optional: select a subset
+        dataset_size = len(labels)  # or set to a smaller number like 1000
+        images = images[:dataset_size]
+        labels = labels[:dataset_size]
+
+        # Example flag for standardization (if your RegressionDataset uses this)
+        standardize = True
+
+        # Assume you have a custom RegressionDataset class
+        dataset = RegressionDataset(images=images, labels=labels, standardize=standardize)
+        
+    elif dataset_name == 'energy':
+        raise NotImplementedError(f'The energy dataset has 2 target variables and it seems like our framework has to be adapted for this first.')
+        
+        from ucimlrepo import fetch_ucirepo 
+  
+        # fetch dataset 
+        energy_efficiency = fetch_ucirepo(id=242) 
+        
+        # data (as pandas dataframes) 
+        features = energy_efficiency.data.features 
+        targets = energy_efficiency.data.targets 
+        
+        # Convert to tensors
+        images = torch.tensor(targets.values, dtype=torch.float32)  # (N, 1)
+        labels = torch.tensor(features.values, dtype=torch.float32) # (N, 8)
+
+        # Image and label dimensions
+        image_dim, label_dim = 1, labels.shape[1]
+
+        # Optional: select a subset
+        dataset_size = len(labels)  # or set to a smaller number like 1000
+        images = images[:dataset_size]
+        labels = labels[:dataset_size]
+
+        # Example flag for standardization (if your RegressionDataset uses this)
+        standardize = True
+
+        # Assume you have a custom RegressionDataset class
         dataset = RegressionDataset(images=images, labels=labels, standardize=standardize)
     elif dataset_name == 'x-squared':
         image_dim, label_dim = 1, 1

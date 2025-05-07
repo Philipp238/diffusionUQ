@@ -11,6 +11,7 @@ import gc
 from models import EMA, Diffusion
 import copy
 import numpy as np
+import configparser
 
 def using(point=""):
     usage = resource.getrusage(resource.RUSAGE_SELF)
@@ -63,6 +64,13 @@ def train(net, optimizer, images, labels, criterion, gradient_clipping, uncertai
     return loss
 
 
+def find_ending_files(folder_path, ending):
+    files = []
+    for filename in os.listdir(folder_path):
+        if filename.endswith(ending):
+            files.append(filename)
+    return files
+
 def trainer(
     train_loader,
     val_loader,
@@ -94,6 +102,26 @@ def trainer(
         _type_: Trained model and corresponding filename.
     """
 
+    if training_parameters['regressor']:
+        import ast
+        folder_path = os.path.join('models', training_parameters['regressor'])
+        ini_file = find_ending_files(folder_path, '.ini')[0]
+        weight_file = find_ending_files(folder_path, '.pt')[0]
+
+        config = configparser.ConfigParser()
+        config.read(os.path.join(folder_path, ini_file))      
+        
+        regressor_parameters_dict = dict(config.items("TRAININGPARAMETERS"))
+        regressor_parameters_dict = {key: ast.literal_eval(regressor_parameters_dict[key]) for key in
+                                regressor_parameters_dict.keys()}
+        # except_keys for keys that are coming as a list for each training process
+        regressor_parameters_dict = train_utils.get_hyperparameters_combination(regressor_parameters_dict, 
+                                                                           except_keys=['uno_out_channels', 'uno_scalings', 'uno_n_modes'])
+        
+        
+        regressor = train_utils.setup_model(regressor_parameters_dict[0], device, image_dim, label_dim)
+        train_utils.resume(regressor, os.path.join(folder_path, weight_file))
+        
     if device == "cpu":
         assert not training_parameters["data_loader_pin_memory"]
 
