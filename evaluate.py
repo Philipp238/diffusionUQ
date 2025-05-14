@@ -54,7 +54,7 @@ def generate_samples(
             labels=a,
             images_shape=u.shape,
             n_samples=n_samples,
-            type=distributional_method,
+            distributional_method=distributional_method,
         ).permute(0, 2, 1)
     return out
 

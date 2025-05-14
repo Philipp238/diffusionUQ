@@ -4,6 +4,109 @@ import math
 import numpy as np
 from typing import List
 import torch
+import torch.nn as nn
+from torch import Tensor
+
+class NormalCRPS(nn.Module):
+    """Computes the continuous ranked probability score (CRPS) for a predictive normal distribution and corresponding observations.
+
+    Args:
+        observation (Tensor): Observed outcome. Shape = [batch_size, d0, .. dn].
+        mu (Tensor): Predicted mu of normal distribution. Shape = [batch_size, d0, .. dn].
+        sigma (Tensor): Predicted sigma of normal distribution. Shape = [batch_size, d0, .. dn].
+        reduce (bool, optional): Boolean value indicating whether reducing the loss to one value or to
+            a Tensor with shape = `[batch_size]`.
+        reduction (str, optional): Specifies the reduction to apply to the output:
+            ``'mean'`` | ``'sum'``.
+    Raises:
+        ValueError: If sizes of target mu and sigma don't match.
+
+    Returns:
+        quantile_score: 1-D float `Tensor` with shape [batch_size] or Float if reduction = True
+
+    References:
+      - Gneiting, T. et al., 2005: Calibrated Probabilistic Forecasting Using Ensemble Model Output Statistics and Minimum CRPS Estimation. Mon. Wea. Rev., 133, 1098–1118
+    """
+
+    def __init__(
+        self,
+        reduction = "mean",
+    ) -> None:
+        super().__init__()
+        self.reduction = reduction
+
+    def forward(self, observation: Tensor, mu: Tensor, sigma: Tensor) -> Tensor:
+        if not (mu.size() == sigma.size() == observation.size()):
+            raise ValueError("Mismatching target and prediction shapes")
+        # Use absolute value of sigma
+        sigma = torch.abs(sigma) +1e-12
+        loc = (observation - mu) / sigma
+        Phi = 0.5 * (1 + torch.special.erf(loc / np.sqrt(2.0)))
+        phi = 1 / (np.sqrt(2.0 * np.pi)) * torch.exp(-torch.pow(loc, 2) / 2.0)
+        crps = sigma * (loc * (2.0 * Phi - 1) + 2.0 * phi - 1 / np.sqrt(np.pi))
+        if self.reduction == "sum":
+            return torch.sum(crps)
+        elif self.reduction == "mean":
+            return torch.mean(crps)
+        else:
+            return crps
+
+
+class NormalMixtureCRPS(nn.Module):
+    def __init__(
+        self,
+        reduction: str = "mean",
+    ) -> None:
+        super().__init__()
+        self.reduction = reduction
+        self.normal = torch.distributions.Normal(loc=0.0, scale=1.0)
+        self.norm_crps = NormalCRPS(reduction = None)
+
+    def _A(self, mu: torch.Tensor, sigma: torch.Tensor):
+        Phi = self.normal.cdf(mu / sigma)
+        phi = self.normal.log_prob(mu / sigma).exp()
+        out = mu * (2 * Phi - 1) + 2 * sigma * phi
+        return out
+
+    def forward(
+        self,
+        observation: torch.torch.Tensor,
+        prediction: torch.torch.Tensor,
+    ) -> torch.Tensor:      
+        
+        # Split
+        mu, sigma, weights = torch.split(prediction, 1, dim = -1)
+        sigma = torch.abs(sigma) + 1e-12
+
+
+        # Reshape
+        # observation = torch.flatten(observation.unsqueeze(-1), start_dim = 1, end_dim = -2)
+        # mu = torch.flatten(mu, start_dim = 1, end_dim = -2)
+        # sigma = torch.flatten(sigma, start_dim = 1, end_dim = -2)
+        # weights = torch.flatten(weights, start_dim = 1, end_dim = -2)
+
+        # First term
+        diff = observation.unsqueeze(-1).unsqueeze(-1) - mu
+        t1 = self._A(diff, sigma)
+        t1 = (t1 * weights).sum(axis=(-2,-1)).squeeze()
+
+        # Second term
+        mu_diff = mu - mu.transpose(dim0=-2, dim1=-1)
+        sigma_sum = torch.sqrt(
+            torch.pow(sigma, 2) + torch.pow(sigma, 2).transpose(dim0=-2, dim1=-1)
+        )
+        t2 = self._A(mu_diff, sigma_sum)
+        w = weights * weights.transpose(dim0 = -2, dim1 = -1)
+        t2 = (w*t2).sum(axis = (-2,-1))
+
+        crps = t1-0.5*t2
+
+        if self.reduction == "sum":
+            return torch.sum(crps)
+        elif self.reduction == "mean":
+            return torch.mean(crps)
+        else:
+            return crps
 
 
 class LpLoss(object):

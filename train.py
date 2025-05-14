@@ -193,8 +193,8 @@ def trainer(
     if uncertainty_quantification == 'diffusion':
         if distributional_method == "deterministic":
             diffusion = Diffusion(img_size=image_dim, device=device)
-        elif distributional_method == "normal":
-            diffusion = DistributionalDiffusion(img_size=image_dim, device=device)
+        else:
+            diffusion = DistributionalDiffusion(img_size=image_dim, device=device, distributional_method=distributional_method)
     else:
         diffusion = None
     
