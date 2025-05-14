@@ -8,7 +8,7 @@ from utils import train_utils
 import resource
 import psutil
 import gc
-from models import EMA, Diffusion
+from models import EMA, Diffusion, DistributionalDiffusion
 import copy
 import numpy as np
 import configparser
@@ -125,9 +125,8 @@ def trainer(
     if device == "cpu":
         assert not training_parameters["data_loader_pin_memory"]
 
-    # criterion = train_utils.get_criterion(training_parameters, domain_range=None, d=image_dim, device=device)
-    
-    criterion = torch.nn.MSELoss()
+    criterion = train_utils.get_criterion(training_parameters, device=device) # Different loss functions for noise prediction
+    eval_criterion = torch.nn.MSELoss() # MSE loss for evaluating generated samples
     
     model = train_utils.setup_model(
         training_parameters, device, image_dim, label_dim
@@ -190,8 +189,12 @@ def trainer(
 
     # Additional parameters
     uncertainty_quantification = training_parameters["uncertainty_quantification"]
+    distributional_method = training_parameters["distributional_method"]
     if uncertainty_quantification == 'diffusion':
-        diffusion = Diffusion(img_size=image_dim, device=device)
+        if distributional_method == "deterministic":
+            diffusion = Diffusion(img_size=image_dim, device=device)
+        elif distributional_method == "normal":
+            diffusion = DistributionalDiffusion(img_size=image_dim, device=device)
     else:
         diffusion = None
     
@@ -256,8 +259,8 @@ def trainer(
                         sampled_images = model(labels)
                         sampled_images_ema = ema_model(labels)
                     
-                    validation_loss += criterion(sampled_images, images).item()
-                    validation_loss_ema += criterion(sampled_images_ema, images).item()
+                    validation_loss += eval_criterion(sampled_images, images).item()
+                    validation_loss_ema += eval_criterion(sampled_images_ema, images).item()
             
             validation_loss_list.append(
                 validation_loss / len(val_loader)
