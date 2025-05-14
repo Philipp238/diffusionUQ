@@ -77,12 +77,45 @@ class Diffusion:
         x = (x * 255).type(torch.uint8)
         return x
     
-def generate_diffusion_samples_low_dimensional(model, labels, images_shape, n_samples):
-    diffusion = Diffusion(img_size=images_shape[1], device=labels.device)
+def generate_diffusion_samples_low_dimensional(model, labels, images_shape, n_samples, type = "deterministic"):
+    if type == "deterministic":
+        diffusion = Diffusion(img_size=images_shape[1], device=labels.device)
+    elif type == "normal":
+        diffusion = DistributionalDiffusion(img_size=images_shape[1], device=labels.device)
     
     sampled_images = torch.zeros(*images_shape, n_samples).to(labels.device)
     for i in range(n_samples):
         with torch.no_grad():
             sampled_images[..., i] = diffusion.sample_low_dimensional(model, n=labels.shape[0], conditioning=labels).detach()
     
-    return sampled_images    
+    return sampled_images
+
+
+
+class DistributionalDiffusion(Diffusion):
+    def __init__(self, noise_steps=1000, beta_start=1e-4, beta_end=0.02, img_size=256, device="cuda"):
+        super().__init__(noise_steps=noise_steps, beta_start=beta_start, beta_end=beta_end, img_size=img_size, device=device)
+
+    def sample_low_dimensional(self, model, n, conditioning=None, cfg_scale=3):
+        model.eval()
+        with torch.no_grad():
+            x = torch.randn((n, self.img_size)).to(self.device)
+            for i in reversed(range(1, self.noise_steps)):
+                t = (torch.ones(n) * i).long().to(self.device)
+                predicted_noise = model(x, t, conditioning)
+                predicted_noise = predicted_noise[...,0] + predicted_noise[...,1] * torch.randn_like(predicted_noise[...,0], device = self.device)
+                if cfg_scale > 0:
+                    uncond_predicted_noise = model(x, t, None)
+                    uncond_predicted_noise = uncond_predicted_noise[...,0] + uncond_predicted_noise[...,1] * torch.randn_like(uncond_predicted_noise[...,0], device = self.device)
+                    predicted_noise = torch.lerp(uncond_predicted_noise, predicted_noise, cfg_scale)
+                alpha = self.alpha[t][:, None]
+                alpha_hat = self.alpha_hat[t][:, None]
+                beta = self.beta[t][:, None]
+                if i > 1:
+                    noise = torch.randn_like(x)
+                else:
+                    noise = torch.zeros_like(x)
+                x = 1 / torch.sqrt(alpha) * (x - ((1 - alpha) / (torch.sqrt(1 - alpha_hat))) * predicted_noise) + torch.sqrt(beta) * noise
+        model.train()
+        return x
+    

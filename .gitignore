@@ -175,6 +175,15 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+*.out
+ **/__pycache__/
+ *.pyc
+
+
+# exclude everything within these folders 
+*.out
+ **/__pycache__/
+ *.pyc
 
 
 # include everything within these folders 

@@ -5,7 +5,9 @@ import torch
 import torch.nn as nn
 import numpy as np
 import utils.losses as losses
-from models import MLP, MLP_diffusion, LA_Wrapper
+import scoringrules as sr
+from models import MLP, MLP_diffusion, MLP_diffusion_normal, LA_Wrapper
+
 
 def log_and_save_evaluation(value: float, key: str, results_dict: dict, logging):
     """Method to log and save evaluation results.
@@ -50,34 +52,17 @@ def resume(model, filename):
         model.load_state_dict(torch.load(filename))
 
 
-def get_criterion(training_parameters, domain_range, d, device):
-    """Get the criterion for the model training.
-
-    Args:
-        training_parameters (_type_): Dictionary of training parameters
-        domain_range (_type_): Either list of domain range for LP based loss or nlon and weights for spherical loss
-        d (_type_): Dimension of data
-        device (_type_): Device to run the model on.
-
-    Returns:
-        _type_: Loss criterion
+def get_criterion(training_parameters, device):
+    """Define criterion for the model.
+    Criterion gets as arguments (truth, prediction) and returns a loss value.
     """
-    if training_parameters["model"] == "SFNO":
-        # If Spherical model, nlon and weights are passed
-        nlon, train_weights, _, _ = domain_range
-        if training_parameters["uncertainty_quantification"].startswith("scoring-rule"):
-            criterion = losses.EnergyScore(
-                type="spherical", nlon=nlon, weights=train_weights.to(device)
-            )
-        else:
-            criterion = losses.SphericalL2Loss(
-                nlon=nlon, weights=train_weights.to(device)
-            )
-    else:
-        if training_parameters["uncertainty_quantification"].startswith("scoring-rule"):
-            criterion = losses.EnergyScore(d=d, p=2, type="lp", L=domain_range)
-        else:
-            criterion = losses.LpLoss(d=d, p=2, L=domain_range)
+    if training_parameters["distributional_method"] == "deterministic":
+        criterion = nn.MSELoss()
+    elif training_parameters["distributional_method"] == "normal":
+        criterion = lambda truth, prediction: sr.crps_normal(
+            truth, prediction[..., 0], prediction[..., 1], backend="torch"
+        ).mean()
+
     return criterion
 
 
@@ -107,15 +92,36 @@ def setup_model(training_parameters: dict, device, image_dim: int, label_dim: in
         _type_: Specified model
     """
     if training_parameters["uncertainty_quantification"] == "scoring-rule-reparam":
-        raise NotImplementedError('Implement a model with parametrization trick.')
+        raise NotImplementedError("Implement a model with parametrization trick.")
         hidden_model = None
     elif training_parameters["uncertainty_quantification"] == "diffusion":
-        hidden_model = MLP_diffusion(target_dim=image_dim, conditioning_dim=label_dim, concat=training_parameters['concat_condition_diffusion'], 
-                                        hidden_dim=training_parameters['hidden_dim'], layers=training_parameters['n_layers'], dropout=training_parameters['dropout'])
+        if training_parameters["distributional_method"] == "deterministic":
+            hidden_model = MLP_diffusion(
+                target_dim=image_dim,
+                conditioning_dim=label_dim,
+                concat=training_parameters["concat_condition_diffusion"],
+                hidden_dim=training_parameters["hidden_dim"],
+                layers=training_parameters["n_layers"],
+                dropout=training_parameters["dropout"],
+            )
+        elif training_parameters["distributional_method"] == "normal":
+            hidden_model = MLP_diffusion_normal(
+                target_dim=image_dim,
+                conditioning_dim=label_dim,
+                concat=training_parameters["concat_condition_diffusion"],
+                hidden_dim=training_parameters["hidden_dim"],
+                layers=training_parameters["n_layers"],
+                dropout=training_parameters["dropout"],
+            )
     else:
-        hidden_model = MLP(target_dim=image_dim, conditioning_dim=label_dim, dropout=training_parameters['dropout'],
-                                    hidden_dim=training_parameters['hidden_dim'], layers=training_parameters['n_layers'])
-            
+        hidden_model = MLP(
+            target_dim=image_dim,
+            conditioning_dim=label_dim,
+            dropout=training_parameters["dropout"],
+            hidden_dim=training_parameters["hidden_dim"],
+            layers=training_parameters["n_layers"],
+        )
+
     if training_parameters["uncertainty_quantification"] == "scoring-rule-dropout":
         # return PNO_Wrapper(hidden_model, n_samples=training_parameters["n_samples"]).to(device)
         return None

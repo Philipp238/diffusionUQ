@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 
+EPS = 1e-6
+
 class Sequential2Inputs(nn.Sequential):
     def __init__(self, modules, concat=False):
         super().__init__(*modules)
@@ -68,3 +70,33 @@ class MLP_diffusion(nn.Module):
 
         output = self.output_projection(x_t)
         return output
+    
+
+class MLP_diffusion_normal(MLP_diffusion):
+    def __init__(self, target_dim = 1, conditioning_dim=None, concat=False, hidden_dim=128, layers=5, dropout=0.1, device="cuda"):
+        super().__init__(target_dim=target_dim, conditioning_dim=conditioning_dim, concat=concat, hidden_dim=hidden_dim, layers=layers, dropout=dropout, device=device)
+        
+        if concat:
+            self.mu_projection = nn.Linear(2 * hidden_dim, target_dim)
+            self.sigma_projection = nn.Linear(2 * hidden_dim, target_dim)
+        else:
+            self.mu_projection = nn.Linear(hidden_dim, target_dim)
+            self.sigma_projection = nn.Linear(hidden_dim, target_dim)
+        self.sofplus = nn.Softplus()
+
+    def forward(self, x_t, t, y=None):
+        t = t.unsqueeze(-1).type(torch.float32)
+        t = self.pos_encoding(t, self.hidden_dim)
+        t = self.time_projection(t)
+        if y is not None:
+            t += self.conditioning_projection(y)
+        x_t = self.input_projection(x_t)    
+        x_t = self.act(x_t)
+        x_t = self.blocks(x_t, t)
+
+        mu = self.mu_projection(x_t)
+        sigma = self.sigma_projection(x_t)
+        sigma = self.sofplus(sigma) + EPS
+        output = torch.stack([mu, sigma], dim=-1)
+        return output
+
