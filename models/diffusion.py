@@ -103,10 +103,10 @@ class DistributionalDiffusion(Diffusion):
             for i in reversed(range(1, self.noise_steps)):
                 t = (torch.ones(n) * i).long().to(self.device)
                 predicted_noise = model(x, t, conditioning)
-                predicted_noise = predicted_noise[...,0]
+                predicted_noise = predicted_noise[...,0] + predicted_noise[...,1] * torch.randn_like(predicted_noise[...,0], device = self.device)
                 if cfg_scale > 0:
                     uncond_predicted_noise = model(x, t, None)
-                    uncond_predicted_noise = uncond_predicted_noise[...,0]
+                    uncond_predicted_noise = uncond_predicted_noise[...,0] + uncond_predicted_noise[...,1] * torch.randn_like(uncond_predicted_noise[...,0], device = self.device)
                     predicted_noise = torch.lerp(uncond_predicted_noise, predicted_noise, cfg_scale)
                 alpha = self.alpha[t][:, None]
                 alpha_hat = self.alpha_hat[t][:, None]

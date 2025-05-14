@@ -177,3 +177,4 @@ cython_debug/
 .pypirc
 *.out
  **/__pycache__/
+ *.pyc
