@@ -1,0 +1,59 @@
+INFO:root:Starting the logger.
+INFO:root:Using cuda.
+INFO:root:: mem (CPU python)=518.6171875MB; mem (CPU total)=4659.7578125MB
+INFO:root:############### Starting experiment with config file debug.ini ###############
+INFO:root:###1 out of 1 data set parameter combinations ###
+INFO:root:Data parameters: {'dataset_name': 'housing_prices', 'max_dataset_size': 100000, 'standardize': False}
+INFO:root:After loading the datasets: mem (CPU python)=560.3203125MB; mem (CPU total)=4688.53515625MB
+INFO:root:###1 out of 1 training parameter combinations ###
+INFO:root:Training parameters: {'report_every': 5, 'seed': 1234, 'model': 'MLP', 'uncertainty_quantification': 'dropout', 'batch_size': 64, 'eval_batch_size': 16384, 'n_epochs': 10000, 'early_stopping': 50, 'init': 'default', 'learning_rate': 0.0001, 'lr_schedule': 'step', 'optimizer': 'adam', 'gradient_clipping': 1, 'data_loader_pin_memory': False, 'data_loader_num_workers': 0, 'distributed_training': False, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'concat_condition_diffusion': True, 'evaluate': False, 'regressor': 'concrete/20250507_144839_debug'}
+INFO:root:After creating the dataloaders: mem (CPU python)=562.28125MB; mem (CPU total)=4689.51953125MB
+INFO:root:NumberParameters: 8961
+INFO:root:GPU memory allocated: 2097152
+INFO:root:After setting up the model: mem (CPU python)=654.94921875MB; mem (CPU total)=4770.5859375MB
+INFO:root:Training starts now.
+INFO:root:[    5] Training loss: 49.25904307, Validation loss: 7.52757645, Validation loss EMA: 2.01558137
+INFO:root:[   10] Training loss: 3.65350645, Validation loss: 2.23342967, Validation loss EMA: 1.39725077
+INFO:root:[   15] Training loss: 1.90705077, Validation loss: 1.60926282, Validation loss EMA: 1.39518642
+INFO:root:[   20] Training loss: 1.50825386, Validation loss: 1.50789559, Validation loss EMA: 1.30220640
+INFO:root:[   25] Training loss: 1.30736449, Validation loss: 1.14570439, Validation loss EMA: 1.13504100
+INFO:root:[   30] Training loss: 1.02917680, Validation loss: 0.78963983, Validation loss EMA: 0.79443997
+INFO:root:[   35] Training loss: 0.80683353, Validation loss: 0.72818708, Validation loss EMA: 0.62796599
+INFO:root:[   40] Training loss: 0.76694621, Validation loss: 0.73739767, Validation loss EMA: 0.63010383
+INFO:root:[   45] Training loss: 0.76642776, Validation loss: 0.72789598, Validation loss EMA: 0.64432025
+INFO:root:[   50] Training loss: 0.71390207, Validation loss: 0.65898252, Validation loss EMA: 0.61931580
+INFO:root:[   55] Training loss: 0.68860316, Validation loss: 0.68298322, Validation loss EMA: 0.58352250
+INFO:root:[   60] Training loss: 0.70161441, Validation loss: 0.64135492, Validation loss EMA: 0.67676526
+INFO:root:[   65] Training loss: 0.71174992, Validation loss: 0.74916172, Validation loss EMA: 0.67024457
+INFO:root:[   70] Training loss: 0.66270951, Validation loss: 0.59020543, Validation loss EMA: 0.55130929
+INFO:root:[   75] Training loss: 0.65728993, Validation loss: 0.59748393, Validation loss EMA: 0.61276823
+INFO:root:[   80] Training loss: 0.66824174, Validation loss: 0.58740890, Validation loss EMA: 0.62006354
+INFO:root:[   85] Training loss: 0.65496151, Validation loss: 0.58325642, Validation loss EMA: 0.63093841
+INFO:root:[   90] Training loss: 0.64380863, Validation loss: 0.53871900, Validation loss EMA: 0.51437575
+INFO:root:[   95] Training loss: 0.65730940, Validation loss: 0.57038760, Validation loss EMA: 0.53627902
+INFO:root:[  100] Training loss: 0.63893468, Validation loss: 0.56928521, Validation loss EMA: 0.53090924
+INFO:root:[  105] Training loss: 0.62361517, Validation loss: 0.68165529, Validation loss EMA: 0.51898062
+INFO:root:[  110] Training loss: 0.63892267, Validation loss: 0.54302752, Validation loss EMA: 0.53363180
+INFO:root:[  115] Training loss: 0.62126243, Validation loss: 0.55915469, Validation loss EMA: 0.51104367
+INFO:root:[  120] Training loss: 0.59656259, Validation loss: 0.63014412, Validation loss EMA: 0.50154322
+INFO:root:[  125] Training loss: 0.60657721, Validation loss: 0.50794673, Validation loss EMA: 0.51404572
+INFO:root:[  130] Training loss: 0.59630872, Validation loss: 0.54057217, Validation loss EMA: 0.50157887
+INFO:root:[  135] Training loss: 0.58862411, Validation loss: 0.59238344, Validation loss EMA: 0.49697313
+INFO:root:[  140] Training loss: 0.59060243, Validation loss: 0.56248218, Validation loss EMA: 0.48736462
+INFO:root:[  145] Training loss: 0.58869524, Validation loss: 0.68308920, Validation loss EMA: 0.50941229
+INFO:root:[  150] Training loss: 0.58215403, Validation loss: 0.51889390, Validation loss EMA: 0.48112211
+INFO:root:[  155] Training loss: 0.59962039, Validation loss: 0.51960409, Validation loss EMA: 0.48583239
+INFO:root:[  160] Training loss: 0.57865740, Validation loss: 0.48651540, Validation loss EMA: 0.47854456
+INFO:root:[  165] Training loss: 0.57364081, Validation loss: 0.57233077, Validation loss EMA: 0.47539684
+INFO:root:[  170] Training loss: 0.61349365, Validation loss: 0.60438621, Validation loss EMA: 0.48124573
+INFO:root:[  175] Training loss: 0.61289337, Validation loss: 0.61786681, Validation loss EMA: 0.47500354
+INFO:root:[  180] Training loss: 0.60187436, Validation loss: 0.52053356, Validation loss EMA: 0.47683710
+INFO:root:[  185] Training loss: 0.59829673, Validation loss: 0.56831151, Validation loss EMA: 0.46830699
+INFO:root:[  190] Training loss: 0.58688638, Validation loss: 0.60269046, Validation loss EMA: 0.46644852
+INFO:root:[  195] Training loss: 0.57750591, Validation loss: 0.52765387, Validation loss EMA: 0.46188012
+INFO:root:[  200] Training loss: 0.57104067, Validation loss: 0.64529455, Validation loss EMA: 0.45481372
+INFO:root:[  205] Training loss: 0.57603586, Validation loss: 0.53010237, Validation loss EMA: 0.45238686
+INFO:root:EP 209: Early stopping
+INFO:root:After finishing all epochs: mem (CPU python)=828.1484375MB; mem (CPU total)=4872.80078125MB
+INFO:root:Training the model took 70.545s.
+INFO:root:Emptying the cuda cache took 0.0s.
