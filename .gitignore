@@ -178,3 +178,16 @@ cython_debug/
 *.out
  **/__pycache__/
  *.pyc
+
+
+# exclude everything within these folders 
+*.out
+ **/__pycache__/
+ *.pyc
+
+
+# include everything within these folders 
+!models/concrete/**/*
+!models/housing_prices/**/*
+!models/power/**/*
+!models/x-squared/**/*
