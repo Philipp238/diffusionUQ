@@ -61,8 +61,6 @@ def get_data(dataset_name, dataset_path, dataset_size, standardize=False, image_
         images = images[:dataset_size]
         labels = labels[:dataset_size]
 
-        # Example flag for standardization (if your RegressionDataset uses this)
-        standardize = True
 
         # Assume you have a custom RegressionDataset class
         dataset = RegressionDataset(images=images, labels=labels, standardize=standardize)
@@ -88,8 +86,6 @@ def get_data(dataset_name, dataset_path, dataset_size, standardize=False, image_
         images = images[:dataset_size]
         labels = labels[:dataset_size]
 
-        # Example flag for standardization (if your RegressionDataset uses this)
-        standardize = True
 
         # Assume you have a custom RegressionDataset class
         dataset = RegressionDataset(images=images, labels=labels, standardize=standardize)
@@ -118,8 +114,6 @@ def get_data(dataset_name, dataset_path, dataset_size, standardize=False, image_
         images = images[:dataset_size]
         labels = labels[:dataset_size]
 
-        # Example flag for standardization (if your RegressionDataset uses this)
-        standardize = True
 
         # Assume you have a custom RegressionDataset class
         dataset = RegressionDataset(images=images, labels=labels, standardize=standardize)

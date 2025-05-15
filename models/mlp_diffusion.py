@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-EPS = 1e-6
+EPS = 1e-9
 
 class Sequential2Inputs(nn.Sequential):
     def __init__(self, modules, concat=False):
@@ -128,7 +128,7 @@ class MLP_diffusion_sample(MLP_diffusion):
         return output
 
 class MLP_diffusion_mixednormal(MLP_diffusion):
-    def __init__(self, target_dim = 1, conditioning_dim=None, concat=False, hidden_dim=128, layers=5, dropout=0.1, device="cuda", n_components = 2):
+    def __init__(self, target_dim = 1, conditioning_dim=None, concat=False, hidden_dim=128, layers=5, dropout=0.1, device="cuda", n_components = 3):
         super().__init__(target_dim=target_dim, conditioning_dim=conditioning_dim, concat=concat, hidden_dim=hidden_dim, layers=layers, dropout=dropout, device=device)
         self.n_components = n_components
         self.target_dim = target_dim
