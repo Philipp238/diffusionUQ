@@ -51,7 +51,7 @@ def get_data(dataset_name, dataset_path, dataset_size, standardize=False, image_
 
         # Convert to tensors
         images = torch.tensor(targets.values, dtype=torch.float32)  # (N, 1)
-        labels = torch.tensor(features.values, dtype=torch.float32)               # (N, 8)
+        labels = torch.tensor(features.values, dtype=torch.float32) # (N, 8)
 
         # Image and label dimensions
         image_dim, label_dim = 1, labels.shape[1]
