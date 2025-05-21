@@ -1,5 +1,5 @@
 from models.mlp import MLP
-from models.mlp_diffusion import MLP_diffusion, MLP_diffusion_normal
+from models.mlp_diffusion import MLP_diffusion, MLP_diffusion_normal, MLP_diffusion_sample, MLP_diffusion_mixednormal
 from models.ema import EMA
 
 from models.mcdropout import generate_mcd_samples

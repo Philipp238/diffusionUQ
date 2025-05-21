@@ -15,7 +15,7 @@ import argparse
 import configparser
 import ast
 import shutil
-from data.data_utils import get_data
+from data.data_utils import UCI_DATASET_NAMES, get_data, get_uci_data
 from train import trainer, using
 from utils import train_utils
 from evaluate import start_evaluation
@@ -78,7 +78,8 @@ if __name__ == '__main__':
     shutil.copy(os.path.join('config', config_name), directory)
     print(f'Created directory {directory}')
 
-    logging.basicConfig(filename=os.path.join(directory, 'experiment.log'), level=logging.INFO)
+    # https://stackoverflow.com/questions/30861524/logging-basicconfig-not-creating-log-file-when-i-run-in-pycharm
+    logging.basicConfig(filename=os.path.join(directory, 'experiment.log'), level=logging.INFO, force=True)
     logging.info('Starting the logger.')
     logging.debug(f'Directory: {directory}')
     logging.debug(f'File: {__file__}')
@@ -124,7 +125,15 @@ if __name__ == '__main__':
         
         dataset_name = data_parameters['dataset_name']
         dataset_size = data_parameters['max_dataset_size']
-        dataset, image_dim, label_dim = get_data(dataset_name, data_dir, dataset_size, data_parameters['standardize'], image_size=None)
+        if dataset_name in UCI_DATASET_NAMES:
+            split = data_parameters['yarin_gal_uci_split_indices']
+            uci_data = get_uci_data(dataset_name, 
+                                    splits=split, 
+                                    standardize=data_parameters['standardize'], 
+                                    validation_ratio=0.15)
+            dataset, image_dim, label_dim = uci_data
+        else:
+            dataset, image_dim, label_dim = get_data(dataset_name, data_dir, dataset_size, data_parameters['standardize'], image_size=None)
         
         logging.info(using('After loading the datasets'))
 
@@ -142,7 +151,12 @@ if __name__ == '__main__':
             batch_size = training_parameters['batch_size']
             eval_batch_size = training_parameters['eval_batch_size']
             
-            training_dataset, validation_dataset, test_dataset = random_split(dataset, [0.8, 0.1, 0.1])
+            if dataset_name in UCI_DATASET_NAMES:
+                logging.info(f"Using split-{split} for UCI dataset {dataset_name}") # type: ignore
+                training_dataset, validation_dataset, test_dataset = dataset
+            else:
+                logging.info(f"Use random split for dataset {dataset_name}")
+                training_dataset, validation_dataset, test_dataset = random_split(dataset, [0.8, 0.1, 0.1])
             train_loader = DataLoader(training_dataset, batch_size=batch_size, shuffle=True)
             val_loader = DataLoader(validation_dataset, batch_size=eval_batch_size, shuffle=True)
             logging.info(using('After creating the dataloaders'))

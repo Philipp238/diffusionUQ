@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-EPS = 1e-6
+EPS = 1e-9
 
 class Sequential2Inputs(nn.Sequential):
     def __init__(self, modules, concat=False):
@@ -10,7 +10,7 @@ class Sequential2Inputs(nn.Sequential):
     
     def forward(self, x_t, t):
         if self.concat:
-            x_t = torch.cat([x_t, t], dim=1).to(x_t.device)
+            x_t = torch.cat([x_t, t], dim=-1).to(x_t.device)
         else:
             x_t = x_t + t
         return super().forward(x_t)
@@ -99,4 +99,71 @@ class MLP_diffusion_normal(MLP_diffusion):
         sigma = self.sofplus(sigma) + EPS
         output = torch.stack([mu, sigma], dim=-1)
         return output
+    
 
+class MLP_diffusion_sample(MLP_diffusion):
+    def __init__(self, target_dim = 1, conditioning_dim=None, concat=False, hidden_dim=128, layers=5, dropout=0.1, device="cuda", n_samples = 50):
+        super().__init__(target_dim=target_dim, conditioning_dim=conditioning_dim, concat=concat, hidden_dim=hidden_dim, layers=layers, dropout=dropout, device=device)
+        self.input_projection = nn.Linear(target_dim+1, hidden_dim)  # Concatenate noise with channel
+        self.n_samples = n_samples
+
+    def forward(self, x_t, t, y=None, n_samples = None):
+        if n_samples is None:
+            n_samples = self.n_samples
+        t = t.unsqueeze(-1).type(torch.float32)
+        t = self.pos_encoding(t, self.hidden_dim)
+        t = self.time_projection(t)
+        if y is not None:
+            t += self.conditioning_projection(y)
+        # Concatenate noise
+        noise = torch.randn(*x_t.shape[:-1], n_samples, x_t.shape[-1]).to(x_t.device)
+        x_t_expanded = torch.repeat_interleave(x_t.unsqueeze(-2), n_samples, dim=-2)
+        t_expanded = torch.repeat_interleave(t.unsqueeze(-2), n_samples, dim=-2)
+        x_t = torch.cat([x_t_expanded, noise], dim=-1).to(x_t.device)
+        x_t = self.input_projection(x_t)    
+        x_t = self.act(x_t)
+        x_t = self.blocks(x_t, t_expanded)
+
+        output = self.output_projection(x_t)
+        return output
+
+class MLP_diffusion_mixednormal(MLP_diffusion):
+    def __init__(self, target_dim = 1, conditioning_dim=None, concat=False, hidden_dim=128, layers=5, dropout=0.1, device="cuda", n_components = 3):
+        super().__init__(target_dim=target_dim, conditioning_dim=conditioning_dim, concat=concat, hidden_dim=hidden_dim, layers=layers, dropout=dropout, device=device)
+        self.n_components = n_components
+        self.target_dim = target_dim
+
+        if concat:
+            self.mu_projection = nn.Linear(2 * hidden_dim, target_dim*self.n_components)
+            self.sigma_projection = nn.Linear(2 * hidden_dim, target_dim*self.n_components)
+            self.weights_projection = nn.Linear(2 * hidden_dim, target_dim*self.n_components)
+        else:
+            self.mu_projection = nn.Linear(hidden_dim, target_dim*self.n_components)
+            self.sigma_projection = nn.Linear(hidden_dim, target_dim*self.n_components)
+            self.weights_projection = nn.Linear(hidden_dim, target_dim*self.n_components)
+        self.sofplus = nn.Softplus()
+
+    def forward(self, x_t, t, y=None):
+        t = t.unsqueeze(-1).type(torch.float32)
+        t = self.pos_encoding(t, self.hidden_dim)
+        t = self.time_projection(t)
+        if y is not None:
+            t += self.conditioning_projection(y)
+        x_t = self.input_projection(x_t)    
+        x_t = self.act(x_t)
+        x_t = self.blocks(x_t, t)
+
+        mu = self.mu_projection(x_t)
+        sigma = self.sigma_projection(x_t)
+        weights = self.weights_projection(x_t)
+        # Reshape
+        mu = mu.reshape(mu.shape[0], self.target_dim, self.n_components)
+        sigma = sigma.reshape(sigma.shape[0], self.target_dim, self.n_components)
+        weights = weights.reshape(weights.shape[0], self.target_dim, self.n_components)
+
+        # Apply postprocessing
+        sigma = self.sofplus(sigma) + EPS
+        weights = torch.softmax(weights, dim=-1)
+
+        output = torch.stack([mu, sigma, weights], dim=-1)
+        return output

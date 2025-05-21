@@ -6,7 +6,14 @@ import torch.nn as nn
 import numpy as np
 import utils.losses as losses
 import scoringrules as sr
-from models import MLP, MLP_diffusion, MLP_diffusion_normal, LA_Wrapper
+from models import (
+    MLP,
+    MLP_diffusion,
+    MLP_diffusion_normal,
+    MLP_diffusion_sample,
+    MLP_diffusion_mixednormal,
+    LA_Wrapper,
+)
 
 
 def log_and_save_evaluation(value: float, key: str, results_dict: dict, logging):
@@ -62,7 +69,14 @@ def get_criterion(training_parameters, device):
         criterion = lambda truth, prediction: sr.crps_normal(
             truth, prediction[..., 0], prediction[..., 1], backend="torch"
         ).mean()
-
+    elif training_parameters["distributional_method"] == "sample":
+        criterion = lambda truth, prediction: sr.energy_score(
+            truth, prediction, m_axis=-2, v_axis=-1, backend="torch"
+        ).mean()
+    elif training_parameters["distributional_method"] == "mixednormal":
+        criterion = losses.NormalMixtureCRPS()
+    else:
+        criterion = None
     return criterion
 
 
@@ -113,6 +127,26 @@ def setup_model(training_parameters: dict, device, image_dim: int, label_dim: in
                 layers=training_parameters["n_layers"],
                 dropout=training_parameters["dropout"],
             )
+        elif training_parameters["distributional_method"] == "sample":
+            hidden_model = MLP_diffusion_sample(
+                target_dim=image_dim,
+                conditioning_dim=label_dim,
+                concat=training_parameters["concat_condition_diffusion"],
+                hidden_dim=training_parameters["hidden_dim"],
+                layers=training_parameters["n_layers"],
+                dropout=training_parameters["dropout"],
+            )
+        elif training_parameters["distributional_method"] == "mixednormal":
+            hidden_model = MLP_diffusion_mixednormal(
+                target_dim=image_dim,
+                conditioning_dim=label_dim,
+                concat=training_parameters["concat_condition_diffusion"],
+                hidden_dim=training_parameters["hidden_dim"],
+                layers=training_parameters["n_layers"],
+                dropout=training_parameters["dropout"],
+                n_components=2,
+            )
+
     else:
         hidden_model = MLP(
             target_dim=image_dim,
