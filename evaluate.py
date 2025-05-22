@@ -64,7 +64,7 @@ def generate_samples(
     return out
 
 
-def evaluate(model, training_parameters: dict, loader, device, regressor):
+def evaluate(model, training_parameters: dict, loader, device, regressor, standardized:bool = False):
     """Method to evaluate the given model.
 
     Args:
@@ -110,6 +110,10 @@ def evaluate(model, training_parameters: dict, loader, device, regressor):
                 training_parameters["distributional_method"],
                 regressor
             )
+
+            if standardized:
+                images = loader.dataset.destandardize_image(images)
+                predicted_images = loader.dataset.destandardize_image(predicted_images)
 
             mse += (
                 mse_loss(predicted_images.mean(axis=1), images).item()
@@ -214,10 +218,18 @@ def start_evaluation(
     for name, loader in data_loaders.items():
         logging.info(f"Evaluating the model on {name} data.")
 
-        mse, es, crps, coverage = evaluate(model, training_parameters, loader, device, regressor)
+        mse, es, crps, coverage = evaluate(
+            model, 
+            training_parameters, 
+            loader, 
+            device, 
+            regressor,
+            standardized=data_parameters["standardize"]
+        )
         # mse, es, crps, gaussian_nll, coverage, int_width = evaluate(model, training_parameters, loader, device, domain_range)
 
         train_utils.log_and_save_evaluation(mse, "MSE" + name, results_dict, logging)
+        train_utils.log_and_save_evaluation(np.sqrt(mse), "RMSE" + name, results_dict, logging)
         train_utils.log_and_save_evaluation(
             es, "EnergyScore" + name, results_dict, logging
         )

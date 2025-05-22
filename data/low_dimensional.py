@@ -4,18 +4,28 @@ class RegressionDataset(Dataset):
     def __init__(self, images, labels, standardize=True):
         # names (images, labels) taken from conditional image generation, to make the roles more clear (images=target (y), labels=conditioning (x))
         super().__init__()
+        self.orig_images = self.images = images
+        self.orig_labels = self.labels = labels
+
         if standardize:
-            self.images_means = images.mean(dim=0, keepdim=True)
-            self.images_stds = images.std(dim=0, keepdim=True)
-            images = (images - self.images_means) / self.images_stds
+            self._standardize()
             
-            self.labels_mean = labels.mean()
-            self.labels_std = labels.std()
-            labels = (labels - self.labels_mean) / self.labels_std
-            
-        self.images = images
-        self.labels = labels
+    def _standardize(self):
+        self.images_means = self.images.mean(dim=0, keepdim=True)
+        self.images_stds = self.images.std(dim=0, keepdim=True)
+        self.images = (self.images - self.images_means) / self.images_stds
         
+        self.labels_mean = self.labels.mean()
+        self.labels_std = self.labels.std()
+        self.labels = (self.labels - self.labels_mean) / self.labels_std
+        
+    def destandardize_image(self, x):
+        if hasattr(self, "images_means") and hasattr(self, "image_stds"):
+            return x * self.images_stds + self.images_means
+        else:
+            return x 
+
+
     def __getitem__(self, index):
         return self.images[index], self.labels[index]
         
