@@ -18,7 +18,10 @@ def generate_samples(
     a: torch.Tensor,
     u: torch.Tensor,
     n_samples: int,
+    x_T_sampling_method: str,
     distributional_method: str = "deterministic",
+    regressor=None,
+    
 ) -> torch.Tensor:
     """Mehtod to generate samples from the underlying model with the specified uncertainty quantification method.
 
@@ -55,11 +58,13 @@ def generate_samples(
             images_shape=u.shape,
             n_samples=n_samples,
             distributional_method=distributional_method,
+            regressor=regressor,
+            x_T_sampling_method=x_T_sampling_method
         ).permute(0, 2, 1)
     return out
 
 
-def evaluate(model, training_parameters: dict, loader, device):
+def evaluate(model, training_parameters: dict, loader, device, regressor):
     """Method to evaluate the given model.
 
     Args:
@@ -101,7 +106,9 @@ def evaluate(model, training_parameters: dict, loader, device):
                 labels,
                 images,
                 training_parameters["n_samples_uq"],
+                training_parameters['x_T_sampling_method'],
                 training_parameters["distributional_method"],
+                regressor
             )
 
             mse += (
@@ -152,6 +159,7 @@ def start_evaluation(
     device,
     logging,
     filename: str,
+    regressor,
     **kwargs,
 ):
     """Performs evaluation of the model on the given data sets.
@@ -206,7 +214,7 @@ def start_evaluation(
     for name, loader in data_loaders.items():
         logging.info(f"Evaluating the model on {name} data.")
 
-        mse, es, crps, coverage = evaluate(model, training_parameters, loader, device)
+        mse, es, crps, coverage = evaluate(model, training_parameters, loader, device, regressor)
         # mse, es, crps, gaussian_nll, coverage, int_width = evaluate(model, training_parameters, loader, device, domain_range)
 
         train_utils.log_and_save_evaluation(mse, "MSE" + name, results_dict, logging)
