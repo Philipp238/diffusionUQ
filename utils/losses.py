@@ -7,6 +7,55 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
+class QICE(nn.Module):
+    """Implements QICE metric for quantile calibration.
+
+    Args:
+        nn (_type_): _description_
+    """
+    def __init__(self, n_bins = 10):
+        super(QICE, self).__init__()
+        self.n_bins = n_bins
+        self.quantile_list = torch.linspace(0, 1, n_bins + 1)
+        self.quantile_bin_count = torch.zeros(n_bins)
+        self.n_samples = 0
+
+
+    def aggregate(self, prediction, truth, n_samples):
+        """_summary_
+
+        Args:
+            prediction (_type_): Should be of shape (batch_size, ..., n_samples)
+            truth (_type_): Should be of shape (batch_size, ...)
+        """
+        # Count number of samples
+        self.n_samples += n_samples
+
+        prediction = torch.flatten(prediction, start_dim=1, end_dim=-2)
+        truth = torch.flatten(truth, start_dim=1).unsqueeze(0)
+        quantiles = torch.quantile(prediction, self.quantile_list, dim=2)
+        quantile_membership = (truth-quantiles>0).sum(axis = 0)
+
+        quantile_bin_count = torch.tensor(
+            [(quantile_membership == v).sum() for v in range(self.n_bins + 2)],
+            dtype=torch.int64
+        )
+        # Combine outside (left/right) end intervals
+        quantile_bin_count[1] += quantile_bin_count[0]
+        quantile_bin_count[-2] += quantile_bin_count[-1]
+        quantile_bin_count = quantile_bin_count[1:-1]
+
+        # Add to quantile bin count
+        self.quantile_bin_count += quantile_bin_count
+
+
+    def compute(self):
+        quantile_ratio = self.quantile_bin_count / self.n_samples
+        # Compute QICE
+        qice = torch.abs(torch.ones(self.n_bins) / self.n_bins - quantile_ratio).mean()
+        return qice.item()
+
+
 class NormalCRPS(nn.Module):
     """Computes the continuous ranked probability score (CRPS) for a predictive normal distribution and corresponding observations.
 
@@ -243,106 +292,6 @@ class LpLoss(object):
         if self.reduce_dims is not None:
             diff = self.reduce(diff).squeeze()
         return diff
-
-    def __call__(self, y_pred, y, **kwargs):
-        if self.rel:
-            return self.relative(y_pred, y)
-        else:
-            return self.abs(y_pred, y)
-
-
-class SphericalL2Loss(object):
-    """
-    Calculates the spherical L2 loss between two tensors. The loss is weightet according to the spherical grid.
-    """
-
-    def __init__(
-        self,
-        nlon: int,
-        weights: torch.Tensor,
-        reduce_dims: List = [0],
-        reduction: str = "mean",
-        rel: bool = False,
-    ):
-        """Initializes the Spherical Lp loss class. The loss is calculated in a unit-free manner with weights summed to one.
-
-        Args:
-            nlon (int,): Dimension of longitude.
-            weights (torch.Tensor): Weight tensor for the latitude spacing.
-            reduce_dims (List, optional): Which dimensions to reduce loss across. Defaults to [0].
-            reduction (str, optional): Which reduction should be applied. Defaults to "mean".
-            rel (bool, optional): Whether to calculate relative or absolute loss. Defaults to False.
-        """
-        super().__init__()
-        self.dlon = 1 / nlon
-        self.weights = weights / weights.sum()
-        self.rel = rel
-
-        if isinstance(reduce_dims, int):
-            self.reduce_dims = [reduce_dims]
-        else:
-            self.reduce_dims = reduce_dims
-
-        if self.reduce_dims is not None:
-            if isinstance(reduction, str):
-                assert reduction == "sum" or reduction == "mean"
-                self.reductions = [reduction] * len(self.reduce_dims)
-            else:
-                for j in range(len(reduction)):
-                    assert reduction[j] == "sum" or reduction[j] == "mean"
-                self.reductions = reduction
-
-    def reduce(self, x: torch.Tensor) -> torch.Tensor:
-        """Reduces the tensor across all dimensions specified in reduce_dims.
-
-        Args:
-            x (torch.Tensor): Input tensor
-
-        Returns:
-            torch.Tensor: Reduced tensor
-        """
-        for j in range(len(self.reduce_dims)):
-            if self.reductions[j] == "sum":
-                x = torch.sum(x, dim=self.reduce_dims[j], keepdim=True)
-            else:
-                x = torch.mean(x, dim=self.reduce_dims[j], keepdim=True)
-        return x
-
-    def abs(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        """Calculates the absolute L2 loss between two tensors weighted by the spherical grid.
-
-        Args:
-            x (torch.Tensor): Input tensor x
-            y (torch.Tensor): Input tensor y
-
-        Returns:
-            torch.Tensor: Absolute weighted L2 loss.
-        """
-        sq_diff = torch.pow(x - y, 2)
-        loss = torch.sqrt(
-            torch.sum(sq_diff * self.weights * self.dlon, dim=(-3, -2, -1))
-        )
-        if self.reduce_dims is not None:
-            loss = self.reduce(loss).squeeze()
-        return loss
-
-    def relative(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        """Calculates the relative L2 loss between two tensors weighted by the spherical grid.
-
-        Args:
-            x (torch.Tensor): Input tensor x
-            y (torch.Tensor): Input tensor y
-
-        Returns:
-            torch.Tensor: Relative weighted L2 loss.
-        """
-        loss = self.abs(x, y)
-        loss = loss / torch.sqrt(
-            torch.sum(torch.pow(y, 2) * self.weights * self.dlon, dim=(-3, -2, -1))
-        )
-        if self.reduce_dims is not None:
-            loss = self.reduce(loss).squeeze()
-        return loss
 
     def __call__(self, y_pred, y, **kwargs):
         if self.rel:
@@ -605,8 +554,6 @@ class GaussianNLL(object):
         super().__init__()
         self.reduction = reduction
         self.reduce_dims = reduce_dims
-        # Kwargs for spherical loss
-        self.weights = kwargs.get("weights", None)
 
     def reduce(self, x: torch.Tensor) -> torch.Tensor:
         """Reduces the tensor across all dimensions specified in reduce_dims.
@@ -645,10 +592,7 @@ class GaussianNLL(object):
         # Calculate Gaussian NLL
         gaussian = torch.distributions.Normal(mu, sigma)
         score = -gaussian.log_prob(y)
-        # Weighting
-        if self.weights is not None:
-            weights = (self.weights / self.weights.sum()) * self.weights.size(0)
-            score = score * weights
+
 
         if self.reduce_dims:
             # Aggregate CRPS over spatial dimensions

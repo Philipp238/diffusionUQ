@@ -21,7 +21,6 @@ def generate_samples(
     x_T_sampling_method: str,
     distributional_method: str = "deterministic",
     regressor=None,
-    
 ) -> torch.Tensor:
     """Mehtod to generate samples from the underlying model with the specified uncertainty quantification method.
 
@@ -59,12 +58,19 @@ def generate_samples(
             n_samples=n_samples,
             distributional_method=distributional_method,
             regressor=regressor,
-            x_T_sampling_method=x_T_sampling_method
+            x_T_sampling_method=x_T_sampling_method,
         ).permute(0, 2, 1)
     return out
 
 
-def evaluate(model, training_parameters: dict, loader, device, regressor, standardized:bool = False):
+def evaluate(
+    model,
+    training_parameters: dict,
+    loader,
+    device,
+    regressor,
+    standardized: bool = False,
+):
     """Method to evaluate the given model.
 
     Args:
@@ -81,18 +87,16 @@ def evaluate(model, training_parameters: dict, loader, device, regressor, standa
     mse = 0
     es = 0
     coverage = 0
-    interval_width = 0
     crps = 0
     gaussian_nll = 0
     alpha = training_parameters["alpha"]
 
-    d = len(next(iter(loader))[0].shape) - 2
     mse_loss = torch.nn.MSELoss()
     # energy_score = losses.EnergyScore(d=d, p=2, type="lp", L=domain_range)
     # crps_loss = losses.CRPS()
     gaussian_nll_loss = losses.GaussianNLL()
     coverage_loss = losses.Coverage(alpha)
-    interval_width_loss = losses.IntervalWidth(alpha)
+    qice_loss = losses.QICE()
 
     with torch.no_grad():
         for images, labels in loader:
@@ -106,9 +110,9 @@ def evaluate(model, training_parameters: dict, loader, device, regressor, standa
                 labels,
                 images,
                 training_parameters["n_samples_uq"],
-                training_parameters['x_T_sampling_method'],
+                training_parameters["x_T_sampling_method"],
                 training_parameters["distributional_method"],
-                regressor
+                regressor,
             )
 
             if standardized:
@@ -137,19 +141,22 @@ def evaluate(model, training_parameters: dict, loader, device, regressor, standa
                 * batch_size
                 / len(loader.dataset)
             )
-            # gaussian_nll += (
-            #     gaussian_nll_loss(predicted_images, images).item() * batch_size / len(loader.dataset)
-            # )
+            gaussian_nll += (
+                gaussian_nll_loss(predicted_images.permute(0,2,1).cpu(), images.cpu()).item()
+                * batch_size
+                / len(loader.dataset)
+            )
             coverage += (
                 coverage_loss(predicted_images, images, ensemble_dim=1).item()
                 * batch_size
                 / len(loader.dataset)
             )
-            # interval_width += (
-            #     interval_width_loss(predicted_images, images).item() * batch_size / len(loader.dataset)
-            # )
+            qice_loss.aggregate(
+                predicted_images.permute(0, 2, 1).cpu(), images.cpu(), batch_size
+            )
+        qice = qice_loss.compute()
 
-    return mse, es, crps, coverage  # , gaussian_nll, , interval_width
+    return mse, es, crps, coverage, gaussian_nll, qice
 
 
 def start_evaluation(
@@ -218,28 +225,30 @@ def start_evaluation(
     for name, loader in data_loaders.items():
         logging.info(f"Evaluating the model on {name} data.")
 
-        mse, es, crps, coverage = evaluate(
-            model, 
-            training_parameters, 
-            loader, 
-            device, 
+        mse, es, crps, coverage, gaussian_nll, qice = evaluate(
+            model,
+            training_parameters,
+            loader,
+            device,
             regressor,
-            standardized=data_parameters["standardize"]
+            standardized=data_parameters["standardize"],
         )
         # mse, es, crps, gaussian_nll, coverage, int_width = evaluate(model, training_parameters, loader, device, domain_range)
 
         train_utils.log_and_save_evaluation(mse, "MSE" + name, results_dict, logging)
-        train_utils.log_and_save_evaluation(np.sqrt(mse), "RMSE" + name, results_dict, logging)
+        train_utils.log_and_save_evaluation(
+            np.sqrt(mse), "RMSE" + name, results_dict, logging
+        )
         train_utils.log_and_save_evaluation(
             es, "EnergyScore" + name, results_dict, logging
         )
         train_utils.log_and_save_evaluation(crps, "CRPS" + name, results_dict, logging)
-        # train_utils.log_and_save_evaluation(
-        #     gaussian_nll, "Gaussian NLL" + name, results_dict, logging
-        # )
+        train_utils.log_and_save_evaluation(
+            gaussian_nll, "Gaussian NLL" + name, results_dict, logging
+        )
         train_utils.log_and_save_evaluation(
             coverage, "Coverage" + name, results_dict, logging
         )
-        # train_utils.log_and_save_evaluation(
-        #     int_width, "IntervalWidth" + name, results_dict, logging
-        # )
+        train_utils.log_and_save_evaluation(
+            qice, "QICE" + name, results_dict, logging
+        )
