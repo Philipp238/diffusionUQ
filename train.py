@@ -27,7 +27,7 @@ print(f"Using {device}.")
 
 
 def train(net, optimizer, images, labels, criterion, gradient_clipping, uncertainty_quantification, ema, ema_model, diffusion=None, 
-          conditional_free_guidance_training=True, **kwargs):
+          conditional_free_guidance_training=True, regressor=None,**kwargs):
     """Function that perfroms a training step for a given model.
 
     Args:
@@ -46,7 +46,12 @@ def train(net, optimizer, images, labels, criterion, gradient_clipping, uncertai
     if uncertainty_quantification == 'diffusion':
         assert not (diffusion is None)
         t = diffusion.sample_timesteps(images.shape[0]).to(device)
-        x_t, noise = diffusion.noise_low_dimensional(images, t)
+        if regressor is None:
+            pred = None
+        else:
+            pred = regressor(labels)
+        
+        x_t, noise = diffusion.noise_low_dimensional(images, t, pred=pred)
         if np.random.random() < 0.1 and conditional_free_guidance_training:
             labels = None
         predicted_noise = net(x_t, t, labels)
@@ -64,14 +69,6 @@ def train(net, optimizer, images, labels, criterion, gradient_clipping, uncertai
 
     return loss
 
-
-def find_ending_files(folder_path, ending):
-    files = []
-    for filename in os.listdir(folder_path):
-        if filename.endswith(ending):
-            files.append(filename)
-    return files
-
 def trainer(
     train_loader,
     val_loader,
@@ -84,6 +81,7 @@ def trainer(
     label_dim,
     d_time,
     results_dict,
+    regressor
 ):
     """ Trainer function that takes a parameter dictionaray and dataloaders, trains the models and logs the results.
 
@@ -102,26 +100,6 @@ def trainer(
     Returns:
         _type_: Trained model and corresponding filename.
     """
-
-    if training_parameters['regressor']:
-        import ast
-        folder_path = os.path.join('models', training_parameters['regressor'])
-        ini_file = find_ending_files(folder_path, '.ini')[0]
-        weight_file = find_ending_files(folder_path, '.pt')[0]
-
-        config = configparser.ConfigParser()
-        config.read(os.path.join(folder_path, ini_file))      
-        
-        regressor_parameters_dict = dict(config.items("TRAININGPARAMETERS"))
-        regressor_parameters_dict = {key: ast.literal_eval(regressor_parameters_dict[key]) for key in
-                                regressor_parameters_dict.keys()}
-        # except_keys for keys that are coming as a list for each training process
-        regressor_parameters_dict = train_utils.get_hyperparameters_combination(regressor_parameters_dict, 
-                                                                           except_keys=['uno_out_channels', 'uno_scalings', 'uno_n_modes'])
-        
-        
-        regressor = train_utils.setup_model(regressor_parameters_dict[0], device, image_dim, label_dim)
-        train_utils.resume(regressor, os.path.join(folder_path, weight_file))
         
     if device == "cpu":
         assert not training_parameters["data_loader_pin_memory"]
@@ -193,9 +171,10 @@ def trainer(
     distributional_method = training_parameters["distributional_method"]
     if uncertainty_quantification == 'diffusion':
         if distributional_method == "deterministic":
-            diffusion = Diffusion(img_size=image_dim, device=device)
+            diffusion = Diffusion(img_size=image_dim, device=device, x_T_sampling_method=training_parameters['x_T_sampling_method'])
         else:
-            diffusion = DistributionalDiffusion(img_size=image_dim, device=device, distributional_method=distributional_method)
+            diffusion = DistributionalDiffusion(img_size=image_dim, device=device, distributional_method=distributional_method, 
+                                                x_T_sampling_method=training_parameters['x_T_sampling_method'])
     else:
         diffusion = None
     
@@ -226,7 +205,8 @@ def trainer(
                 uncertainty_quantification=uncertainty_quantification,
                 ema=ema, 
                 ema_model=ema_model, 
-                diffusion=diffusion
+                diffusion=diffusion,
+                regressor=regressor
             )
             running_loss += batch_loss
 
@@ -253,17 +233,28 @@ def trainer(
                     
                     if uncertainty_quantification == 'diffusion':
                         n_samples = 10
+                        
+                        if regressor is None:
+                            pred = None
+                        else:
+                            pred = regressor(labels)
+                            repeated_pred = pred.repeat_interleave(n_samples, dim=0)
+
                         repeated_labels = labels.repeat_interleave(n_samples, dim=0)
                         sampled_images = diffusion.sample_low_dimensional(
-                            model, 
-                            n=repeated_labels.shape[0], 
-                            conditioning=repeated_labels, 
-                            cfg_scale=cfg_scale)
+                            model,
+                            n=repeated_labels.shape[0],
+                            conditioning=repeated_labels,
+                            pred=repeated_pred,
+                            cfg_scale=cfg_scale
+                            )
                         sampled_images_ema = diffusion.sample_low_dimensional(
-                            ema_model, 
-                            n=repeated_labels.shape[0], 
-                            conditioning=repeated_labels, 
-                            cfg_scale=cfg_scale)
+                            ema_model,
+                            n=repeated_labels.shape[0],
+                            conditioning=repeated_labels,
+                            pred=repeated_pred,
+                            cfg_scale=cfg_scale
+                            )
                         sampled_images = sampled_images.reshape(labels.shape[0], n_samples, images.shape[1]).mean(dim=1)
                         sampled_images_ema = sampled_images_ema.reshape(labels.shape[0], n_samples, images.shape[1]).mean(dim=1)
                     else:

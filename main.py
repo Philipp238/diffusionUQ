@@ -39,6 +39,8 @@ args = parser.parse_args()
 
 config_name = args.config
 config = configparser.ConfigParser()
+config.optionxform = str # otherwise capital letters will be transformed to lower case
+
 config.read(os.path.join('config', config_name))
 results_path = config['META']['results_path']
 experiment_name = config['META']['experiment_name']
@@ -70,6 +72,12 @@ def get_weight_filenames_directory(directory):
     filenames = [filename for filename in filenames if (not filename[:-3].endswith('la_state'))]
     return filenames
 
+def find_files_by_ending(folder_path, ending):
+    files = []
+    for filename in os.listdir(folder_path):
+        if filename.endswith(ending):
+            files.append(filename)
+    return files
 
 if __name__ == '__main__':
     d_time = datetime.datetime.now().strftime('%Y%m%d_%H%M%S_')
@@ -160,7 +168,28 @@ if __name__ == '__main__':
             train_loader = DataLoader(training_dataset, batch_size=batch_size, shuffle=True)
             val_loader = DataLoader(validation_dataset, batch_size=eval_batch_size, shuffle=True)
             logging.info(using('After creating the dataloaders'))
-                        
+            
+            if training_parameters['regressor']:
+                folder_path = os.path.join('models', training_parameters['regressor'])
+                ini_file = find_files_by_ending(folder_path, '.ini')[0]
+                weight_file = find_files_by_ending(folder_path, '.pt')[0]
+
+                config = configparser.ConfigParser()
+                config.read(os.path.join(folder_path, ini_file))      
+                
+                regressor_parameters_dict = dict(config.items("TRAININGPARAMETERS"))
+                regressor_parameters_dict = {key: ast.literal_eval(regressor_parameters_dict[key]) for key in
+                                        regressor_parameters_dict.keys()}
+                # except_keys for keys that are coming as a list for each training process
+                regressor_parameters_dict = train_utils.get_hyperparameters_combination(regressor_parameters_dict, 
+                                                                                except_keys=['uno_out_channels', 'uno_scalings', 'uno_n_modes'])
+                
+                
+                regressor = train_utils.setup_model(regressor_parameters_dict[0], device, image_dim, label_dim)
+                train_utils.resume(regressor, os.path.join(folder_path, weight_file))
+            else:
+                regressor = None
+            
             if training_parameters.get('filename_to_validate', None):
                 # In case you ONLY want to validate all models in a certain directory; loads the model (instead of training it)
                 # in_channels = next(iter(train_loader))[0].shape[1]
@@ -185,7 +214,7 @@ if __name__ == '__main__':
                 d_time_train = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
                 model, filename = trainer(train_loader, val_loader, directory=directory, training_parameters=training_parameters,
                                           data_parameters = data_parameters, logging=logging, filename_ending=filename_ending, d_time=d_time_train,
-                                          image_dim=image_dim, label_dim=label_dim, results_dict=results_dict)
+                                          image_dim=image_dim, label_dim=label_dim, results_dict=results_dict, regressor=regressor)
                             
                 t_1 = time()
                 t_training = np.round(t_1 - t_0, 3)
@@ -205,7 +234,7 @@ if __name__ == '__main__':
             
             if training_parameters['evaluate']:
                 start_evaluation(model, training_parameters, data_parameters, train_loader, val_loader, 
-                                test_loader, results_dict, device, logging, filename)
+                                test_loader, results_dict, device, logging, filename, regressor)
                             
                 append_results_dict(results_dict, data_parameters, training_parameters, t_training)
                 results_pd = pd.DataFrame(results_dict)
