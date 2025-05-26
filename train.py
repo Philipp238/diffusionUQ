@@ -235,7 +235,7 @@ def trainer(
                         n_samples = 10
                         
                         if regressor is None:
-                            pred = None
+                            repeated_pred = None
                         else:
                             pred = regressor(labels)
                             repeated_pred = pred.repeat_interleave(n_samples, dim=0)
