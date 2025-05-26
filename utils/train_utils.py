@@ -4,6 +4,7 @@ from itertools import product
 import torch
 import torch.nn as nn
 import numpy as np
+from models.mlp_diffusion import MLP_diffusion_CARD
 import utils.losses as losses
 import scoringrules as sr
 from models import (
@@ -107,25 +108,35 @@ def setup_model(training_parameters: dict, device, image_dim: int, label_dim: in
     """
     if training_parameters["uncertainty_quantification"] == "scoring-rule-reparam":
         raise NotImplementedError("Implement a model with parametrization trick.")
-        hidden_model = None
     elif training_parameters["uncertainty_quantification"] == "diffusion":
-        if training_parameters["distributional_method"] == "deterministic":
-            hidden_model = MLP_diffusion(
+        if training_parameters["backbone"] == "default":
+            backbone = MLP_diffusion(
+                    target_dim=image_dim,
+                    conditioning_dim=label_dim,
+                    concat=training_parameters["concat_condition_diffusion"],
+                    hidden_dim=training_parameters["hidden_dim"],
+                    layers=training_parameters["n_layers"],
+                    dropout=training_parameters["dropout"],
+                )
+        elif training_parameters["backbone"] == "CARD":
+            hidden_dim = 2*training_parameters["hidden_dim"] if training_parameters["concat_condition_diffusion"] else training_parameters["hidden_dim"]
+            backbone = MLP_diffusion_CARD(
                 target_dim=image_dim,
                 conditioning_dim=label_dim,
-                concat=training_parameters["concat_condition_diffusion"],
-                hidden_dim=training_parameters["hidden_dim"],
+                hidden_dim=hidden_dim,
                 layers=training_parameters["n_layers"],
-                dropout=training_parameters["dropout"],
             )
+        else:
+            raise KeyError(f"No such backbone architecture: {training_parameters['backbone']}")
+        
+        if training_parameters["distributional_method"] == "deterministic":
+            hidden_model = backbone
         elif training_parameters["distributional_method"] == "normal":
             hidden_model = MLP_diffusion_normal(
+                backbone=backbone,
                 target_dim=image_dim,
-                conditioning_dim=label_dim,
                 concat=training_parameters["concat_condition_diffusion"],
                 hidden_dim=training_parameters["hidden_dim"],
-                layers=training_parameters["n_layers"],
-                dropout=training_parameters["dropout"],
             )
         elif training_parameters["distributional_method"] == "sample":
             hidden_model = MLP_diffusion_sample(
@@ -138,12 +149,10 @@ def setup_model(training_parameters: dict, device, image_dim: int, label_dim: in
             )
         elif training_parameters["distributional_method"] == "mixednormal":
             hidden_model = MLP_diffusion_mixednormal(
+                backbone=backbone,
                 target_dim=image_dim,
-                conditioning_dim=label_dim,
                 concat=training_parameters["concat_condition_diffusion"],
                 hidden_dim=training_parameters["hidden_dim"],
-                layers=training_parameters["n_layers"],
-                dropout=training_parameters["dropout"],
                 n_components=2,
             )
 
