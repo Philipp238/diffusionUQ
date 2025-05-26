@@ -26,7 +26,8 @@ else:
 print(f"Using {device}.")
 
 
-def train(net, optimizer, images, labels, criterion, gradient_clipping, uncertainty_quantification, ema, ema_model, diffusion=None, regressor=None,**kwargs):
+def train(net, optimizer, images, labels, criterion, gradient_clipping, uncertainty_quantification, ema, ema_model, diffusion=None, 
+          conditional_free_guidance_training=True, regressor=None,**kwargs):
     """Function that perfroms a training step for a given model.
 
     Args:
@@ -51,7 +52,7 @@ def train(net, optimizer, images, labels, criterion, gradient_clipping, uncertai
             pred = regressor(labels)
         
         x_t, noise = diffusion.noise_low_dimensional(images, t, pred=pred)
-        if np.random.random() < 0.1:
+        if np.random.random() < 0.1 and conditional_free_guidance_training:
             labels = None
         predicted_noise = net(x_t, t, labels)
         loss = criterion(noise, predicted_noise)
@@ -180,6 +181,8 @@ def trainer(
     ema = EMA(0.995)
     ema_model = copy.deepcopy(model).eval().requires_grad_(False)
 
+    cfg_scale = 3 if training_parameters["conditional_free_guidance_training"] else 0
+
     # Iterate over autoregressive steps, if necessary
     logging.info(f"Training starts now.")
 
@@ -238,8 +241,20 @@ def trainer(
                             repeated_pred = pred.repeat_interleave(n_samples, dim=0)
 
                         repeated_labels = labels.repeat_interleave(n_samples, dim=0)
-                        sampled_images = diffusion.sample_low_dimensional(model, n=repeated_labels.shape[0], conditioning=repeated_labels, pred=repeated_pred)
-                        sampled_images_ema = diffusion.sample_low_dimensional(ema_model, n=repeated_labels.shape[0], conditioning=repeated_labels, pred=repeated_pred)
+                        sampled_images = diffusion.sample_low_dimensional(
+                            model,
+                            n=repeated_labels.shape[0],
+                            conditioning=repeated_labels,
+                            pred=repeated_pred,
+                            cfg_scale=cfg_scale
+                            )
+                        sampled_images_ema = diffusion.sample_low_dimensional(
+                            ema_model,
+                            n=repeated_labels.shape[0],
+                            conditioning=repeated_labels,
+                            pred=repeated_pred,
+                            cfg_scale=cfg_scale
+                            )
                         sampled_images = sampled_images.reshape(labels.shape[0], n_samples, images.shape[1]).mean(dim=1)
                         sampled_images_ema = sampled_images_ema.reshape(labels.shape[0], n_samples, images.shape[1]).mean(dim=1)
                     else:

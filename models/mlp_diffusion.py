@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 
+import torch.nn.functional as F
+
 EPS = 1e-9
 
 class Sequential2Inputs(nn.Sequential):
@@ -58,7 +60,7 @@ class MLP_diffusion(nn.Module):
         pos_enc = torch.cat([pos_enc_a, pos_enc_b], dim=-1)
         return pos_enc
 
-    def forward(self, x_t, t, y=None):
+    def forward_body(self, x_t, t, y=None):
         t = t.unsqueeze(-1).type(torch.float32)
         t = self.pos_encoding(t, self.hidden_dim)
         t = self.time_projection(t)
@@ -67,15 +69,84 @@ class MLP_diffusion(nn.Module):
         x_t = self.input_projection(x_t)    
         x_t = self.act(x_t)
         x_t = self.blocks(x_t, t)
+        
+        return x_t
 
-        output = self.output_projection(x_t)
-        return output
+    def forward(self, x_t, t, y=None):
+        output = self.forward_body(x_t, t, y)
+        eps_pred = self.output_projection(output)
+        return eps_pred
+
+class ConditionalLinear(nn.Module):
+    def __init__(self, num_in, num_out, n_steps):
+        super(ConditionalLinear, self).__init__()
+        self.num_out = num_out
+        self.lin = nn.Linear(num_in, num_out)
+        self.embed = nn.Embedding(n_steps, num_out)
+        self.embed.weight.data.uniform_()
+
+    def forward(self, x, t):
+        out = self.lin(x)
+        gamma = self.embed(t)
+        out = gamma.view(-1, self.num_out) * out
+        return F.softplus(out)
     
 
-class MLP_diffusion_normal(MLP_diffusion):
-    def __init__(self, target_dim = 1, conditioning_dim=None, concat=False, hidden_dim=128, layers=5, dropout=0.1, device="cuda"):
-        super().__init__(target_dim=target_dim, conditioning_dim=conditioning_dim, concat=concat, hidden_dim=hidden_dim, layers=layers, dropout=dropout, device=device)
+class MLP_diffusion_CARD(nn.Module):
+    def __init__(self, target_dim=1, conditioning_dim=0, hidden_dim=128, layers=2, diffusion_timesteps=1000, use_regressor_guidance=False):
+        super(MLP_diffusion_CARD, self).__init__()
+        n_steps = diffusion_timesteps + 1
+        self.conditioning_dim = conditioning_dim
+        self.use_regressor_guidance = use_regressor_guidance
+
+        data_dim = target_dim + conditioning_dim
+        if use_regressor_guidance:
+            data_dim += target_dim
+
+        self.input_projection = ConditionalLinear(data_dim, hidden_dim, n_steps)
+        hidden_layers = [
+            ConditionalLinear(hidden_dim, hidden_dim, n_steps) for _ in range(layers)
+        ]
+
+        self.hidden_layers = nn.ModuleList(hidden_layers)
+        self.output_projection = nn.Linear(hidden_dim, 1)
+
+
+    def forward_body(self, x_t, t, y=None, x_0_hat=None): 
+        assert not self.use_regressor_guidance or (
+            self.use_regressor_guidance and x_0_hat is not None
+        )
+
+        if self.conditioning_dim > 0:
+            if y is None:
+                y = torch.zeros((x_t.shape[0], self.conditioning_dim)).to(x_t.device)
+
+            if x_0_hat is not None:
+                eps_pred = torch.cat((x_t, y, x_0_hat), dim=1)
+            else:
+                eps_pred = torch.cat((x_t, y), dim=1)
+        else:
+            if x_0_hat is not None:
+                eps_pred = torch.cat((x_t, x_0_hat), dim=1)
+            else:
+                eps_pred = x_t
+
+        eps_pred = self.input_projection(eps_pred, t)
+
+        for hidden_layer in self.hidden_layers:
+            eps_pred = hidden_layer(eps_pred, t)
         
+        return eps_pred
+    
+    def forward(self, x_t, t, y=None, x_0_hat=None): 
+        eps_pred = self.forward_body(x_t, t, y, x_0_hat)
+        return self.output_projection(eps_pred)
+    
+    
+class MLP_diffusion_normal(nn.Module):
+    def __init__(self, backbone, target_dim = 1, concat=False, hidden_dim=128):
+        super(MLP_diffusion_normal, self).__init__()
+        self.backbone = backbone
         if concat:
             self.mu_projection = nn.Linear(2 * hidden_dim, target_dim)
             self.sigma_projection = nn.Linear(2 * hidden_dim, target_dim)
@@ -85,14 +156,7 @@ class MLP_diffusion_normal(MLP_diffusion):
         self.sofplus = nn.Softplus()
 
     def forward(self, x_t, t, y=None):
-        t = t.unsqueeze(-1).type(torch.float32)
-        t = self.pos_encoding(t, self.hidden_dim)
-        t = self.time_projection(t)
-        if y is not None:
-            t += self.conditioning_projection(y)
-        x_t = self.input_projection(x_t)    
-        x_t = self.act(x_t)
-        x_t = self.blocks(x_t, t)
+        x_t = self.backbone.forward_body(x_t, t, y)
 
         mu = self.mu_projection(x_t)
         sigma = self.sigma_projection(x_t)
@@ -120,7 +184,7 @@ class MLP_diffusion_sample(MLP_diffusion):
         x_t_expanded = torch.repeat_interleave(x_t.unsqueeze(-2), n_samples, dim=-2)
         t_expanded = torch.repeat_interleave(t.unsqueeze(-2), n_samples, dim=-2)
         x_t = torch.cat([x_t_expanded, noise], dim=-1).to(x_t.device)
-        x_t = self.input_projection(x_t)    
+        x_t = self.input_projection(x_t)
         x_t = self.act(x_t)
         x_t = self.blocks(x_t, t_expanded)
 
@@ -128,8 +192,9 @@ class MLP_diffusion_sample(MLP_diffusion):
         return output
 
 class MLP_diffusion_mixednormal(MLP_diffusion):
-    def __init__(self, target_dim = 1, conditioning_dim=None, concat=False, hidden_dim=128, layers=5, dropout=0.1, device="cuda", n_components = 3):
-        super().__init__(target_dim=target_dim, conditioning_dim=conditioning_dim, concat=concat, hidden_dim=hidden_dim, layers=layers, dropout=dropout, device=device)
+    def __init__(self, backbone, target_dim = 1, concat=False, hidden_dim=128, n_components = 3):
+        super(MLP_diffusion_mixednormal, self).__init__()
+        self.backbone = backbone
         self.n_components = n_components
         self.target_dim = target_dim
 
@@ -144,14 +209,7 @@ class MLP_diffusion_mixednormal(MLP_diffusion):
         self.sofplus = nn.Softplus()
 
     def forward(self, x_t, t, y=None):
-        t = t.unsqueeze(-1).type(torch.float32)
-        t = self.pos_encoding(t, self.hidden_dim)
-        t = self.time_projection(t)
-        if y is not None:
-            t += self.conditioning_projection(y)
-        x_t = self.input_projection(x_t)    
-        x_t = self.act(x_t)
-        x_t = self.blocks(x_t, t)
+        x_t = self.backbone.forward_body(x_t, t, y)
 
         mu = self.mu_projection(x_t)
         sigma = self.sigma_projection(x_t)
