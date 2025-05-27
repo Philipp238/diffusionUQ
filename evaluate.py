@@ -21,6 +21,7 @@ def generate_samples(
     x_T_sampling_method: str,
     distributional_method: str = "deterministic",
     regressor=None,
+    cfg_scale=3
 ) -> torch.Tensor:
     """Mehtod to generate samples from the underlying model with the specified uncertainty quantification method.
 
@@ -59,18 +60,12 @@ def generate_samples(
             distributional_method=distributional_method,
             regressor=regressor,
             x_T_sampling_method=x_T_sampling_method,
+            cfg_scale=cfg_scale
         ).permute(0, 2, 1)
     return out
 
 
-def evaluate(
-    model,
-    training_parameters: dict,
-    loader,
-    device,
-    regressor,
-    standardized: bool = False,
-):
+def evaluate(model, training_parameters: dict, loader, device, regressor, standardized:bool = False):
     """Method to evaluate the given model.
 
     Args:
@@ -98,6 +93,7 @@ def evaluate(
     coverage_loss = losses.Coverage(alpha)
     qice_loss = losses.QICE()
 
+    cfg_scale = 3 if training_parameters["conditional_free_guidance_training"] else 0
     with torch.no_grad():
         for images, labels in loader:
             labels = labels.to(device)
@@ -113,6 +109,7 @@ def evaluate(
                 training_parameters["x_T_sampling_method"],
                 training_parameters["distributional_method"],
                 regressor,
+                cfg_scale=cfg_scale
             )
 
             if standardized:

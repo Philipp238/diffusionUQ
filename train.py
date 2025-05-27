@@ -54,7 +54,7 @@ def train(net, optimizer, images, labels, criterion, gradient_clipping, uncertai
         x_t, noise = diffusion.noise_low_dimensional(images, t, pred=pred)
         if np.random.random() < 0.1 and conditional_free_guidance_training:
             labels = None
-        predicted_noise = net(x_t, t, labels)
+        predicted_noise = net(x_t, t, labels, pred)
         loss = criterion(noise, predicted_noise)
     else:
         predicted_images = net(labels)

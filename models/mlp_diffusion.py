@@ -32,7 +32,7 @@ class MLP_diffusion(nn.Module):
         def forward(self, x_t):
             return self.dropout(self.act(self.ff(x_t)))
     
-    def __init__(self, target_dim=1, conditioning_dim=None, concat=False, hidden_dim=128, layers=5, dropout=0.1, device="cuda"):
+    def __init__(self, target_dim=1, conditioning_dim=None, concat=False, use_regressor_pred=False, hidden_dim=128, layers=5, dropout=0.1, device="cuda"):
         super().__init__()
         self.device = device
         self.hidden_dim = hidden_dim
@@ -40,6 +40,9 @@ class MLP_diffusion(nn.Module):
         self.time_projection = nn.Linear(hidden_dim, hidden_dim)
         if conditioning_dim:
             self.conditioning_projection = nn.Linear(conditioning_dim, hidden_dim)
+
+        if use_regressor_pred:
+            self.regressor_pred_projection = nn.Linear(target_dim, hidden_dim)
         
         self.act = nn.ReLU()
         
@@ -60,22 +63,27 @@ class MLP_diffusion(nn.Module):
         pos_enc = torch.cat([pos_enc_a, pos_enc_b], dim=-1)
         return pos_enc
 
-    def forward_body(self, x_t, t, y=None):
+    def forward_body(self, x_t, t, y=None, pred=None):
         t = t.unsqueeze(-1).type(torch.float32)
         t = self.pos_encoding(t, self.hidden_dim)
         t = self.time_projection(t)
         if y is not None:
             t += self.conditioning_projection(y)
+
+        if pred is not None:
+            t += self.regressor_pred_projection(pred)
+
         x_t = self.input_projection(x_t)    
         x_t = self.act(x_t)
         x_t = self.blocks(x_t, t)
         
         return x_t
 
-    def forward(self, x_t, t, y=None):
-        output = self.forward_body(x_t, t, y)
+    def forward(self, x_t, t, y=None, pred=None):
+        output = self.forward_body(x_t, t, y, pred)
         eps_pred = self.output_projection(output)
         return eps_pred
+
 
 class ConditionalLinear(nn.Module):
     def __init__(self, num_in, num_out, n_steps):
@@ -93,8 +101,9 @@ class ConditionalLinear(nn.Module):
     
 
 class MLP_diffusion_CARD(nn.Module):
-    def __init__(self, target_dim=1, conditioning_dim=0, hidden_dim=128, layers=2, diffusion_timesteps=1000, use_regressor_guidance=False):
+    def __init__(self, target_dim=1, conditioning_dim=0, hidden_dim=128, layers=2, diffusion_timesteps=1000, use_regressor_guidance=False, device="cuda"):
         super(MLP_diffusion_CARD, self).__init__()
+        self.device = device
         n_steps = diffusion_timesteps + 1
         self.conditioning_dim = conditioning_dim
         self.use_regressor_guidance = use_regressor_guidance
@@ -155,8 +164,8 @@ class MLP_diffusion_normal(nn.Module):
             self.sigma_projection = nn.Linear(hidden_dim, target_dim)
         self.sofplus = nn.Softplus()
 
-    def forward(self, x_t, t, y=None):
-        x_t = self.backbone.forward_body(x_t, t, y)
+    def forward(self, x_t, t, y=None, pred=None):
+        x_t = self.backbone.forward_body(x_t, t, y, pred)
 
         mu = self.mu_projection(x_t)
         sigma = self.sigma_projection(x_t)
@@ -171,7 +180,8 @@ class MLP_diffusion_sample(MLP_diffusion):
         self.input_projection = nn.Linear(target_dim+1, hidden_dim)  # Concatenate noise with channel
         self.n_samples = n_samples
 
-    def forward(self, x_t, t, y=None, n_samples = None):
+    def forward(self, x_t, t, y=None, pred=None, n_samples = None):
+        # TODO: Implement regressor prediction guidance
         if n_samples is None:
             n_samples = self.n_samples
         t = t.unsqueeze(-1).type(torch.float32)
@@ -208,8 +218,8 @@ class MLP_diffusion_mixednormal(MLP_diffusion):
             self.weights_projection = nn.Linear(hidden_dim, target_dim*self.n_components)
         self.sofplus = nn.Softplus()
 
-    def forward(self, x_t, t, y=None):
-        x_t = self.backbone.forward_body(x_t, t, y)
+    def forward(self, x_t, t, y=None, pred=None):
+        x_t = self.backbone.forward_body(x_t, t, y, pred)
 
         mu = self.mu_projection(x_t)
         sigma = self.sigma_projection(x_t)

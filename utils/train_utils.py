@@ -109,11 +109,13 @@ def setup_model(training_parameters: dict, device, image_dim: int, label_dim: in
     if training_parameters["uncertainty_quantification"] == "scoring-rule-reparam":
         raise NotImplementedError("Implement a model with parametrization trick.")
     elif training_parameters["uncertainty_quantification"] == "diffusion":
+        use_regressor_pred = training_parameters["regressor"] is not None
         if training_parameters["backbone"] == "default":
             backbone = MLP_diffusion(
                     target_dim=image_dim,
                     conditioning_dim=label_dim,
                     concat=training_parameters["concat_condition_diffusion"],
+                    use_regressor_pred=use_regressor_pred,
                     hidden_dim=training_parameters["hidden_dim"],
                     layers=training_parameters["n_layers"],
                     dropout=training_parameters["dropout"],

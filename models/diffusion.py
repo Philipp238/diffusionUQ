@@ -111,9 +111,9 @@ class Diffusion:
             x = self.sample_x_T((n, self.img_size), pred)
             for i in reversed(range(1, self.noise_steps)):
                 t = (torch.ones(n) * i).long().to(self.device)
-                predicted_noise = model(x, t, conditioning)
+                predicted_noise = model(x, t, conditioning, pred)
                 if cfg_scale > 0:
-                    uncond_predicted_noise = model(x, t, None)
+                    uncond_predicted_noise = model(x, t, None, pred)
                     predicted_noise = torch.lerp(
                         uncond_predicted_noise, predicted_noise, cfg_scale
                     )
@@ -158,7 +158,7 @@ class Diffusion:
 
 
 def generate_diffusion_samples_low_dimensional(
-    model, labels, images_shape, n_samples, x_T_sampling_method, distributional_method="deterministic", regressor=None, 
+    model, labels, images_shape, n_samples, x_T_sampling_method, distributional_method="deterministic", regressor=None, cfg_scale=3 
 ):
     if distributional_method == "deterministic":
         diffusion = Diffusion(img_size=images_shape[1], device=labels.device, x_T_sampling_method=x_T_sampling_method)
@@ -175,7 +175,7 @@ def generate_diffusion_samples_low_dimensional(
     for i in range(n_samples):
         with torch.no_grad():
             sampled_images[..., i] = diffusion.sample_low_dimensional(
-                model, n=labels.shape[0], conditioning=labels, pred=pred
+                model, n=labels.shape[0], conditioning=labels, pred=pred, cfg_scale=cfg_scale
             ).detach()
 
     return sampled_images
@@ -202,16 +202,16 @@ class DistributionalDiffusion(Diffusion):
         )
         self.distributional_method = distributional_method
 
-    def sample_noise(self, model, x, t, conditioning=None):
+    def sample_noise(self, model, x, t, conditioning=None, pred=None):
         if self.distributional_method == "normal":
-            predicted_noise = model(x, t, conditioning)
+            predicted_noise = model(x, t, conditioning, pred)
             predicted_noise = predicted_noise[..., 0] + predicted_noise[
                 ..., 1
             ] * torch.randn_like(predicted_noise[..., 0], device=self.device)
         elif self.distributional_method == "sample":
-            predicted_noise = model(x, t, conditioning, n_samples = 1).squeeze(1)
+            predicted_noise = model(x, t, conditioning, pred, n_samples = 1).squeeze(1)
         elif self.distributional_method == "mixednormal":
-            predicted_mixture = model(x, t, conditioning)
+            predicted_mixture = model(x, t, conditioning, pred)
             mu = predicted_mixture[..., 0]
             sigma = predicted_mixture[..., 1]
             weights = predicted_mixture[..., 2]
@@ -231,9 +231,9 @@ class DistributionalDiffusion(Diffusion):
             x = self.sample_x_T((n, self.img_size), pred)
             for i in reversed(range(1, self.noise_steps)):
                 t = (torch.ones(n) * i).long().to(self.device)
-                predicted_noise = self.sample_noise(model, x, t, conditioning)
+                predicted_noise = self.sample_noise(model, x, t, conditioning, pred)
                 if cfg_scale > 0:
-                    uncond_predicted_noise = self.sample_noise(model, x, t, None)
+                    uncond_predicted_noise = self.sample_noise(model, x, t, None, pred)
                     predicted_noise = torch.lerp(
                         uncond_predicted_noise, predicted_noise, cfg_scale
                     )
