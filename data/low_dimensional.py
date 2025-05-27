@@ -20,8 +20,8 @@ class RegressionDataset(Dataset):
         self.labels = (self.labels - self.labels_mean) / self.labels_std
         
     def destandardize_image(self, x):
-        if hasattr(self, "images_means") and hasattr(self, "image_stds"):
-            return x * self.images_stds + self.images_means
+        if hasattr(self, "images_means") and hasattr(self, "images_stds"):
+            return x * self.images_stds.to(x.device) + self.images_means.to(x.device)
         else:
             return x 
 
