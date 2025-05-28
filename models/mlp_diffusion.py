@@ -58,8 +58,8 @@ class MLP_diffusion(nn.Module):
             10000
             ** (torch.arange(0, channels, 2, device=self.device).float() / channels)
         )
-        pos_enc_a = torch.sin(t.repeat(1, channels // 2) * inv_freq)
-        pos_enc_b = torch.cos(t.repeat(1, channels // 2) * inv_freq)
+        pos_enc_a = torch.sin(t.repeat_interleave(channels // 2, dim=-1) * inv_freq)
+        pos_enc_b = torch.cos(t.repeat_interleave(channels // 2, dim=-1) * inv_freq)
         pos_enc = torch.cat([pos_enc_a, pos_enc_b], dim=-1)
         return pos_enc
 
@@ -96,20 +96,20 @@ class ConditionalLinear(nn.Module):
     def forward(self, x, t):
         out = self.lin(x)
         gamma = self.embed(t)
-        out = gamma.view(-1, self.num_out) * out
+        out = gamma * out
         return F.softplus(out)
     
 
 class MLP_diffusion_CARD(nn.Module):
-    def __init__(self, target_dim=1, conditioning_dim=0, hidden_dim=128, layers=2, diffusion_timesteps=1000, use_regressor_guidance=False, device="cuda"):
+    def __init__(self, target_dim=1, conditioning_dim=0, hidden_dim=128, layers=2, diffusion_timesteps=1000, use_regressor_pred=False, device="cuda"):
         super(MLP_diffusion_CARD, self).__init__()
         self.device = device
         n_steps = diffusion_timesteps + 1
         self.conditioning_dim = conditioning_dim
-        self.use_regressor_guidance = use_regressor_guidance
+        self.use_regressor_pred = use_regressor_pred
 
         data_dim = target_dim + conditioning_dim
-        if use_regressor_guidance:
+        if use_regressor_pred:
             data_dim += target_dim
 
         self.input_projection = ConditionalLinear(data_dim, hidden_dim, n_steps)
@@ -122,21 +122,21 @@ class MLP_diffusion_CARD(nn.Module):
 
 
     def forward_body(self, x_t, t, y=None, x_0_hat=None): 
-        assert not self.use_regressor_guidance or (
-            self.use_regressor_guidance and x_0_hat is not None
+        assert not self.use_regressor_pred or (
+            self.use_regressor_pred and x_0_hat is not None
         )
 
         if self.conditioning_dim > 0:
             if y is None:
-                y = torch.zeros((x_t.shape[0], self.conditioning_dim)).to(x_t.device)
+                y = torch.zeros((*x_t.shape[:-1], self.conditioning_dim)).to(x_t.device)
 
             if x_0_hat is not None:
-                eps_pred = torch.cat((x_t, y, x_0_hat), dim=1)
+                eps_pred = torch.cat((x_t, y, x_0_hat), dim=-1)
             else:
-                eps_pred = torch.cat((x_t, y), dim=1)
+                eps_pred = torch.cat((x_t, y), dim=-1)
         else:
             if x_0_hat is not None:
-                eps_pred = torch.cat((x_t, x_0_hat), dim=1)
+                eps_pred = torch.cat((x_t, x_0_hat), dim=-1)
             else:
                 eps_pred = x_t
 
@@ -174,32 +174,47 @@ class MLP_diffusion_normal(nn.Module):
         return output
     
 
-class MLP_diffusion_sample(MLP_diffusion):
-    def __init__(self, target_dim = 1, conditioning_dim=None, concat=False, hidden_dim=128, layers=5, dropout=0.1, device="cuda", n_samples = 50):
-        super().__init__(target_dim=target_dim, conditioning_dim=conditioning_dim, concat=concat, hidden_dim=hidden_dim, layers=layers, dropout=dropout, device=device)
-        self.input_projection = nn.Linear(target_dim+1, hidden_dim)  # Concatenate noise with channel
+class MLP_diffusion_sample(nn.Module):
+    def __init__(self, backbone, target_dim = 1, hidden_dim=128, n_samples = 50):
+        super(MLP_diffusion_sample, self).__init__()
+        self.backbone = backbone    
+
+        # Concatenate noise with channel
+        if isinstance(backbone, MLP_diffusion):
+            self.backbone.input_projection = nn.Linear(target_dim+1, hidden_dim)  
+        elif isinstance(backbone, MLP_diffusion_CARD):
+            input_dim = self.backbone.input_projection.lin.in_features
+            output_dim = self.backbone.input_projection.lin.out_features
+            self.backbone.input_projection.lin= nn.Linear(input_dim+1, output_dim)  
+
         self.n_samples = n_samples
 
     def forward(self, x_t, t, y=None, pred=None, n_samples = None):
-        # TODO: Implement regressor prediction guidance
         if n_samples is None:
             n_samples = self.n_samples
-        t = t.unsqueeze(-1).type(torch.float32)
-        t = self.pos_encoding(t, self.hidden_dim)
-        t = self.time_projection(t)
-        if y is not None:
-            t += self.conditioning_projection(y)
-        # Concatenate noise
-        noise = torch.randn(*x_t.shape[:-1], n_samples, x_t.shape[-1]).to(x_t.device)
-        x_t_expanded = torch.repeat_interleave(x_t.unsqueeze(-2), n_samples, dim=-2)
-        t_expanded = torch.repeat_interleave(t.unsqueeze(-2), n_samples, dim=-2)
-        x_t = torch.cat([x_t_expanded, noise], dim=-1).to(x_t.device)
-        x_t = self.input_projection(x_t)
-        x_t = self.act(x_t)
-        x_t = self.blocks(x_t, t_expanded)
 
-        output = self.output_projection(x_t)
-        return output
+        x_t_expanded = torch.repeat_interleave(x_t.unsqueeze(-2), n_samples, dim=-2)
+        t_expanded = torch.repeat_interleave(t.unsqueeze(-1), n_samples, dim=-1)
+        if y is not None:
+            y_expanded = torch.repeat_interleave(y.unsqueeze(-2), n_samples, dim=-2)
+        else:
+            y_expanded = None
+
+        if pred is not None:
+            pred_expanded = torch.repeat_interleave(pred.unsqueeze(-2), n_samples, dim=-2)
+        else:
+            pred_expanded = None
+
+        # Concatenate noise
+        noise = torch.randn_like(x_t_expanded)
+        x_t_expanded = torch.cat([x_t_expanded, noise], dim=-1).to(x_t.device)
+
+        return self.backbone.forward(
+            x_t_expanded,
+            t_expanded,
+            y_expanded,
+            pred_expanded
+        )
 
 class MLP_diffusion_mixednormal(MLP_diffusion):
     def __init__(self, backbone, target_dim = 1, concat=False, hidden_dim=128, n_components = 3):

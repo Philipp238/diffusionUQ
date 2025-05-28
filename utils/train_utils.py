@@ -127,6 +127,7 @@ def setup_model(training_parameters: dict, device, image_dim: int, label_dim: in
                 conditioning_dim=label_dim,
                 hidden_dim=hidden_dim,
                 layers=training_parameters["n_layers"],
+                use_regressor_pred=use_regressor_pred,
             )
         else:
             raise KeyError(f"No such backbone architecture: {training_parameters['backbone']}")
@@ -142,12 +143,9 @@ def setup_model(training_parameters: dict, device, image_dim: int, label_dim: in
             )
         elif training_parameters["distributional_method"] == "sample":
             hidden_model = MLP_diffusion_sample(
+                backbone=backbone,
                 target_dim=image_dim,
-                conditioning_dim=label_dim,
-                concat=training_parameters["concat_condition_diffusion"],
                 hidden_dim=training_parameters["hidden_dim"],
-                layers=training_parameters["n_layers"],
-                dropout=training_parameters["dropout"],
             )
         elif training_parameters["distributional_method"] == "mixednormal":
             hidden_model = MLP_diffusion_mixednormal(

@@ -206,6 +206,7 @@ def trainer(
                 ema=ema, 
                 ema_model=ema_model, 
                 diffusion=diffusion,
+                conditional_free_guidance_training=training_parameters["conditional_free_guidance_training"],
                 regressor=regressor
             )
             running_loss += batch_loss
