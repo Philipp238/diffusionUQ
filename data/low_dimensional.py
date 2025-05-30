@@ -15,8 +15,8 @@ class RegressionDataset(Dataset):
         self.images_stds = self.images.std(dim=0, keepdim=True)
         self.images = (self.images - self.images_means) / self.images_stds
         
-        self.labels_mean = self.labels.mean()
-        self.labels_std = self.labels.std()
+        self.labels_mean = self.labels.mean(dim=0, keepdim=True)
+        self.labels_std = self.labels.std(dim=0, keepdim=True)
         self.labels = (self.labels - self.labels_mean) / self.labels_std
         
     def destandardize_image(self, x):
