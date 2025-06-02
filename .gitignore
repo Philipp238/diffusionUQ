@@ -191,3 +191,4 @@ cython_debug/
 !models/housing_prices/**/*
 !models/power/**/*
 !models/x-squared/**/*
+!models/pre-trained/**/*

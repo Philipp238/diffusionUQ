@@ -64,20 +64,24 @@ def get_criterion(training_parameters, device):
     """Define criterion for the model.
     Criterion gets as arguments (truth, prediction) and returns a loss value.
     """
-    if training_parameters["distributional_method"] == "deterministic":
-        criterion = nn.MSELoss()
-    elif training_parameters["distributional_method"] == "normal":
-        criterion = lambda truth, prediction: sr.crps_normal(
-            truth, prediction[..., 0], prediction[..., 1], backend="torch"
-        ).mean()
-    elif training_parameters["distributional_method"] == "sample":
-        criterion = lambda truth, prediction: sr.energy_score(
-            truth, prediction, m_axis=-2, v_axis=-1, backend="torch"
-        ).mean()
-    elif training_parameters["distributional_method"] == "mixednormal":
-        criterion = losses.NormalMixtureCRPS()
+    if training_parameters['uncertainty_quantification'] == 'diffusion':
+        if training_parameters["distributional_method"] == "deterministic":
+            criterion = nn.MSELoss()
+        elif training_parameters["distributional_method"] == "normal":
+            criterion = lambda truth, prediction: sr.crps_normal(
+                truth, prediction[..., 0], prediction[..., 1], backend="torch"
+            ).mean()
+        elif training_parameters["distributional_method"] == "sample":
+            criterion = lambda truth, prediction: sr.energy_score(
+                truth, prediction, m_axis=-2, v_axis=-1, backend="torch"
+            ).mean()
+        elif training_parameters["distributional_method"] == "mixednormal":
+            criterion = losses.NormalMixtureCRPS()
+        else:
+            raise ValueError(f'"distributional_method" must be any of the following: "deterministzic", "normal", "sample" or'
+                             f'"mixednormal". You chose {training_parameters["distributional_method"]}.')
     else:
-        criterion = None
+        criterion = nn.MSELoss()
     return criterion
 
 
