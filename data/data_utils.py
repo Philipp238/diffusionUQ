@@ -206,15 +206,18 @@ def get_uci_data(dataset_name, splits=None, standardize=False, validation_ratio=
         
         if validation_ratio > 0:
             num_training_examples = int(validation_ratio * X_train.shape[0])
-            X_val = X_train[num_training_examples:, :]
-            y_val = y_train[num_training_examples:]
-            X_train = X_train[0:num_training_examples, :]
-            y_train = y_train[0:num_training_examples]
+            X_train_subset = X_train[num_training_examples:, :]
+            y_train_subset = y_train[num_training_examples:]
+            X_val = X_train[0:num_training_examples, :]
+            y_val = y_train[0:num_training_examples]
 
             val_images = torch.tensor(y_val, dtype=torch.float32)
             val_labels = torch.tensor(X_val, dtype=torch.float32)
 
-            train_dataset = RegressionDataset(images=train_images, labels=train_labels, standardize=standardize)
+            train_images_subset = torch.tensor(y_train_subset, dtype=torch.float32)
+            train_labels_subset = torch.tensor(X_train_subset, dtype=torch.float32)
+
+            train_dataset = RegressionDataset(images=train_images_subset, labels=train_labels_subset, standardize=standardize)
             val_dataset = RegressionDataset(images=val_images, labels=val_labels, standardize=standardize)
         else:
             train_dataset = RegressionDataset(images=train_images, labels=train_labels, standardize=standardize)
