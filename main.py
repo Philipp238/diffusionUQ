@@ -138,7 +138,7 @@ if __name__ == '__main__':
             uci_data = get_uci_data(dataset_name, 
                                     splits=split, 
                                     standardize=data_parameters['standardize'], 
-                                    validation_ratio=0.15)
+                                    validation_ratio=0.11)
             dataset, image_dim, label_dim = uci_data
         else:
             dataset, image_dim, label_dim = get_data(dataset_name, data_dir, dataset_size, data_parameters['standardize'], image_size=None)
