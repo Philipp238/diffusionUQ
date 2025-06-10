@@ -138,7 +138,7 @@ def setup_model(training_parameters: dict, device, image_dim: int, label_dim: in
         
         if training_parameters["distributional_method"] == "deterministic":
             hidden_model = backbone
-        elif training_parameters["distributional_method"] == "normal":
+        elif training_parameters["distributional_method"] == "normal" or training_parameters["distributional_method"] == "closed_form_normal":
             hidden_model = MLP_diffusion_normal(
                 backbone=backbone,
                 target_dim=image_dim,

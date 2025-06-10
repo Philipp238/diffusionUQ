@@ -224,20 +224,55 @@ class DistributionalDiffusion(Diffusion):
             predicted_noise = predicted_noise.squeeze(1)
 
         return predicted_noise
-    
+
+
+    def sample_x_t_closed_form_normal(self, x, t, predicted_noise_distribution_params, i):
+        assert self.x_T_sampling_method in ['standard', 'naive-regressor-mean'], f"Closed form normal sampling not supported for {self.x_T_sampling_method}"
+        
+        predicted_noise_mu = predicted_noise_distribution_params[..., 0]
+        predicted_noise_sigma = predicted_noise_distribution_params[..., 1]
+
+        alpha = self.alpha[t][:, None]
+        alpha_hat = self.alpha_hat[t][:, None]
+        beta = self.beta[t][:, None]
+        if i > 1:
+            noise = torch.randn_like(x)
+        else:
+            noise = torch.zeros_like(x)
+
+        variance_factor = (beta**2 / (alpha * (1-alpha_hat)))
+            
+        x = (
+            1
+            / torch.sqrt(alpha)
+            * (
+                x
+                - ((1 - alpha) / (torch.sqrt(1 - alpha_hat))) * predicted_noise_mu
+            )
+            + (variance_factor * predicted_noise_sigma + torch.sqrt(beta)) * noise
+        )
+
+        return x
+
+
     def sample_low_dimensional(self, model, n, conditioning=None, cfg_scale=3, pred=None):
         model.eval()
         with torch.no_grad():
             x = self.sample_x_T((n, self.img_size), pred)
             for i in reversed(range(1, self.noise_steps)):
                 t = (torch.ones(n) * i).long().to(self.device)
-                predicted_noise = self.sample_noise(model, x, t, conditioning, pred)
+                if self.distributional_method == "closed_form_normal":
+                    predicted_noise_distribution_params = model(x, t, conditioning, pred)
+                else:
+                    predicted_noise = self.sample_noise(model, x, t, conditioning, pred)
                 if cfg_scale > 0:
                     uncond_predicted_noise = self.sample_noise(model, x, t, None, pred)
                     predicted_noise = torch.lerp(
                         uncond_predicted_noise, predicted_noise, cfg_scale
                     )
-                
-                x = self.sample_x_t_inference(x, t, predicted_noise, pred, i)
+                if self.distributional_method == "closed_form_normal":
+                    x = self.sample_x_t_closed_form_normal(x, t, predicted_noise_distribution_params, i)
+                else:
+                    x = self.sample_x_t_inference(x, t, predicted_noise, pred, i)
         model.train()
         return x
