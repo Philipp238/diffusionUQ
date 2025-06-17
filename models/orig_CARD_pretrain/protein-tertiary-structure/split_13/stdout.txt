@@ -1,0 +1,154 @@
+INFO - main.py - 2025-06-13 15:47:25,672 - Using device: cuda:0
+INFO - main.py - 2025-06-13 15:47:25,674 - Writing log file to ./results_250613_pretrain_protein/card_conditional_uci_results/1000steps/nn/run_1_a4000/f_phi_prior_cat_f_phi/logs/uci_protein/split_13
+INFO - main.py - 2025-06-13 15:47:25,674 - Exp instance id = 5500
+INFO - main.py - 2025-06-13 15:47:25,675 - Exp comment = 
+INFO - card_regression.py - 2025-06-13 15:47:25,678 - Test set info:
+ERROR - main.py - 2025-06-13 15:47:26,064 - Traceback (most recent call last):
+  File "main.py", line 297, in main
+    runner.train()
+  File "/home/math/kneissl/Projects/CARD_base/regression/card_regression.py", line 228, in train
+    test_set_object, test_set = get_dataset(args, config, test_set=True)
+  File "/home/math/kneissl/Projects/CARD_base/regression/utils.py", line 173, in get_dataset
+    data_object = UCI_Dataset(config, args.split, validation)
+  File "/home/math/kneissl/Projects/CARD_base/regression/data_loader.py", line 168, in __init__
+    index_train = np.loadtxt(_get_index_train_test_path(_DATA_DIRECTORY_PATH, split, train=True))
+  File "/home/groups/ai/kneissl/anaconda3/envs/card/lib/python3.8/site-packages/numpy/lib/npyio.py", line 1067, in loadtxt
+    fh = np.lib._datasource.open(fname, 'rt', encoding=encoding)
+  File "/home/groups/ai/kneissl/anaconda3/envs/card/lib/python3.8/site-packages/numpy/lib/_datasource.py", line 193, in open
+    return ds.open(path, mode, encoding=encoding, newline=newline)
+  File "/home/groups/ai/kneissl/anaconda3/envs/card/lib/python3.8/site-packages/numpy/lib/_datasource.py", line 533, in open
+    raise IOError("%s not found." % path)
+OSError: ./data/datasets/UCI_Datasets/protein-tertiary-structure/data/index_train_13.txt not found.
+
+INFO - main.py - 2025-06-13 15:47:26,134 - Using device: cuda:0
+INFO - main.py - 2025-06-13 15:47:26,135 - Writing log file to ./results_250613_pretrain_protein/card_conditional_uci_results/1000steps/nn/run_1_a4000/f_phi_prior_cat_f_phi/logs/uci_protein/split_14
+INFO - main.py - 2025-06-13 15:47:26,135 - Exp instance id = 5500
+INFO - main.py - 2025-06-13 15:47:26,135 - Exp comment = 
+INFO - card_regression.py - 2025-06-13 15:47:26,137 - Test set info:
+ERROR - main.py - 2025-06-13 15:47:26,520 - Traceback (most recent call last):
+  File "main.py", line 297, in main
+    runner.train()
+  File "/home/math/kneissl/Projects/CARD_base/regression/card_regression.py", line 228, in train
+    test_set_object, test_set = get_dataset(args, config, test_set=True)
+  File "/home/math/kneissl/Projects/CARD_base/regression/utils.py", line 173, in get_dataset
+    data_object = UCI_Dataset(config, args.split, validation)
+  File "/home/math/kneissl/Projects/CARD_base/regression/data_loader.py", line 168, in __init__
+    index_train = np.loadtxt(_get_index_train_test_path(_DATA_DIRECTORY_PATH, split, train=True))
+  File "/home/groups/ai/kneissl/anaconda3/envs/card/lib/python3.8/site-packages/numpy/lib/npyio.py", line 1067, in loadtxt
+    fh = np.lib._datasource.open(fname, 'rt', encoding=encoding)
+  File "/home/groups/ai/kneissl/anaconda3/envs/card/lib/python3.8/site-packages/numpy/lib/_datasource.py", line 193, in open
+    return ds.open(path, mode, encoding=encoding, newline=newline)
+  File "/home/groups/ai/kneissl/anaconda3/envs/card/lib/python3.8/site-packages/numpy/lib/_datasource.py", line 533, in open
+    raise IOError("%s not found." % path)
+OSError: ./data/datasets/UCI_Datasets/protein-tertiary-structure/data/index_train_14.txt not found.
+
+INFO - main.py - 2025-06-13 15:47:26,567 - Using device: cuda:0
+INFO - main.py - 2025-06-13 15:47:26,568 - Writing log file to ./results_250613_pretrain_protein/card_conditional_uci_results/1000steps/nn/run_1_a4000/f_phi_prior_cat_f_phi/logs/uci_protein/split_15
+INFO - main.py - 2025-06-13 15:47:26,568 - Exp instance id = 5500
+INFO - main.py - 2025-06-13 15:47:26,569 - Exp comment = 
+INFO - card_regression.py - 2025-06-13 15:47:26,570 - Test set info:
+ERROR - main.py - 2025-06-13 15:47:26,952 - Traceback (most recent call last):
+  File "main.py", line 297, in main
+    runner.train()
+  File "/home/math/kneissl/Projects/CARD_base/regression/card_regression.py", line 228, in train
+    test_set_object, test_set = get_dataset(args, config, test_set=True)
+  File "/home/math/kneissl/Projects/CARD_base/regression/utils.py", line 173, in get_dataset
+    data_object = UCI_Dataset(config, args.split, validation)
+  File "/home/math/kneissl/Projects/CARD_base/regression/data_loader.py", line 168, in __init__
+    index_train = np.loadtxt(_get_index_train_test_path(_DATA_DIRECTORY_PATH, split, train=True))
+  File "/home/groups/ai/kneissl/anaconda3/envs/card/lib/python3.8/site-packages/numpy/lib/npyio.py", line 1067, in loadtxt
+    fh = np.lib._datasource.open(fname, 'rt', encoding=encoding)
+  File "/home/groups/ai/kneissl/anaconda3/envs/card/lib/python3.8/site-packages/numpy/lib/_datasource.py", line 193, in open
+    return ds.open(path, mode, encoding=encoding, newline=newline)
+  File "/home/groups/ai/kneissl/anaconda3/envs/card/lib/python3.8/site-packages/numpy/lib/_datasource.py", line 533, in open
+    raise IOError("%s not found." % path)
+OSError: ./data/datasets/UCI_Datasets/protein-tertiary-structure/data/index_train_15.txt not found.
+
+INFO - main.py - 2025-06-13 15:47:26,981 - Using device: cuda:0
+INFO - main.py - 2025-06-13 15:47:26,982 - Writing log file to ./results_250613_pretrain_protein/card_conditional_uci_results/1000steps/nn/run_1_a4000/f_phi_prior_cat_f_phi/logs/uci_protein/split_16
+INFO - main.py - 2025-06-13 15:47:26,983 - Exp instance id = 5500
+INFO - main.py - 2025-06-13 15:47:26,983 - Exp comment = 
+INFO - card_regression.py - 2025-06-13 15:47:26,985 - Test set info:
+ERROR - main.py - 2025-06-13 15:47:27,416 - Traceback (most recent call last):
+  File "main.py", line 297, in main
+    runner.train()
+  File "/home/math/kneissl/Projects/CARD_base/regression/card_regression.py", line 228, in train
+    test_set_object, test_set = get_dataset(args, config, test_set=True)
+  File "/home/math/kneissl/Projects/CARD_base/regression/utils.py", line 173, in get_dataset
+    data_object = UCI_Dataset(config, args.split, validation)
+  File "/home/math/kneissl/Projects/CARD_base/regression/data_loader.py", line 168, in __init__
+    index_train = np.loadtxt(_get_index_train_test_path(_DATA_DIRECTORY_PATH, split, train=True))
+  File "/home/groups/ai/kneissl/anaconda3/envs/card/lib/python3.8/site-packages/numpy/lib/npyio.py", line 1067, in loadtxt
+    fh = np.lib._datasource.open(fname, 'rt', encoding=encoding)
+  File "/home/groups/ai/kneissl/anaconda3/envs/card/lib/python3.8/site-packages/numpy/lib/_datasource.py", line 193, in open
+    return ds.open(path, mode, encoding=encoding, newline=newline)
+  File "/home/groups/ai/kneissl/anaconda3/envs/card/lib/python3.8/site-packages/numpy/lib/_datasource.py", line 533, in open
+    raise IOError("%s not found." % path)
+OSError: ./data/datasets/UCI_Datasets/protein-tertiary-structure/data/index_train_16.txt not found.
+
+INFO - main.py - 2025-06-13 15:47:27,441 - Using device: cuda:0
+INFO - main.py - 2025-06-13 15:47:27,441 - Writing log file to ./results_250613_pretrain_protein/card_conditional_uci_results/1000steps/nn/run_1_a4000/f_phi_prior_cat_f_phi/logs/uci_protein/split_17
+INFO - main.py - 2025-06-13 15:47:27,442 - Exp instance id = 5500
+INFO - main.py - 2025-06-13 15:47:27,442 - Exp comment = 
+INFO - card_regression.py - 2025-06-13 15:47:27,444 - Test set info:
+ERROR - main.py - 2025-06-13 15:47:27,833 - Traceback (most recent call last):
+  File "main.py", line 297, in main
+    runner.train()
+  File "/home/math/kneissl/Projects/CARD_base/regression/card_regression.py", line 228, in train
+    test_set_object, test_set = get_dataset(args, config, test_set=True)
+  File "/home/math/kneissl/Projects/CARD_base/regression/utils.py", line 173, in get_dataset
+    data_object = UCI_Dataset(config, args.split, validation)
+  File "/home/math/kneissl/Projects/CARD_base/regression/data_loader.py", line 168, in __init__
+    index_train = np.loadtxt(_get_index_train_test_path(_DATA_DIRECTORY_PATH, split, train=True))
+  File "/home/groups/ai/kneissl/anaconda3/envs/card/lib/python3.8/site-packages/numpy/lib/npyio.py", line 1067, in loadtxt
+    fh = np.lib._datasource.open(fname, 'rt', encoding=encoding)
+  File "/home/groups/ai/kneissl/anaconda3/envs/card/lib/python3.8/site-packages/numpy/lib/_datasource.py", line 193, in open
+    return ds.open(path, mode, encoding=encoding, newline=newline)
+  File "/home/groups/ai/kneissl/anaconda3/envs/card/lib/python3.8/site-packages/numpy/lib/_datasource.py", line 533, in open
+    raise IOError("%s not found." % path)
+OSError: ./data/datasets/UCI_Datasets/protein-tertiary-structure/data/index_train_17.txt not found.
+
+INFO - main.py - 2025-06-13 15:47:27,889 - Using device: cuda:0
+INFO - main.py - 2025-06-13 15:47:27,890 - Writing log file to ./results_250613_pretrain_protein/card_conditional_uci_results/1000steps/nn/run_1_a4000/f_phi_prior_cat_f_phi/logs/uci_protein/split_18
+INFO - main.py - 2025-06-13 15:47:27,890 - Exp instance id = 5500
+INFO - main.py - 2025-06-13 15:47:27,891 - Exp comment = 
+INFO - card_regression.py - 2025-06-13 15:47:27,894 - Test set info:
+ERROR - main.py - 2025-06-13 15:47:28,282 - Traceback (most recent call last):
+  File "main.py", line 297, in main
+    runner.train()
+  File "/home/math/kneissl/Projects/CARD_base/regression/card_regression.py", line 228, in train
+    test_set_object, test_set = get_dataset(args, config, test_set=True)
+  File "/home/math/kneissl/Projects/CARD_base/regression/utils.py", line 173, in get_dataset
+    data_object = UCI_Dataset(config, args.split, validation)
+  File "/home/math/kneissl/Projects/CARD_base/regression/data_loader.py", line 168, in __init__
+    index_train = np.loadtxt(_get_index_train_test_path(_DATA_DIRECTORY_PATH, split, train=True))
+  File "/home/groups/ai/kneissl/anaconda3/envs/card/lib/python3.8/site-packages/numpy/lib/npyio.py", line 1067, in loadtxt
+    fh = np.lib._datasource.open(fname, 'rt', encoding=encoding)
+  File "/home/groups/ai/kneissl/anaconda3/envs/card/lib/python3.8/site-packages/numpy/lib/_datasource.py", line 193, in open
+    return ds.open(path, mode, encoding=encoding, newline=newline)
+  File "/home/groups/ai/kneissl/anaconda3/envs/card/lib/python3.8/site-packages/numpy/lib/_datasource.py", line 533, in open
+    raise IOError("%s not found." % path)
+OSError: ./data/datasets/UCI_Datasets/protein-tertiary-structure/data/index_train_18.txt not found.
+
+INFO - main.py - 2025-06-13 15:47:28,443 - Using device: cuda:0
+INFO - main.py - 2025-06-13 15:47:28,444 - Writing log file to ./results_250613_pretrain_protein/card_conditional_uci_results/1000steps/nn/run_1_a4000/f_phi_prior_cat_f_phi/logs/uci_protein/split_19
+INFO - main.py - 2025-06-13 15:47:28,445 - Exp instance id = 5500
+INFO - main.py - 2025-06-13 15:47:28,445 - Exp comment = 
+INFO - card_regression.py - 2025-06-13 15:47:28,447 - Test set info:
+ERROR - main.py - 2025-06-13 15:47:28,833 - Traceback (most recent call last):
+  File "main.py", line 297, in main
+    runner.train()
+  File "/home/math/kneissl/Projects/CARD_base/regression/card_regression.py", line 228, in train
+    test_set_object, test_set = get_dataset(args, config, test_set=True)
+  File "/home/math/kneissl/Projects/CARD_base/regression/utils.py", line 173, in get_dataset
+    data_object = UCI_Dataset(config, args.split, validation)
+  File "/home/math/kneissl/Projects/CARD_base/regression/data_loader.py", line 168, in __init__
+    index_train = np.loadtxt(_get_index_train_test_path(_DATA_DIRECTORY_PATH, split, train=True))
+  File "/home/groups/ai/kneissl/anaconda3/envs/card/lib/python3.8/site-packages/numpy/lib/npyio.py", line 1067, in loadtxt
+    fh = np.lib._datasource.open(fname, 'rt', encoding=encoding)
+  File "/home/groups/ai/kneissl/anaconda3/envs/card/lib/python3.8/site-packages/numpy/lib/_datasource.py", line 193, in open
+    return ds.open(path, mode, encoding=encoding, newline=newline)
+  File "/home/groups/ai/kneissl/anaconda3/envs/card/lib/python3.8/site-packages/numpy/lib/_datasource.py", line 533, in open
+    raise IOError("%s not found." % path)
+OSError: ./data/datasets/UCI_Datasets/protein-tertiary-structure/data/index_train_19.txt not found.
+

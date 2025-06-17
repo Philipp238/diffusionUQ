@@ -1,0 +1,22 @@
+INFO - main.py - 2025-06-13 15:47:28,443 - Using device: cuda:0
+INFO - main.py - 2025-06-13 15:47:28,444 - Writing log file to ./results_250613_pretrain_protein/card_conditional_uci_results/1000steps/nn/run_1_a4000/f_phi_prior_cat_f_phi/logs/uci_protein/split_19
+INFO - main.py - 2025-06-13 15:47:28,445 - Exp instance id = 5500
+INFO - main.py - 2025-06-13 15:47:28,445 - Exp comment = 
+INFO - card_regression.py - 2025-06-13 15:47:28,447 - Test set info:
+ERROR - main.py - 2025-06-13 15:47:28,833 - Traceback (most recent call last):
+  File "main.py", line 297, in main
+    runner.train()
+  File "/home/math/kneissl/Projects/CARD_base/regression/card_regression.py", line 228, in train
+    test_set_object, test_set = get_dataset(args, config, test_set=True)
+  File "/home/math/kneissl/Projects/CARD_base/regression/utils.py", line 173, in get_dataset
+    data_object = UCI_Dataset(config, args.split, validation)
+  File "/home/math/kneissl/Projects/CARD_base/regression/data_loader.py", line 168, in __init__
+    index_train = np.loadtxt(_get_index_train_test_path(_DATA_DIRECTORY_PATH, split, train=True))
+  File "/home/groups/ai/kneissl/anaconda3/envs/card/lib/python3.8/site-packages/numpy/lib/npyio.py", line 1067, in loadtxt
+    fh = np.lib._datasource.open(fname, 'rt', encoding=encoding)
+  File "/home/groups/ai/kneissl/anaconda3/envs/card/lib/python3.8/site-packages/numpy/lib/_datasource.py", line 193, in open
+    return ds.open(path, mode, encoding=encoding, newline=newline)
+  File "/home/groups/ai/kneissl/anaconda3/envs/card/lib/python3.8/site-packages/numpy/lib/_datasource.py", line 533, in open
+    raise IOError("%s not found." % path)
+OSError: ./data/datasets/UCI_Datasets/protein-tertiary-structure/data/index_train_19.txt not found.
+

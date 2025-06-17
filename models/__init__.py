@@ -1,4 +1,4 @@
-from models.mlp import MLP
+from models.mlp import MLP, MLP_CARD
 from models.mlp_diffusion import MLP_diffusion, MLP_diffusion_normal, MLP_diffusion_sample, MLP_diffusion_mixednormal
 from models.ema import EMA
 

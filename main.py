@@ -1,5 +1,6 @@
 # Main function to run the experiments.
 
+import yaml
 import numpy as np
 import torch
 import gc
@@ -135,10 +136,11 @@ if __name__ == '__main__':
         dataset_size = data_parameters['max_dataset_size']
         if dataset_name in UCI_DATASET_NAMES:
             split = data_parameters['yarin_gal_uci_split_indices']
+            validation_ratio_on_train_set = data_parameters["validation_ratio"] / (1 - data_parameters["validation_ratio"])
             uci_data = get_uci_data(dataset_name, 
                                     splits=split, 
                                     standardize=data_parameters['standardize'], 
-                                    validation_ratio=0.11)
+                                    validation_ratio=validation_ratio_on_train_set)
             dataset, image_dim, label_dim = uci_data
         else:
             dataset, image_dim, label_dim = get_data(dataset_name, data_dir, dataset_size, data_parameters['standardize'], image_size=None)
@@ -161,15 +163,54 @@ if __name__ == '__main__':
             
             if dataset_name in UCI_DATASET_NAMES:
                 logging.info(f"Using split-{split} for UCI dataset {dataset_name}") # type: ignore
-                training_dataset, validation_dataset, test_dataset = dataset
+                if data_parameters["validation_ratio"] > 0:
+                    training_dataset, validation_dataset, test_dataset = dataset
+                else:
+                    training_dataset, test_dataset = dataset
+                    validation_dataset = None
             else:
                 logging.info(f"Use random split for dataset {dataset_name}")
                 training_dataset, validation_dataset, test_dataset = random_split(dataset, [0.8, 0.1, 0.1])
+
             train_loader = DataLoader(training_dataset, batch_size=batch_size, shuffle=True)
-            val_loader = DataLoader(validation_dataset, batch_size=eval_batch_size, shuffle=True)
+            if validation_dataset is not None:
+                val_loader = DataLoader(validation_dataset, batch_size=eval_batch_size, shuffle=True)
+            else:
+                val_loader = None
             logging.info(using('After creating the dataloaders'))
             
-            if training_parameters['regressor']:
+            if training_parameters['regressor'] == "orig_CARD_pretrain":
+                logging.info(f"Using pre-trained regressor from the CARD repo")
+                model_path = os.path.join("models", "orig_CARD_pretrain", dataset_name, f"split_{split}", "aux_ckpt.pth")
+                aux_states = torch.load(model_path)
+
+                config_path = os.path.join("models", "orig_CARD_pretrain", dataset_name, f"split_{split}", "config.yml")
+                with open(os.path.join(config_path), "r") as f:
+                    card_config = yaml.unsafe_load(f)
+
+                regressor = train_utils.setup_CARD_model(
+                    image_dim=image_dim,
+                    label_dim=label_dim,
+                    hidden_layers=card_config.diffusion.nonlinear_guidance.hid_layers,
+                    use_batchnorm=card_config.diffusion.nonlinear_guidance.use_batchnorm,
+                    negative_slope=card_config.diffusion.nonlinear_guidance.negative_slope,
+                    dropout_rate=card_config.diffusion.nonlinear_guidance.dropout_rate,
+                ).to(device)
+
+                regressor.load_state_dict(aux_states[0])
+                regressor.eval()
+
+                # Eval regressor on test set
+                test_loader = DataLoader(test_dataset, batch_size=eval_batch_size, shuffle=True)
+                test_performance = train_utils.evaluate_CARD_model(
+                    model=regressor,
+                    loader=test_loader,
+                    device=device,
+                    standardized=data_parameters['standardize'],
+                )
+                rmse = np.sqrt(test_performance)
+                logging.info(f"Performance of pre-trained regressor on test set: RMSE={round(rmse, 2)}")
+            elif training_parameters['regressor']:
                 folder_path = os.path.join('models', training_parameters['regressor'])
                 ini_file = find_files_by_ending(folder_path, '.ini')[0]
                 weight_file = find_files_by_ending(folder_path, '.pt')[0]
@@ -187,6 +228,7 @@ if __name__ == '__main__':
                 
                 regressor = train_utils.setup_model(regressor_parameters_dict[0], device, image_dim, label_dim)
                 train_utils.resume(regressor, os.path.join(folder_path, weight_file))
+                regressor.eval()
             else:
                 regressor = None
             
@@ -225,7 +267,10 @@ if __name__ == '__main__':
                 logging.info(f'Emptying the cuda cache took {np.round(t_1 - t_0, 3)}s.')
             
             train_loader = DataLoader(training_dataset, batch_size=eval_batch_size, shuffle=True)
-            val_loader = DataLoader(validation_dataset, batch_size=eval_batch_size, shuffle=True)
+            if validation_dataset is not None:
+                val_loader = DataLoader(validation_dataset, batch_size=eval_batch_size, shuffle=True)
+            else:
+                val_loader = None
             test_loader = DataLoader(test_dataset, batch_size=eval_batch_size, shuffle=True)
             
             # Fix the seed again just that the evaluation without training yields the same results as training + evaluation

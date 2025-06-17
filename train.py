@@ -186,6 +186,11 @@ def trainer(
     # Iterate over autoregressive steps, if necessary
     logging.info(f"Training starts now.")
 
+
+    filename = os.path.join(
+        directory, f"Datetime_{d_time}_Loss_{filename_ending}.pt"
+    )
+
     for epoch in range(training_parameters["n_epochs"]):
         gc.collect()
         # logging.info(using("At the start of the epoch"))
@@ -221,94 +226,100 @@ def trainer(
 
         if epoch % report_every == report_every - 1:
             epochs.append(epoch)
-            if not uncertainty_quantification.endswith("dropout"):
-                model.eval()
-
-            validation_loss = 0
-            validation_loss_ema = 0
-            
-            with torch.no_grad():
-                for images, labels in val_loader:
-                    images = images.to(device)
-                    labels = labels.to(device)
-                    
-                    if uncertainty_quantification == 'diffusion':
-                        n_samples = 10
-                        
-                        if regressor is None:
-                            repeated_pred = None
-                        else:
-                            pred = regressor(labels)
-                            repeated_pred = pred.repeat_interleave(n_samples, dim=0)
-
-                        repeated_labels = labels.repeat_interleave(n_samples, dim=0)
-                        sampled_images = diffusion.sample_low_dimensional(
-                            model,
-                            n=repeated_labels.shape[0],
-                            conditioning=repeated_labels,
-                            pred=repeated_pred,
-                            cfg_scale=cfg_scale
-                            )
-                        sampled_images_ema = diffusion.sample_low_dimensional(
-                            ema_model,
-                            n=repeated_labels.shape[0],
-                            conditioning=repeated_labels,
-                            pred=repeated_pred,
-                            cfg_scale=cfg_scale
-                            )
-                        sampled_images = sampled_images.reshape(labels.shape[0], n_samples, images.shape[1]).mean(dim=1)
-                        sampled_images_ema = sampled_images_ema.reshape(labels.shape[0], n_samples, images.shape[1]).mean(dim=1)
-                    else:
-                        sampled_images = model(labels)
-                        sampled_images_ema = ema_model(labels)
-                    
-                    validation_loss += eval_criterion(sampled_images, images).item()
-                    validation_loss_ema += eval_criterion(sampled_images_ema, images).item()
-            
-            validation_loss_list.append(
-                validation_loss / len(val_loader)
-            )
-            validation_loss_list_ema.append(
-                validation_loss_ema / len(val_loader)
-            )
             training_loss_list.append(
                 running_loss / report_every / (len(train_loader))
             )
             running_loss = 0.0
 
-            if validation_loss < best_loss:
-                best_loss = validation_loss
-                filename = os.path.join(
-                    directory, f"Datetime_{d_time}_Loss_{filename_ending}.pt"
-                )
-                train_utils.checkpoint(model, filename)
+            logging_str = f"[{epoch + 1:5d}] Training loss: {training_loss_list[-1]:.8f}"
 
-            # Early stopping (If the model is only getting finetuned, run at least 5 epochs. Otherwise at least 50.)
-            if training_parameters.get('finetuning', None):
-                min_n_epochs = 5
-            else:
-                min_n_epochs = 50
+            if val_loader is not None:
+                if not uncertainty_quantification.endswith("dropout"):
+                    model.eval()
+
+                validation_loss = 0
+                validation_loss_ema = 0
                 
-            if training_parameters['early_stopping'] and (epoch > min_n_epochs):
+                with torch.no_grad():
+                    for images, labels in val_loader:
+                        images = images.to(device)
+                        labels = labels.to(device)
+                        
+                        if uncertainty_quantification == 'diffusion':
+                            n_samples = 10
+                            
+                            if regressor is None:
+                                repeated_pred = None
+                            else:
+                                pred = regressor(labels)
+                                repeated_pred = pred.repeat_interleave(n_samples, dim=0)
 
-                if early_stopper.early_stop(validation_loss):
-                    logging.info(f"EP {epoch}: Early stopping")
-                    break
-            
-            logging.info(
-                    f"[{epoch + 1:5d}] Training loss: {training_loss_list[-1]:.8f}, Validation loss: "
+                            repeated_labels = labels.repeat_interleave(n_samples, dim=0)
+                            sampled_images = diffusion.sample_low_dimensional(
+                                model,
+                                n=repeated_labels.shape[0],
+                                conditioning=repeated_labels,
+                                pred=repeated_pred,
+                                cfg_scale=cfg_scale
+                                )
+                            sampled_images_ema = diffusion.sample_low_dimensional(
+                                ema_model,
+                                n=repeated_labels.shape[0],
+                                conditioning=repeated_labels,
+                                pred=repeated_pred,
+                                cfg_scale=cfg_scale
+                                )
+                            sampled_images = sampled_images.reshape(labels.shape[0], n_samples, images.shape[1]).mean(dim=1)
+                            sampled_images_ema = sampled_images_ema.reshape(labels.shape[0], n_samples, images.shape[1]).mean(dim=1)
+                        else:
+                            sampled_images = model(labels)
+                            sampled_images_ema = ema_model(labels)
+                        
+                        validation_loss += eval_criterion(sampled_images, images).item()
+                        validation_loss_ema += eval_criterion(sampled_images_ema, images).item()
+                
+                validation_loss_list.append(
+                    validation_loss / len(val_loader)
+                )
+                validation_loss_list_ema.append(
+                    validation_loss_ema / len(val_loader)
+                )
+
+                if validation_loss < best_loss:
+                    best_loss = validation_loss
+                    train_utils.checkpoint(model, filename)
+
+                # Early stopping (If the model is only getting finetuned, run at least 5 epochs. Otherwise at least 50.)
+                if training_parameters.get('finetuning', None):
+                    min_n_epochs = 5
+                else:
+                    min_n_epochs = 50
+                    
+                if training_parameters['early_stopping'] and (epoch > min_n_epochs):
+
+                    if early_stopper.early_stop(validation_loss):
+                        logging.info(f"EP {epoch}: Early stopping")
+                        break
+                
+                logging_str += (",Validation loss: "
                     f"{validation_loss_list[-1]:.8f}, Validation loss EMA: {validation_loss_list_ema[-1]:.8f}"
                 )
+            logging.info(logging_str)   
         
     logging.info(using("After finishing all epochs"))
 
     optimizer.zero_grad(set_to_none=True)
-    train_utils.resume(model, filename)
+    try:
+        train_utils.resume(model, filename)
+    except:
+        logging.info(f"Proceeding with diffusion model after {training_parameters['n_epochs']} epochs of training")
+        train_utils.checkpoint(model, filename)
 
     # Plot training and validation loss
     plt.plot(epochs, training_loss_list, label="training loss")
-    plt.plot(epochs, validation_loss_list, label="validation loss")
-    plt.plot(epochs, validation_loss_list_ema, label="validation loss EMA")
+    if val_loader is not None:
+        plt.plot(epochs, validation_loss_list, label="validation loss")
+        plt.plot(epochs, validation_loss_list_ema, label="validation loss EMA")
     plt.legend()
     plt.yscale("log")
     plt.tight_layout()

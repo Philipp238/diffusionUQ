@@ -9,6 +9,7 @@ import utils.losses as losses
 import scoringrules as sr
 from models import (
     MLP,
+    MLP_CARD,
     MLP_diffusion,
     MLP_diffusion_normal,
     MLP_diffusion_sample,
@@ -67,7 +68,7 @@ def get_criterion(training_parameters, device):
     if training_parameters['uncertainty_quantification'] == 'diffusion':
         if training_parameters["distributional_method"] == "deterministic":
             criterion = nn.MSELoss()
-        elif training_parameters["distributional_method"] == "normal":
+        elif training_parameters["distributional_method"] == "normal" or training_parameters["distributional_method"] == "closed_form_normal":
             criterion = lambda truth, prediction: sr.crps_normal(
                 truth, prediction[..., 0], prediction[..., 1], backend="torch"
             ).mean()
@@ -227,3 +228,42 @@ def get_hyperparameters_combination(hp_dict, except_keys=[]):
         for combination in all_combinations
     ]
     return combination_dicts
+
+
+def setup_CARD_model(image_dim: int,
+                     label_dim: int,
+                     hidden_layers=[100, 50],
+                     use_batchnorm=False,
+                     negative_slope=0.01,
+                     dropout_rate=0.1
+                     ):
+    return MLP_CARD(
+        dim_in=label_dim,
+        dim_out=image_dim,
+        hid_layers=hidden_layers,
+        use_batchnorm=use_batchnorm,
+        negative_slope=negative_slope,
+        dropout_rate=dropout_rate
+    )
+
+
+def evaluate_CARD_model(model, loader, device, standardized=False):
+    total_mse = 0
+    count = 0
+    for images, labels in loader:
+        images = images.to(device)
+        labels = labels.to(device)
+
+        images_pred = model(labels).detach().cpu()
+        images = images.cpu()
+
+        if standardized:
+            images = loader.dataset.destandardize_image(images)
+            images_pred = loader.dataset.destandardize_image(images_pred)
+
+        mses = (images_pred - images) ** 2
+        total_mse += mses.sum().item()
+        count += images_pred.shape[0]
+        
+    return total_mse / count
+

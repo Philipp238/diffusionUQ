@@ -1,0 +1,104 @@
+INFO - main.py - 2025-06-13 15:29:14,522 - Using device: cuda:0
+INFO - main.py - 2025-06-13 15:29:14,523 - Writing log file to ./results_250613_pretrain_yacht/card_conditional_uci_results/1000steps/nn/run_1_a4000/f_phi_prior_cat_f_phi/logs/uci_yacht/split_15
+INFO - main.py - 2025-06-13 15:29:14,523 - Exp instance id = 8143
+INFO - main.py - 2025-06-13 15:29:14,523 - Exp comment = 
+INFO - card_regression.py - 2025-06-13 15:29:14,525 - Test set info:
+INFO - utils.py - 2025-06-13 15:29:14,558 - {'n_samples': 31, 'dim_x': 6, 'dim_y': 1}
+INFO - card_regression.py - 2025-06-13 15:29:14,559 - Training set info:
+INFO - utils.py - 2025-06-13 15:29:14,565 - {'n_samples': 277, 'dim_x': 6, 'dim_y': 1}
+INFO - card_regression.py - 2025-06-13 15:29:14,565 - 
+Split original training set into training and validation set for f_phi hyperparameter tuning...
+INFO - card_regression.py - 2025-06-13 15:29:14,565 - Validation set info:
+INFO - utils.py - 2025-06-13 15:29:14,570 - {'n_samples': 111, 'dim_x': 6, 'dim_y': 1}
+INFO - card_regression.py - 2025-06-13 15:29:14,570 - Training subset info:
+INFO - utils.py - 2025-06-13 15:29:14,575 - {'n_samples': 166, 'dim_x': 6, 'dim_y': 1}
+INFO - card_regression.py - 2025-06-13 15:29:14,579 - 
+Before pre-training:
+INFO - card_regression.py - 2025-06-13 15:29:14,584 - NN guidance model un-normalized y RMSE 
+	of the training set and of the test set are 
+	15.37581635 and 14.20551109, respectively.
+INFO - card_regression.py - 2025-06-13 15:29:14,594 - epoch: 0, non-linear guidance model pre-training loss: 0.22166359424591064
+INFO - card_regression.py - 2025-06-13 15:29:14,692 - epoch: 10, non-linear guidance model pre-training loss: 0.10320442914962769
+INFO - card_regression.py - 2025-06-13 15:29:14,790 - epoch: 20, non-linear guidance model pre-training loss: 0.30807575583457947
+INFO - card_regression.py - 2025-06-13 15:29:14,887 - epoch: 30, non-linear guidance model pre-training loss: 0.030288567766547203
+INFO - card_regression.py - 2025-06-13 15:29:14,985 - epoch: 40, non-linear guidance model pre-training loss: 0.11535698175430298
+INFO - card_regression.py - 2025-06-13 15:29:15,083 - epoch: 50, non-linear guidance model pre-training loss: 0.06448791921138763
+INFO - card_regression.py - 2025-06-13 15:29:15,181 - epoch: 60, non-linear guidance model pre-training loss: 0.06874722242355347
+INFO - card_regression.py - 2025-06-13 15:29:15,280 - epoch: 70, non-linear guidance model pre-training loss: 0.02548881433904171
+INFO - card_regression.py - 2025-06-13 15:29:15,378 - epoch: 80, non-linear guidance model pre-training loss: 0.10044103860855103
+INFO - card_regression.py - 2025-06-13 15:29:15,475 - epoch: 90, non-linear guidance model pre-training loss: 0.05136401578783989
+INFO - card_regression.py - 2025-06-13 15:29:15,573 - epoch: 100, non-linear guidance model pre-training loss: 0.037528835237026215
+INFO - card_regression.py - 2025-06-13 15:29:15,670 - epoch: 110, non-linear guidance model pre-training loss: 0.07461528480052948
+INFO - card_regression.py - 2025-06-13 15:29:15,768 - epoch: 120, non-linear guidance model pre-training loss: 0.006776663474738598
+INFO - card_regression.py - 2025-06-13 15:29:15,865 - epoch: 130, non-linear guidance model pre-training loss: 0.012786941602826118
+INFO - card_regression.py - 2025-06-13 15:29:15,963 - epoch: 140, non-linear guidance model pre-training loss: 0.013215280137956142
+INFO - card_regression.py - 2025-06-13 15:29:16,061 - epoch: 150, non-linear guidance model pre-training loss: 0.07350881397724152
+INFO - card_regression.py - 2025-06-13 15:29:16,158 - epoch: 160, non-linear guidance model pre-training loss: 0.06837888807058334
+INFO - card_regression.py - 2025-06-13 15:29:16,256 - epoch: 170, non-linear guidance model pre-training loss: 0.1800510138273239
+INFO - card_regression.py - 2025-06-13 15:29:16,355 - epoch: 180, non-linear guidance model pre-training loss: 0.05508941411972046
+INFO - card_regression.py - 2025-06-13 15:29:16,453 - epoch: 190, non-linear guidance model pre-training loss: 0.006960571743547916
+INFO - card_regression.py - 2025-06-13 15:29:16,551 - epoch: 200, non-linear guidance model pre-training loss: 0.08711931109428406
+INFO - card_regression.py - 2025-06-13 15:29:16,649 - epoch: 210, non-linear guidance model pre-training loss: 0.13701759278774261
+INFO - card_regression.py - 2025-06-13 15:29:16,747 - epoch: 220, non-linear guidance model pre-training loss: 0.011963020078837872
+INFO - card_regression.py - 2025-06-13 15:29:16,845 - epoch: 230, non-linear guidance model pre-training loss: 0.009939204901456833
+INFO - card_regression.py - 2025-06-13 15:29:16,943 - epoch: 240, non-linear guidance model pre-training loss: 0.014854113571345806
+INFO - card_regression.py - 2025-06-13 15:29:17,041 - epoch: 250, non-linear guidance model pre-training loss: 0.012156213633716106
+INFO - card_regression.py - 2025-06-13 15:29:17,139 - epoch: 260, non-linear guidance model pre-training loss: 0.08542895317077637
+INFO - card_regression.py - 2025-06-13 15:29:17,237 - epoch: 270, non-linear guidance model pre-training loss: 0.014060629531741142
+INFO - card_regression.py - 2025-06-13 15:29:17,335 - epoch: 280, non-linear guidance model pre-training loss: 0.04383179545402527
+INFO - card_regression.py - 2025-06-13 15:29:17,433 - epoch: 290, non-linear guidance model pre-training loss: 0.04930964112281799
+INFO - card_regression.py - 2025-06-13 15:29:17,532 - epoch: 300, non-linear guidance model pre-training loss: 0.03422994911670685
+INFO - card_regression.py - 2025-06-13 15:29:17,630 - epoch: 310, non-linear guidance model pre-training loss: 0.016278071328997612
+INFO - card_regression.py - 2025-06-13 15:29:17,728 - epoch: 320, non-linear guidance model pre-training loss: 0.002987429965287447
+INFO - card_regression.py - 2025-06-13 15:29:17,826 - epoch: 330, non-linear guidance model pre-training loss: 0.07697044312953949
+INFO - card_regression.py - 2025-06-13 15:29:17,866 - Tuning for number of epochs to train non-linear guidance model took 0.0547 minutes.
+INFO - card_regression.py - 2025-06-13 15:29:17,866 - 
+After tuning for best total epochs, on training sebset and validation set:
+INFO - card_regression.py - 2025-06-13 15:29:17,871 - NN guidance model un-normalized y RMSE 
+	of the training set and of the test set are 
+	2.84177279 and 2.70223141, respectively.
+INFO - card_regression.py - 2025-06-13 15:29:17,871 - 
+Reset guidance model weights...
+INFO - card_regression.py - 2025-06-13 15:29:17,871 - 
+Re-training the guidance model on original training set with 285 epochs...
+INFO - card_regression.py - 2025-06-13 15:29:17,883 - epoch: 0, non-linear guidance model pre-training loss: 0.8606476783752441
+INFO - card_regression.py - 2025-06-13 15:29:18,006 - epoch: 10, non-linear guidance model pre-training loss: 0.19355253875255585
+INFO - card_regression.py - 2025-06-13 15:29:18,129 - epoch: 20, non-linear guidance model pre-training loss: 0.08096182346343994
+INFO - card_regression.py - 2025-06-13 15:29:18,251 - epoch: 30, non-linear guidance model pre-training loss: 0.031646206974983215
+INFO - card_regression.py - 2025-06-13 15:29:18,374 - epoch: 40, non-linear guidance model pre-training loss: 0.05413674935698509
+INFO - card_regression.py - 2025-06-13 15:29:18,496 - epoch: 50, non-linear guidance model pre-training loss: 0.08803793787956238
+INFO - card_regression.py - 2025-06-13 15:29:18,619 - epoch: 60, non-linear guidance model pre-training loss: 0.06100834161043167
+INFO - card_regression.py - 2025-06-13 15:29:18,742 - epoch: 70, non-linear guidance model pre-training loss: 0.035648103803396225
+INFO - card_regression.py - 2025-06-13 15:29:18,864 - epoch: 80, non-linear guidance model pre-training loss: 0.04754617065191269
+INFO - card_regression.py - 2025-06-13 15:29:18,987 - epoch: 90, non-linear guidance model pre-training loss: 0.007270464673638344
+INFO - card_regression.py - 2025-06-13 15:29:19,109 - epoch: 100, non-linear guidance model pre-training loss: 0.041639409959316254
+INFO - card_regression.py - 2025-06-13 15:29:19,233 - epoch: 110, non-linear guidance model pre-training loss: 0.015856685116887093
+INFO - card_regression.py - 2025-06-13 15:29:19,356 - epoch: 120, non-linear guidance model pre-training loss: 0.019485173746943474
+INFO - card_regression.py - 2025-06-13 15:29:19,480 - epoch: 130, non-linear guidance model pre-training loss: 0.004670414607971907
+INFO - card_regression.py - 2025-06-13 15:29:19,603 - epoch: 140, non-linear guidance model pre-training loss: 0.017083246260881424
+INFO - card_regression.py - 2025-06-13 15:29:19,725 - epoch: 150, non-linear guidance model pre-training loss: 0.02164657972753048
+INFO - card_regression.py - 2025-06-13 15:29:19,847 - epoch: 160, non-linear guidance model pre-training loss: 0.021340083330869675
+INFO - card_regression.py - 2025-06-13 15:29:19,969 - epoch: 170, non-linear guidance model pre-training loss: 0.009403570555150509
+INFO - card_regression.py - 2025-06-13 15:29:20,092 - epoch: 180, non-linear guidance model pre-training loss: 0.01989787071943283
+INFO - card_regression.py - 2025-06-13 15:29:20,214 - epoch: 190, non-linear guidance model pre-training loss: 0.039581362158060074
+INFO - card_regression.py - 2025-06-13 15:29:20,337 - epoch: 200, non-linear guidance model pre-training loss: 0.05386132001876831
+INFO - card_regression.py - 2025-06-13 15:29:20,459 - epoch: 210, non-linear guidance model pre-training loss: 0.017733905464410782
+INFO - card_regression.py - 2025-06-13 15:29:20,582 - epoch: 220, non-linear guidance model pre-training loss: 0.019774794578552246
+INFO - card_regression.py - 2025-06-13 15:29:20,704 - epoch: 230, non-linear guidance model pre-training loss: 0.026503274217247963
+INFO - card_regression.py - 2025-06-13 15:29:20,826 - epoch: 240, non-linear guidance model pre-training loss: 0.02347641997039318
+INFO - card_regression.py - 2025-06-13 15:29:20,949 - epoch: 250, non-linear guidance model pre-training loss: 0.01798207312822342
+INFO - card_regression.py - 2025-06-13 15:29:21,071 - epoch: 260, non-linear guidance model pre-training loss: 0.03177113085985184
+INFO - card_regression.py - 2025-06-13 15:29:21,194 - epoch: 270, non-linear guidance model pre-training loss: 0.02651575207710266
+INFO - card_regression.py - 2025-06-13 15:29:21,316 - epoch: 280, non-linear guidance model pre-training loss: 0.026937436312437057
+INFO - card_regression.py - 2025-06-13 15:29:21,365 - Pre-training of non-linear guidance model took 0.0582 minutes.
+INFO - card_regression.py - 2025-06-13 15:29:21,365 - 
+After pre-training:
+INFO - card_regression.py - 2025-06-13 15:29:21,371 - NN guidance model un-normalized y RMSE 
+	of the training set and of the test set are 
+	2.51761293 and 2.11813545, respectively.
+INFO - card_regression.py - 2025-06-13 15:29:21,376 - Test set unnormalized y RMSE on trained NN guidance model is 0.99815661.
+INFO - main.py - 2025-06-13 15:29:21,376 - 
+Training procedure finished. It took 0.1142 minutes.
+
+
+

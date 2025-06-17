@@ -4,6 +4,7 @@ from data.images import CustomImageDataset
 import torch
 import torchvision
 import numpy as np
+import pandas as pd
 
 UCI_DATASET_NAMES = ["concrete", "power-plant", "energy", "kin8nm", "naval-propulsion-plant", "protein-tertiary-structure", "wine-quality-red", "yacht"]
 
@@ -150,6 +151,41 @@ def _get_index_train_test_path(data_directory_path, split_num, train = True):
     else:
         return data_directory_path + "index_test_" + str(split_num) + ".txt" 
 
+def _onehot_encode_cat_feature(X, cat_var_idx_list):
+    """
+    Apply one-hot encoding to the categorical variable(s) in the feature set,
+        specified by the index list.
+    """
+    # select numerical features
+    X_num = np.delete(arr=X, obj=cat_var_idx_list, axis=1)
+    # select categorical features
+    X_cat = X[:, cat_var_idx_list]
+    X_onehot_cat = []
+    for col in range(X_cat.shape[1]):
+        X_onehot_cat.append(pd.get_dummies(X_cat[:, col], drop_first=True))
+    X_onehot_cat = np.concatenate(X_onehot_cat, axis=1).astype(np.float32)
+    dim_cat = X_onehot_cat.shape[1]  # number of categorical feature(s)
+    X = np.concatenate([X_num, X_onehot_cat], axis=1)
+    return X, dim_cat
+
+
+def _preprocess_uci_feature_set(X, dataset_name):
+    """
+    Obtain preprocessed UCI feature set X (one-hot encoding applied for categorical variable)
+        and dimension of one-hot encoded categorical variables.
+    """
+    dim_cat = 0
+    if dataset_name == 'bostonHousing':
+        X, dim_cat = _onehot_encode_cat_feature(X, [3])
+    elif dataset_name == 'energy':
+        X, dim_cat = _onehot_encode_cat_feature(X, [4, 6, 7])
+    elif dataset_name == 'naval-propulsion-plant':
+        X, dim_cat = _onehot_encode_cat_feature(X, [0, 1, 8, 11])
+    else:
+        pass
+
+    return X, dim_cat
+
 
 def get_uci_data(dataset_name, splits=None, standardize=False, validation_ratio=0.0):
     """
@@ -176,6 +212,9 @@ def get_uci_data(dataset_name, splits=None, standardize=False, validation_ratio=
 
     X = data[ : , [int(i) for i in index_features.tolist()] ]
     y = data[ : , [int(index_target.tolist())] ]
+
+    # preprocess feature set X
+    X, dim_cat = _preprocess_uci_feature_set(X=X, dataset_name=dataset_name)
 
     return_singleton = False
 
@@ -205,11 +244,12 @@ def get_uci_data(dataset_name, splits=None, standardize=False, validation_ratio=
         test_labels = torch.tensor(X_test, dtype=torch.float32)
         
         if validation_ratio > 0:
-            num_training_examples = int(validation_ratio * X_train.shape[0])
-            X_train_subset = X_train[num_training_examples:, :]
-            y_train_subset = y_train[num_training_examples:]
-            X_val = X_train[0:num_training_examples, :]
-            y_val = y_train[0:num_training_examples]
+            num_training_examples = int((1-validation_ratio) * X_train.shape[0])
+            X_val = X_train[num_training_examples:, :]
+            y_val = y_train[num_training_examples:]
+            X_train_subset = X_train[0:num_training_examples, :]
+            y_train_subset = y_train[0:num_training_examples]
+            
 
             val_images = torch.tensor(y_val, dtype=torch.float32)
             val_labels = torch.tensor(X_val, dtype=torch.float32)
@@ -217,12 +257,14 @@ def get_uci_data(dataset_name, splits=None, standardize=False, validation_ratio=
             train_images_subset = torch.tensor(y_train_subset, dtype=torch.float32)
             train_labels_subset = torch.tensor(X_train_subset, dtype=torch.float32)
 
-            train_dataset = RegressionDataset(images=train_images_subset, labels=train_labels_subset, standardize=standardize)
-            val_dataset = RegressionDataset(images=val_images, labels=val_labels, standardize=standardize)
+            train_dataset = RegressionDataset(images=train_images_subset, labels=train_labels_subset, standardize=standardize, dim_cat=dim_cat)
+            train_std_params = train_dataset.get_std_params()
+            val_dataset = RegressionDataset(images=val_images, labels=val_labels, standardize=standardize, std_params=train_std_params, dim_cat=dim_cat)
         else:
-            train_dataset = RegressionDataset(images=train_images, labels=train_labels, standardize=standardize)
+            train_dataset = RegressionDataset(images=train_images, labels=train_labels, standardize=standardize, dim_cat=dim_cat)
+            train_std_params = train_dataset.get_std_params()
         
-        test_dataset = RegressionDataset(images=test_images, labels=test_labels, standardize=standardize)
+        test_dataset = RegressionDataset(images=test_images, labels=test_labels, standardize=standardize, std_params=train_std_params, dim_cat=dim_cat)
 
         
 

@@ -1,0 +1,52 @@
+INFO - main.py - 2025-06-13 15:30:05,062 - Using device: cuda:0
+INFO - main.py - 2025-06-13 15:30:05,063 - Writing log file to ./results_250613_pretrain_wine/card_conditional_uci_results/1000steps/nn/run_1_a4000/f_phi_prior_cat_f_phi/logs/uci_wine/split_17
+INFO - main.py - 2025-06-13 15:30:05,063 - Exp instance id = 8161
+INFO - main.py - 2025-06-13 15:30:05,063 - Exp comment = 
+INFO - card_regression.py - 2025-06-13 15:30:05,064 - Test set info:
+INFO - utils.py - 2025-06-13 15:30:05,126 - {'n_samples': 160, 'dim_x': 11, 'dim_y': 1}
+INFO - card_regression.py - 2025-06-13 15:30:05,126 - Training set info:
+INFO - utils.py - 2025-06-13 15:30:05,150 - {'n_samples': 1439, 'dim_x': 11, 'dim_y': 1}
+INFO - card_regression.py - 2025-06-13 15:30:05,150 - 
+Split original training set into training and validation set for f_phi hyperparameter tuning...
+INFO - card_regression.py - 2025-06-13 15:30:05,150 - Validation set info:
+INFO - utils.py - 2025-06-13 15:30:05,173 - {'n_samples': 576, 'dim_x': 11, 'dim_y': 1}
+INFO - card_regression.py - 2025-06-13 15:30:05,173 - Training subset info:
+INFO - utils.py - 2025-06-13 15:30:05,196 - {'n_samples': 863, 'dim_x': 11, 'dim_y': 1}
+INFO - card_regression.py - 2025-06-13 15:30:05,202 - 
+Before pre-training:
+INFO - card_regression.py - 2025-06-13 15:30:05,230 - NN guidance model un-normalized y RMSE 
+	of the training set and of the test set are 
+	0.82080841 and 0.84510475, respectively.
+INFO - card_regression.py - 2025-06-13 15:30:05,280 - epoch: 0, non-linear guidance model pre-training loss: 0.7697156667709351
+INFO - card_regression.py - 2025-06-13 15:30:05,817 - epoch: 10, non-linear guidance model pre-training loss: 0.39201071858406067
+INFO - card_regression.py - 2025-06-13 15:30:06,354 - epoch: 20, non-linear guidance model pre-training loss: 0.6528744101524353
+INFO - card_regression.py - 2025-06-13 15:30:06,891 - epoch: 30, non-linear guidance model pre-training loss: 0.5617663264274597
+INFO - card_regression.py - 2025-06-13 15:30:07,428 - epoch: 40, non-linear guidance model pre-training loss: 0.357011616230011
+INFO - card_regression.py - 2025-06-13 15:30:07,963 - epoch: 50, non-linear guidance model pre-training loss: 0.3252682387828827
+INFO - card_regression.py - 2025-06-13 15:30:08,499 - epoch: 60, non-linear guidance model pre-training loss: 0.7474103569984436
+INFO - card_regression.py - 2025-06-13 15:30:08,950 - epoch: 70, non-linear guidance model pre-training loss: 0.4937722384929657
+INFO - card_regression.py - 2025-06-13 15:30:09,083 - Tuning for number of epochs to train non-linear guidance model took 0.0642 minutes.
+INFO - card_regression.py - 2025-06-13 15:30:09,083 - 
+After tuning for best total epochs, on training sebset and validation set:
+INFO - card_regression.py - 2025-06-13 15:30:09,102 - NN guidance model un-normalized y RMSE 
+	of the training set and of the test set are 
+	0.53375942 and 0.66648960, respectively.
+INFO - card_regression.py - 2025-06-13 15:30:09,102 - 
+Reset guidance model weights...
+INFO - card_regression.py - 2025-06-13 15:30:09,102 - 
+Re-training the guidance model on original training set with 24 epochs...
+INFO - card_regression.py - 2025-06-13 15:30:09,160 - epoch: 0, non-linear guidance model pre-training loss: 0.4497586488723755
+INFO - card_regression.py - 2025-06-13 15:30:09,769 - epoch: 10, non-linear guidance model pre-training loss: 0.7505250573158264
+INFO - card_regression.py - 2025-06-13 15:30:10,380 - epoch: 20, non-linear guidance model pre-training loss: 0.8714548945426941
+INFO - card_regression.py - 2025-06-13 15:30:10,566 - Pre-training of non-linear guidance model took 0.0244 minutes.
+INFO - card_regression.py - 2025-06-13 15:30:10,566 - 
+After pre-training:
+INFO - card_regression.py - 2025-06-13 15:30:10,591 - NN guidance model un-normalized y RMSE 
+	of the training set and of the test set are 
+	0.59079635 and 0.63667262, respectively.
+INFO - card_regression.py - 2025-06-13 15:30:10,596 - Test set unnormalized y RMSE on trained NN guidance model is 0.60348123.
+INFO - main.py - 2025-06-13 15:30:10,596 - 
+Training procedure finished. It took 0.0922 minutes.
+
+
+

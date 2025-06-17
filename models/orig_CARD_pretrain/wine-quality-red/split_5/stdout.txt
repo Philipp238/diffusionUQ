@@ -1,0 +1,54 @@
+INFO - main.py - 2025-06-13 15:28:42,742 - Using device: cuda:0
+INFO - main.py - 2025-06-13 15:28:42,742 - Writing log file to ./results_250613_pretrain_wine/card_conditional_uci_results/1000steps/nn/run_1_a4000/f_phi_prior_cat_f_phi/logs/uci_wine/split_5
+INFO - main.py - 2025-06-13 15:28:42,743 - Exp instance id = 8161
+INFO - main.py - 2025-06-13 15:28:42,743 - Exp comment = 
+INFO - card_regression.py - 2025-06-13 15:28:42,744 - Test set info:
+INFO - utils.py - 2025-06-13 15:28:42,793 - {'n_samples': 160, 'dim_x': 11, 'dim_y': 1}
+INFO - card_regression.py - 2025-06-13 15:28:42,793 - Training set info:
+INFO - utils.py - 2025-06-13 15:28:42,812 - {'n_samples': 1439, 'dim_x': 11, 'dim_y': 1}
+INFO - card_regression.py - 2025-06-13 15:28:42,813 - 
+Split original training set into training and validation set for f_phi hyperparameter tuning...
+INFO - card_regression.py - 2025-06-13 15:28:42,813 - Validation set info:
+INFO - utils.py - 2025-06-13 15:28:42,829 - {'n_samples': 576, 'dim_x': 11, 'dim_y': 1}
+INFO - card_regression.py - 2025-06-13 15:28:42,829 - Training subset info:
+INFO - utils.py - 2025-06-13 15:28:42,845 - {'n_samples': 863, 'dim_x': 11, 'dim_y': 1}
+INFO - card_regression.py - 2025-06-13 15:28:42,849 - 
+Before pre-training:
+INFO - card_regression.py - 2025-06-13 15:28:42,872 - NN guidance model un-normalized y RMSE 
+	of the training set and of the test set are 
+	0.82484919 and 0.81667674, respectively.
+INFO - card_regression.py - 2025-06-13 15:28:42,912 - epoch: 0, non-linear guidance model pre-training loss: 0.48179715871810913
+INFO - card_regression.py - 2025-06-13 15:28:43,332 - epoch: 10, non-linear guidance model pre-training loss: 0.5016141533851624
+INFO - card_regression.py - 2025-06-13 15:28:43,749 - epoch: 20, non-linear guidance model pre-training loss: 0.45896732807159424
+INFO - card_regression.py - 2025-06-13 15:28:44,168 - epoch: 30, non-linear guidance model pre-training loss: 0.4640348255634308
+INFO - card_regression.py - 2025-06-13 15:28:44,586 - epoch: 40, non-linear guidance model pre-training loss: 0.5910650491714478
+INFO - card_regression.py - 2025-06-13 15:28:45,003 - epoch: 50, non-linear guidance model pre-training loss: 0.43160250782966614
+INFO - card_regression.py - 2025-06-13 15:28:45,418 - epoch: 60, non-linear guidance model pre-training loss: 0.6552814245223999
+INFO - card_regression.py - 2025-06-13 15:28:45,838 - epoch: 70, non-linear guidance model pre-training loss: 0.4317520260810852
+INFO - card_regression.py - 2025-06-13 15:28:46,259 - epoch: 80, non-linear guidance model pre-training loss: 0.46956706047058105
+INFO - card_regression.py - 2025-06-13 15:28:46,602 - Tuning for number of epochs to train non-linear guidance model took 0.0622 minutes.
+INFO - card_regression.py - 2025-06-13 15:28:46,602 - 
+After tuning for best total epochs, on training sebset and validation set:
+INFO - card_regression.py - 2025-06-13 15:28:46,619 - NN guidance model un-normalized y RMSE 
+	of the training set and of the test set are 
+	0.50875843 and 0.68096232, respectively.
+INFO - card_regression.py - 2025-06-13 15:28:46,619 - 
+Reset guidance model weights...
+INFO - card_regression.py - 2025-06-13 15:28:46,619 - 
+Re-training the guidance model on original training set with 39 epochs...
+INFO - card_regression.py - 2025-06-13 15:28:46,678 - epoch: 0, non-linear guidance model pre-training loss: 0.6123207807540894
+INFO - card_regression.py - 2025-06-13 15:28:47,294 - epoch: 10, non-linear guidance model pre-training loss: 0.7102378010749817
+INFO - card_regression.py - 2025-06-13 15:28:47,909 - epoch: 20, non-linear guidance model pre-training loss: 0.5820932388305664
+INFO - card_regression.py - 2025-06-13 15:28:48,524 - epoch: 30, non-linear guidance model pre-training loss: 0.8571831583976746
+INFO - card_regression.py - 2025-06-13 15:28:49,017 - Pre-training of non-linear guidance model took 0.0400 minutes.
+INFO - card_regression.py - 2025-06-13 15:28:49,017 - 
+After pre-training:
+INFO - card_regression.py - 2025-06-13 15:28:49,041 - NN guidance model un-normalized y RMSE 
+	of the training set and of the test set are 
+	0.56183839 and 0.64815766, respectively.
+INFO - card_regression.py - 2025-06-13 15:28:49,048 - Test set unnormalized y RMSE on trained NN guidance model is 0.62959808.
+INFO - main.py - 2025-06-13 15:28:49,048 - 
+Training procedure finished. It took 0.1051 minutes.
+
+
+

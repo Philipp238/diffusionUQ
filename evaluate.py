@@ -220,6 +220,8 @@ def start_evaluation(
         train_utils.checkpoint(model, filename)
 
     for name, loader in data_loaders.items():
+        if loader is None:
+            continue
         logging.info(f"Evaluating the model on {name} data.")
 
         mse, es, crps, coverage, gaussian_nll, qice = evaluate(
