@@ -93,7 +93,13 @@ if __name__ == '__main__':
     logging.debug(f'Directory: {directory}')
     logging.debug(f'File: {__file__}')
 
-    logging.info(f'Using {device}.')
+    logging.info(f'Using device {device}.')
+
+    num_threads = 4
+    torch.set_num_threads(num_threads)
+    logging.info(f"Using {num_threads} threads")
+    
+    torch.backends.cudnn.benchmark = True
     
     logging.info(using(''))
 
@@ -279,7 +285,7 @@ if __name__ == '__main__':
             
             if training_parameters['evaluate']:
                 start_evaluation(model, training_parameters, data_parameters, train_loader, val_loader, 
-                                test_loader, results_dict, device, logging, filename, regressor)
+                                test_loader, results_dict, device, logging, filename, regressor, directory=directory)
                             
                 append_results_dict(results_dict, data_parameters, training_parameters, t_training)
                 results_pd = pd.DataFrame(results_dict)
