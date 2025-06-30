@@ -171,10 +171,20 @@ def trainer(
     distributional_method = training_parameters["distributional_method"]
     if uncertainty_quantification == 'diffusion':
         if distributional_method == "deterministic":
-            diffusion = Diffusion(img_size=image_dim, device=device, x_T_sampling_method=training_parameters['x_T_sampling_method'])
+            diffusion = Diffusion(
+                noise_steps=training_parameters["n_timesteps"],
+                img_size=image_dim,
+                device=device,
+                x_T_sampling_method=training_parameters['x_T_sampling_method']
+            )
         else:
-            diffusion = DistributionalDiffusion(img_size=image_dim, device=device, distributional_method=distributional_method, 
-                                                x_T_sampling_method=training_parameters['x_T_sampling_method'])
+            diffusion = DistributionalDiffusion(
+                noise_steps=training_parameters["n_timesteps"],
+                img_size=image_dim,
+                device=device,
+                distributional_method=distributional_method,
+                x_T_sampling_method=training_parameters['x_T_sampling_method']
+            )
     else:
         diffusion = None
     

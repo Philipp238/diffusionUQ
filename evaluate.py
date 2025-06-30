@@ -10,18 +10,21 @@ from utils import losses, train_utils
 import numpy as np
 
 from scoringrules import energy_score, crps_ensemble
+import matplotlib.pyplot as plt
 
 
 def generate_samples(
     uncertainty_quantification: str,
     model,
+    n_timesteps,
     a: torch.Tensor,
     u: torch.Tensor,
     n_samples: int,
     x_T_sampling_method: str,
     distributional_method: str = "deterministic",
     regressor=None,
-    cfg_scale=3
+    cfg_scale=3,
+    ddim_sigma=1.0,
 ) -> torch.Tensor:
     """Mehtod to generate samples from the underlying model with the specified uncertainty quantification method.
 
@@ -48,24 +51,43 @@ def generate_samples(
     elif uncertainty_quantification.startswith("scoring-rule"):
         out = model(a, n_samples=n_samples)
     elif uncertainty_quantification == "deterministic":
-        out = generate_deterministic_samples(model, a, n_samples=n_samples).permute(
+        out = generate_deterministic_samples(model, a, n_timesteps=n_timesteps, n_samples=n_samples).permute(
             0, 2, 1
         )
     elif uncertainty_quantification == "diffusion":
-        out = generate_diffusion_samples_low_dimensional(
-            model,
-            labels=a,
-            images_shape=u.shape,
-            n_samples=n_samples,
-            distributional_method=distributional_method,
-            regressor=regressor,
-            x_T_sampling_method=x_T_sampling_method,
-            cfg_scale=cfg_scale
-        ).permute(0, 2, 1)
+        if u is not None and distributional_method != "deterministic":
+            out, crps_over_time, rmse_over_time, distr_over_time = generate_diffusion_samples_low_dimensional(
+                model,
+                labels=a,
+                n_timesteps=n_timesteps,
+                images_shape=u.shape,
+                n_samples=n_samples,
+                distributional_method=distributional_method,
+                regressor=regressor,
+                x_T_sampling_method=x_T_sampling_method,
+                cfg_scale=cfg_scale,
+                gt_images=u,
+                ddim_sigma=ddim_sigma,
+            )
+            return out.permute(0,2,1), crps_over_time, rmse_over_time, distr_over_time
+        else:
+            out = generate_diffusion_samples_low_dimensional(
+                model,
+                labels=a,
+                n_timesteps=n_timesteps,
+                images_shape=u.shape,
+                n_samples=n_samples,
+                distributional_method=distributional_method,
+                regressor=regressor,
+                x_T_sampling_method=x_T_sampling_method,
+                cfg_scale=cfg_scale,
+                gt_images=u,
+                ddim_sigma=ddim_sigma,
+            ).permute(0,2,1)
     return out
 
 
-def evaluate(model, training_parameters: dict, loader, device, regressor, standardized:bool = False):
+def evaluate(model, training_parameters: dict, loader, device, regressor, standardized:bool = False, filename=None):
     """Method to evaluate the given model.
 
     Args:
@@ -92,6 +114,9 @@ def evaluate(model, training_parameters: dict, loader, device, regressor, standa
     gaussian_nll_loss = losses.GaussianNLL()
     coverage_loss = losses.Coverage(alpha)
     qice_loss = losses.QICE()
+    
+    if uncertainty_quantification == "diffusion":
+        crps_over_time, rmse_over_time, distr_over_time = [], [], []
 
     cfg_scale = 3 if training_parameters["conditional_free_guidance_training"] else 0
     with torch.no_grad():
@@ -100,17 +125,32 @@ def evaluate(model, training_parameters: dict, loader, device, regressor, standa
             images = images.to(device)
             batch_size = labels.shape[0]
             # predicted_images.shape = (batch_size, n_samples, n_variables)
-            predicted_images = generate_samples(
+            res = generate_samples(
                 uncertainty_quantification,
                 model,
+                training_parameters["n_timesteps"],
                 labels,
                 images,
                 training_parameters["n_samples_uq"],
                 training_parameters["x_T_sampling_method"],
                 training_parameters["distributional_method"],
                 regressor,
-                cfg_scale=cfg_scale
+                cfg_scale=cfg_scale,
+                ddim_sigma=training_parameters["ddim_sigma"],
             )
+
+            if uncertainty_quantification == "diffusion" and training_parameters["distributional_method"] != "deterministic":
+                predicted_images, curr_crps_over_time, curr_rmse_over_time, curr_distr_over_time = res
+                if len(crps_over_time) == 0:
+                    crps_over_time = curr_crps_over_time
+                    rmse_over_time = curr_rmse_over_time
+                    distr_over_time = curr_distr_over_time
+                else:
+                    crps_over_time = [crps_over_time[i] + curr_crps_over_time[i] for i in range(len(curr_crps_over_time))]
+                    rmse_over_time =  [rmse_over_time[i] + curr_rmse_over_time[i] for i in range(len(curr_rmse_over_time))] 
+                    distr_over_time = curr_distr_over_time
+            else:
+                predicted_images = res
 
             if standardized:
                 images = loader.dataset.destandardize_image(images)
@@ -151,9 +191,14 @@ def evaluate(model, training_parameters: dict, loader, device, regressor, standa
             qice_loss.aggregate(
                 predicted_images.permute(0, 2, 1).cpu(), images.cpu(), batch_size
             )
+
+
+        crps_over_time = [x / len(loader.dataset) for x in crps_over_time]
+        rmse_over_time = [np.sqrt(x / len(loader.dataset)) for x in rmse_over_time]
+
         qice = qice_loss.compute()
 
-    return mse, es, crps, coverage, gaussian_nll, qice
+    return mse, es, crps, coverage, gaussian_nll, qice, crps_over_time, rmse_over_time, distr_over_time
 
 
 def start_evaluation(
@@ -187,6 +232,7 @@ def start_evaluation(
     """
     # Need to add additional train loader for autoregressive Laplace
     laplace_train_loader = kwargs.get("laplace_train_loader", None)
+    directory = kwargs.get("directory", None)
     logging.info(
         f'Starting evaluation: model {training_parameters["model"]} & uncertainty quantification {training_parameters["uncertainty_quantification"]}'
     )
@@ -224,13 +270,14 @@ def start_evaluation(
             continue
         logging.info(f"Evaluating the model on {name} data.")
 
-        mse, es, crps, coverage, gaussian_nll, qice = evaluate(
+        mse, es, crps, coverage, gaussian_nll, qice, crps_over_time, rmse_over_time, distr_over_time = evaluate(
             model,
             training_parameters,
             loader,
             device,
             regressor,
             standardized=data_parameters["standardize"],
+            filename=filename,
         )
         # mse, es, crps, gaussian_nll, coverage, int_width = evaluate(model, training_parameters, loader, device, domain_range)
 
@@ -251,3 +298,37 @@ def start_evaluation(
         train_utils.log_and_save_evaluation(
             qice, "QICE" + name, results_dict, logging
         )
+
+        # Plot CRPS and RMSE over the denoising timesteps
+        reversed_epochs = list(reversed(range(len(crps_over_time))))
+        plt.plot(reversed_epochs, crps_over_time, label="CRPS")
+        plt.plot(reversed_epochs, rmse_over_time, label="RMSE")
+        plt.xlabel("epochs")
+        plt.legend()
+        plt.title(f"Metrics {name}")
+        plt.tight_layout()
+        
+        if directory is not None:
+            plt.savefig(f"{directory}/{name}_metrics_over_timesteps.png")
+
+        plt.close()
+
+        NUM_SAMPLES = 5
+        for idx_sample in range(NUM_SAMPLES):
+            means_over_time = np.array([distr_over_time[t][0][idx_sample] for t in range(len(crps_over_time))]).squeeze()
+            stds_over_time =  np.array([distr_over_time[t][1][idx_sample] for t in range(len(crps_over_time))]).squeeze()
+
+
+            plt.figure()
+            plt.plot(reversed_epochs, means_over_time, label="Prediction - Mean")
+            plt.plot(reversed_epochs, [loader.dataset[idx_sample][0].item() for _ in reversed_epochs], label="Ground truth")
+            plt.fill_between(np.array(reversed_epochs), means_over_time - stds_over_time, means_over_time + stds_over_time, color='blue', alpha=0.2, label='±1 Std Dev')
+            plt.xlabel("epochs")
+            plt.legend()
+            plt.title(f"Predictive distribution {name}")
+            plt.tight_layout()
+            
+            if directory is not None:
+                plt.savefig(f"{directory}/{name}_pred_distr_over_timesteps_sample{idx_sample}.png")
+
+            plt.close()
