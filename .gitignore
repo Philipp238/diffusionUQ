@@ -192,3 +192,7 @@ cython_debug/
 !models/power/**/*
 !models/x-squared/**/*
 !models/pre-trained/**/*
+
+# Exclude datasets
+*.nc
+*.hdf5
