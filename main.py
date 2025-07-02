@@ -149,7 +149,7 @@ if __name__ == '__main__':
                                     validation_ratio=validation_ratio_on_train_set)
             dataset, image_dim, label_dim = uci_data
         else:
-            dataset, image_dim, label_dim = get_data(dataset_name, data_dir, dataset_size, data_parameters['standardize'], image_size=None)
+            dataset, image_dim, label_dim = get_data(dataset_name, data_dir, dataset_size, data_parameters, image_size=None)
         
         logging.info(using('After loading the datasets'))
 
