@@ -12,10 +12,11 @@ DATASETS = {
     "1D_Advection": "https://darus.uni-stuttgart.de/api/access/datafile/255674",
     "1D_ReacDiff": "https://darus.uni-stuttgart.de/api/access/datafile/133177",
     "1D_Burgers:": "https://darus.uni-stuttgart.de/api/access/datafile/281363",
+    "2D_DarcyFlow": "https://darus.uni-stuttgart.de/api/access/datafile/133219",
 }
 
 
-def train_test_split(ds, seed, train_size):
+def data_split(ds, train_test_split, train_val_split):
     """Split darcy flow dataset into training and testing datasets
 
     Args:
@@ -36,14 +37,24 @@ def train_test_split(ds, seed, train_size):
     ).rename_vars({"tensor": "u"})
 
     n_samples = ds.sizes["samples"]
-    np.random.seed(seed)
+
+    # Train test split
     indices = np.random.permutation(n_samples)
-    train_data = ds.isel(samples=indices[: int(n_samples * train_size)])
-    test_data = ds.isel(samples=indices[int(n_samples * train_size) :])
-    return train_data, test_data
+    n_train_val = int(n_samples * train_test_split)
+    n_train = int(n_train_val * train_val_split)
+    n_val = n_train_val - n_train
+    train_indices = indices[:n_train]
+    val_indices = indices[n_train:n_train + n_val]
+    test_indices = indices[n_train + n_val:]
+
+    # Create data
+    train_data = ds.isel(samples = train_indices)
+    val_data = ds.isel(samples = val_indices)
+    test_data = ds.isel(samples = test_indices)
+    return train_data, val_data, test_data
 
 
-def main(data_directory, name, url, train_split, seed, download=True, remove=True):
+def main(data_directory, name, url, train_test_split, train_val_split, download=True, remove=True):
     """Main function to download, process and split Darcy Flow datasets
 
     Args:
@@ -63,9 +74,22 @@ def main(data_directory, name, url, train_split, seed, download=True, remove=Tru
     # Load datasets and create train/test splits
     file_path = data_dir + f"raw/{filename}"
     ds = xr.load_dataset(file_path)
-    train_data, test_data = train_test_split(ds, seed, train_split)
-    train_data.to_netcdf(data_dir + "processed/" + "train.nc")
-    test_data.to_netcdf(data_dir + "processed/" + "test.nc")
+    train_data, val_data, test_data = data_split(ds, train_test_split, train_val_split)
+
+    # Save standardization constants as attributes
+    mean = train_data.u.mean()
+    std = train_data.u.std()
+
+    train_data.attrs["mean"] = mean
+    train_data.attrs["std"] = std
+    val_data.attrs["mean"] = mean
+    val_data.attrs["std"] = std
+    test_data.attrs["mean"] = mean
+    test_data.attrs["std"] = std
+
+    train_data.to_netcdf(data_dir + "processed/train.nc")
+    val_data.to_netcdf(data_dir + "processed/val.nc")
+    test_data.to_netcdf(data_dir + "processed/test.nc")
 
     # Remove raw data
     if remove:
@@ -73,10 +97,12 @@ def main(data_directory, name, url, train_split, seed, download=True, remove=Tru
 
 
 if __name__ == "__main__":
-    train_split = 0.9
+    train_test_split = 0.9
+    train_val_split = 0.9
     seed = 42
+    np.random.seed(seed)
     download = False
     data_dir = "data/"
     for dataset in DATASETS:
         print(f"Downloading {dataset} from {DATASETS[dataset]}")
-        main(data_dir, dataset, DATASETS[dataset], train_split, seed, download)
+        main(data_dir, dataset, DATASETS[dataset], train_test_split, train_val_split, download)
