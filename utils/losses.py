@@ -21,7 +21,7 @@ class QICE(nn.Module):
         self.n_samples = 0
 
 
-    def aggregate(self, prediction, truth, n_samples):
+    def aggregate(self, prediction, truth):
         """_summary_
 
         Args:
@@ -29,11 +29,12 @@ class QICE(nn.Module):
             truth (_type_): Should be of shape (batch_size, ...)
         """
         # Count number of samples
-        self.n_samples += n_samples
+        sample_size = truth.nelement()
+        self.n_samples += sample_size
 
         prediction = torch.flatten(prediction, start_dim=1, end_dim=-2)
         truth = torch.flatten(truth, start_dim=1).unsqueeze(0)
-        quantiles = torch.quantile(prediction, self.quantile_list, dim=2)
+        quantiles = torch.quantile(prediction, self.quantile_list, dim=-1)
         quantile_membership = (truth-quantiles>0).sum(axis = 0)
 
         quantile_bin_count = torch.tensor(

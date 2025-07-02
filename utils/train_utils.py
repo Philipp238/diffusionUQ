@@ -74,7 +74,7 @@ def get_criterion(training_parameters, device):
             ).mean()
         elif training_parameters["distributional_method"] == "sample":
             criterion = lambda truth, prediction: sr.energy_score(
-                truth, prediction, m_axis=-2, v_axis=-1, backend="torch"
+                truth.flatten(start_dim = 1, end_dim = -1), prediction.flatten(start_dim = 1, end_dim = -2), m_axis=-1, v_axis=-2, backend="torch"
             ).mean()
         elif training_parameters["distributional_method"] == "mixednormal":
             criterion = losses.NormalMixtureCRPS()
@@ -238,8 +238,8 @@ def setup_CARD_model(image_dim: int,
                      dropout_rate=0.1
                      ):
     return MLP_CARD(
-        dim_in=label_dim,
-        dim_out=image_dim,
+        input_dim=label_dim,
+        target_dim=image_dim,
         hid_layers=hidden_layers,
         use_batchnorm=use_batchnorm,
         negative_slope=negative_slope,

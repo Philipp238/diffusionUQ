@@ -43,24 +43,20 @@ def generate_samples(
     else:
         model.eval()
     if uncertainty_quantification == "dropout":
-        out = generate_mcd_samples(model, a, u.shape, n_samples=n_samples).permute(
-            0, 2, 1
-        )
+        out = generate_mcd_samples(model, a, u.shape, n_samples=n_samples)
     elif uncertainty_quantification == "laplace":
         out = model.predictive_samples(a, n_samples=n_samples)
     elif uncertainty_quantification.startswith("scoring-rule"):
         out = model(a, n_samples=n_samples)
     elif uncertainty_quantification == "deterministic":
-        out = generate_deterministic_samples(model, a, n_timesteps=n_timesteps, n_samples=n_samples).permute(
-            0, 2, 1
-        )
+        out = generate_deterministic_samples(model, a, n_timesteps=n_timesteps, n_samples=n_samples)
     elif uncertainty_quantification == "diffusion":
         if u is not None and distributional_method != "deterministic":
             out, crps_over_time, rmse_over_time, distr_over_time = generate_diffusion_samples_low_dimensional(
                 model,
-                labels=a,
+                input=a,
                 n_timesteps=n_timesteps,
-                images_shape=u.shape,
+                target_shape=u.shape,
                 n_samples=n_samples,
                 distributional_method=distributional_method,
                 regressor=regressor,
@@ -69,13 +65,13 @@ def generate_samples(
                 gt_images=u,
                 ddim_sigma=ddim_sigma,
             )
-            return out.permute(0,2,1), crps_over_time, rmse_over_time, distr_over_time
+            return out, crps_over_time, rmse_over_time, distr_over_time
         else:
             out = generate_diffusion_samples_low_dimensional(
                 model,
-                labels=a,
+                input=a,
                 n_timesteps=n_timesteps,
-                images_shape=u.shape,
+                target_shape=u.shape,
                 n_samples=n_samples,
                 distributional_method=distributional_method,
                 regressor=regressor,
@@ -83,7 +79,7 @@ def generate_samples(
                 cfg_scale=cfg_scale,
                 gt_images=u,
                 ddim_sigma=ddim_sigma,
-            ).permute(0,2,1)
+            )
     return out
 
 
@@ -120,17 +116,17 @@ def evaluate(model, training_parameters: dict, loader, device, regressor, standa
 
     cfg_scale = 3 if training_parameters["conditional_free_guidance_training"] else 0
     with torch.no_grad():
-        for images, labels in loader:
-            labels = labels.to(device)
-            images = images.to(device)
-            batch_size = labels.shape[0]
+        for target, input in loader:
+            input = input.to(device)
+            target = target.to(device)
+            batch_size = input.shape[0]
             # predicted_images.shape = (batch_size, n_samples, n_variables)
             res = generate_samples(
                 uncertainty_quantification,
                 model,
                 training_parameters["n_timesteps"],
-                labels,
-                images,
+                input,
+                target,
                 training_parameters["n_samples_uq"],
                 training_parameters["x_T_sampling_method"],
                 training_parameters["distributional_method"],
@@ -153,24 +149,24 @@ def evaluate(model, training_parameters: dict, loader, device, regressor, standa
                 predicted_images = res
 
             if standardized:
-                images = loader.dataset.destandardize_image(images)
+                target = loader.dataset.destandardize_image(target)
                 predicted_images = loader.dataset.destandardize_image(predicted_images)
 
             mse += (
-                mse_loss(predicted_images.mean(axis=1), images).item()
+                mse_loss(predicted_images.mean(axis=-1), target).item()
                 * batch_size
                 / len(loader.dataset)
             )
             es += (
-                energy_score(images, predicted_images, backend="torch").mean().item()
+                energy_score(target.flatten(start_dim = 1, end_dim = -1), predicted_images.flatten(start_dim = 1, end_dim = -2), m_axis = -1, v_axis = -2, backend="torch").mean().item()
                 * batch_size
                 / len(loader.dataset)
             )
 
             crps += (
                 crps_ensemble(
-                    images.cpu(),
-                    predicted_images.permute(0, 2, 1).cpu(),
+                    target.cpu(),
+                    predicted_images.cpu(),
                     backend="torch",
                 )
                 .mean()
@@ -179,17 +175,17 @@ def evaluate(model, training_parameters: dict, loader, device, regressor, standa
                 / len(loader.dataset)
             )
             gaussian_nll += (
-                gaussian_nll_loss(predicted_images.permute(0,2,1).cpu(), images.cpu()).item()
+                gaussian_nll_loss(predicted_images.cpu(), target.cpu()).item()
                 * batch_size
                 / len(loader.dataset)
             )
             coverage += (
-                coverage_loss(predicted_images, images, ensemble_dim=1).item()
+                coverage_loss(predicted_images, target, ensemble_dim=-1).item()
                 * batch_size
                 / len(loader.dataset)
             )
             qice_loss.aggregate(
-                predicted_images.permute(0, 2, 1).cpu(), images.cpu(), batch_size
+                predicted_images.cpu(), target.cpu()
             )
 
 

@@ -206,15 +206,15 @@ def trainer(
         # logging.info(using("At the start of the epoch"))
 
         model.train()
-        for images, labels in train_loader:
-            images = images.to(device)
-            labels = labels.to(device)
+        for target, input in train_loader:
+            target = target.to(device)
+            input = input.to(device)
 
             batch_loss = train(
                 model,
                 optimizer,
-                images,
-                labels,
+                target,
+                input,
                 criterion,
                 training_parameters["gradient_clipping"],
                 uncertainty_quantification=uncertainty_quantification,
@@ -251,9 +251,9 @@ def trainer(
                 validation_loss_ema = 0
                 
                 with torch.no_grad():
-                    for images, labels in val_loader:
-                        images = images.to(device)
-                        labels = labels.to(device)
+                    for target, input in val_loader:
+                        target = target.to(device)
+                        input = input.to(device)
                         
                         if uncertainty_quantification == 'diffusion':
                             n_samples = 10
@@ -261,10 +261,10 @@ def trainer(
                             if regressor is None:
                                 repeated_pred = None
                             else:
-                                pred = regressor(labels)
+                                pred = regressor(input)
                                 repeated_pred = pred.repeat_interleave(n_samples, dim=0)
 
-                            repeated_labels = labels.repeat_interleave(n_samples, dim=0)
+                            repeated_labels = input.repeat_interleave(n_samples, dim=0)
                             sampled_images = diffusion.sample_low_dimensional(
                                 model,
                                 n=repeated_labels.shape[0],
@@ -279,14 +279,14 @@ def trainer(
                                 pred=repeated_pred,
                                 cfg_scale=cfg_scale
                                 )
-                            sampled_images = sampled_images.reshape(labels.shape[0], n_samples, images.shape[1]).mean(dim=1)
-                            sampled_images_ema = sampled_images_ema.reshape(labels.shape[0], n_samples, images.shape[1]).mean(dim=1)
+                            sampled_images = sampled_images.reshape(input.shape[0], n_samples, *target.shape[1:]).mean(dim=1)
+                            sampled_images_ema = sampled_images_ema.reshape(input.shape[0], n_samples, *target.shape[1:]).mean(dim=1)
                         else:
-                            sampled_images = model(labels)
-                            sampled_images_ema = ema_model(labels)
+                            sampled_images = model(input)
+                            sampled_images_ema = ema_model(input)
                         
-                        validation_loss += eval_criterion(sampled_images, images).item()
-                        validation_loss_ema += eval_criterion(sampled_images_ema, images).item()
+                        validation_loss += eval_criterion(sampled_images, target).item()
+                        validation_loss_ema += eval_criterion(sampled_images_ema, target).item()
                 
                 validation_loss_list.append(
                     validation_loss / len(val_loader)
@@ -347,14 +347,14 @@ def trainer(
     
     
     if data_parameters['dataset_name'] in ['x-squared', 'uniform-regression']:
-        labels = (torch.rand(1024, dtype=torch.float32, device=device) * 3 ).sort().values.unsqueeze(-1)
+        input = (torch.rand(1024, dtype=torch.float32, device=device) * 3 ).sort().values.unsqueeze(-1)
         with torch.no_grad():
             if uncertainty_quantification == 'diffusion':
-                sampled_images = diffusion.sample_low_dimensional(model, n=labels.shape[0], conditioning=labels).squeeze(1).to('cpu')
+                sampled_images = diffusion.sample_low_dimensional(model, n=input.shape[0], conditioning=input).squeeze(1).to('cpu')
             else:
-                sampled_images = model(labels).squeeze(1).to('cpu')
+                sampled_images = model(input).squeeze(1).to('cpu')
 
-            plt.plot(labels.cpu(), sampled_images, 'x')
+            plt.plot(input.cpu(), sampled_images, 'x')
 
             plt.savefig(os.path.join(directory, f"Datetime_{d_time}_visualisation.png"))
             plt.close()
