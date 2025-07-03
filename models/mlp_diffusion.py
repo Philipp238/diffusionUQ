@@ -159,22 +159,23 @@ class MLP_diffusion_CARD(nn.Module):
         self.hidden_layers = nn.ModuleList(hidden_layers)
         self.output_projection = nn.Linear(hidden_dim, 1)
 
-    def forward_body(self, x_t, t, y=None, x_0_hat=None):
+    def forward_body(self, x_t, t, conditioning=None, pred
+                     =None):
         assert not self.use_regressor_pred or (
-            self.use_regressor_pred and x_0_hat is not None
+            self.use_regressor_pred and pred is not None
         )
 
         if self.conditioning_dim > 0:
-            if y is None:
-                y = torch.zeros((*x_t.shape[:-1], self.conditioning_dim)).to(x_t.device)
+            if conditioning is None:
+                conditioning = torch.zeros((*x_t.shape[:-1], self.conditioning_dim)).to(x_t.device)
 
-            if x_0_hat is not None:
-                eps_pred = torch.cat((x_t, y, x_0_hat), dim=-1)
+            if pred is not None:
+                eps_pred = torch.cat((x_t, conditioning, pred), dim=-1)
             else:
-                eps_pred = torch.cat((x_t, y), dim=-1)
+                eps_pred = torch.cat((x_t, conditioning), dim=-1)
         else:
-            if x_0_hat is not None:
-                eps_pred = torch.cat((x_t, x_0_hat), dim=-1)
+            if pred is not None:
+                eps_pred = torch.cat((x_t, pred), dim=-1)
             else:
                 eps_pred = x_t
 
@@ -185,8 +186,8 @@ class MLP_diffusion_CARD(nn.Module):
 
         return eps_pred
 
-    def forward(self, x_t, t, y=None, x_0_hat=None):
-        eps_pred = self.forward_body(x_t, t, y, x_0_hat)
+    def forward(self, x_t, t, conditioning=None, pred=None):
+        eps_pred = self.forward_body(x_t, t, conditioning, pred)
         return self.output_projection(eps_pred).unsqueeze(1)
 
 
