@@ -6,23 +6,20 @@ class Diffusion:
     def __init__(
         self,
         noise_steps=1000,
-        beta_start=1e-4,
-        beta_end=0.02,
         img_size=256,
         device="cuda",
         x_T_sampling_method="standard",
         ddim_sigma=1,
+        noise_schedule="linear"
     ):
-        self.noise_steps = noise_steps
-        self.beta_start = beta_start
-        self.beta_end = beta_end
+        self.device = device
 
-        self.beta = self.prepare_noise_schedule().to(device)
-        self.alpha = 1.0 - self.beta
-        self.alpha_hat = torch.cumprod(self.alpha, dim=0)
+        self.noise_steps = noise_steps
+        self.noise_schedule = noise_schedule
+
+        self.prepare_noise_schedule()
 
         self.img_size = img_size
-        self.device = device
         self.x_T_sampling_method = x_T_sampling_method
         self.ddim_sigma = ddim_sigma
 
@@ -125,8 +122,23 @@ class Diffusion:
         return target_training
 
     def prepare_noise_schedule(self):
-        return torch.linspace(self.beta_start, self.beta_end, self.noise_steps)
-
+        if self.noise_schedule == 'linear':
+            beta_start = 1e-4
+            beta_end = 0.02
+            self.beta = torch.linspace(beta_start, beta_end, self.noise_steps).to(self.device)
+        elif self.noise_schedule == 'cosine':
+            t = torch.arange(0, self.noise_steps+1, device=self.device)
+            def f(t, T, s):
+                return torch.cos((t/T+s)/(1+s) * torch.pi / 2)**2
+            T=self.noise_steps
+            s=0.008  # from improved DDPM paper, might try to adjust it, as the value is motivated by the pixel bin size
+            alpha_bar = f(t, T, s) / f(torch.tensor([0], device=self.device), T, s)
+            self.beta = (1 - alpha_bar[1:] / alpha_bar[:-1]).clamp(max=0.999) 
+        else:
+            raise ValueError(f'Noise schedule must be "linear" or "cosine". You chose "{self.noise_schedule}".')
+        self.alpha = 1.0 - self.beta
+        self.alpha_hat = torch.cumprod(self.alpha, dim=0)            
+            
     def noise_low_dimensional(self, x, t, pred=None):
         assert (self.x_T_sampling_method == "standard") or not (pred is None)
 
@@ -213,6 +225,7 @@ def generate_diffusion_samples_low_dimensional(
     cfg_scale=3,
     gt_images=None,
     ddim_sigma=1.0,
+    noise_schedule=None
 ):
     if distributional_method == "deterministic":
         diffusion = Diffusion(
@@ -221,6 +234,7 @@ def generate_diffusion_samples_low_dimensional(
             device=input.device,
             x_T_sampling_method=x_T_sampling_method,
             ddim_sigma=ddim_sigma,
+            noise_schedule=noise_schedule
         )
     else:
         diffusion = DistributionalDiffusion(
@@ -230,6 +244,7 @@ def generate_diffusion_samples_low_dimensional(
             distributional_method=distributional_method,
             x_T_sampling_method=x_T_sampling_method,
             ddim_sigma=ddim_sigma,
+            noise_schedule=noise_schedule
         )
 
     sampled_images = torch.zeros(*target_shape, n_samples).to(input.device)
@@ -275,8 +290,7 @@ class DistributionalDiffusion(Diffusion):
     def __init__(
         self,
         noise_steps=1000,
-        beta_start=1e-4,
-        beta_end=0.02,
+        noise_schedule="linear",
         img_size=256,
         device="cuda",
         distributional_method="normal",
@@ -285,8 +299,7 @@ class DistributionalDiffusion(Diffusion):
     ):
         super().__init__(
             noise_steps=noise_steps,
-            beta_start=beta_start,
-            beta_end=beta_end,
+            noise_schedule=noise_schedule,
             img_size=img_size,
             device=device,
             x_T_sampling_method=x_T_sampling_method,
