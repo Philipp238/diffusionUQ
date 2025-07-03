@@ -38,7 +38,7 @@ class RegressionDataset(Dataset):
         self.target = (self.target - self.target_mean) / self.target_std
         self.input = (self.input - self.input_mean) / self.input_std
         
-    def destandardize_image(self, x):
+    def destandardize_output(self, x):
         if hasattr(self, "target_mean") and hasattr(self, "target_std"):
             return x * self.target_std.to(x.device) + self.target_mean.to(x.device)
         else:
