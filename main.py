@@ -23,12 +23,6 @@ from evaluate import start_evaluation
 from train import trainer, using
 from utils import train_utils
 
-# from models import LA_Wrapper
-
-# print(os.getcwd())
-# sys.path[0] = os.getcwd()
-# import utils
-
 torch.autograd.set_detect_anomaly(False)
 
 msg = "Start main"

@@ -25,6 +25,7 @@ def generate_samples(
     regressor=None,
     cfg_scale=3,
     ddim_sigma=1.0,
+    noise_schedule=None,
 ) -> torch.Tensor:
     """Mehtod to generate samples from the underlying model with the specified uncertainty quantification method.
 
@@ -64,6 +65,7 @@ def generate_samples(
                 cfg_scale=cfg_scale,
                 gt_images=u,
                 ddim_sigma=ddim_sigma,
+                noise_schedule=noise_schedule
             )
             return out, crps_over_time, rmse_over_time, distr_over_time
         else:
@@ -79,6 +81,7 @@ def generate_samples(
                 cfg_scale=cfg_scale,
                 gt_images=u,
                 ddim_sigma=ddim_sigma,
+                noise_schedule=noise_schedule
             )
     return out
 
@@ -133,6 +136,7 @@ def evaluate(model, training_parameters: dict, loader, device, regressor, standa
                 regressor,
                 cfg_scale=cfg_scale,
                 ddim_sigma=training_parameters["ddim_sigma"],
+                noise_schedule=training_parameters["noise_schedule"]
             )
 
             if uncertainty_quantification == "diffusion" and training_parameters["distributional_method"] != "deterministic":
