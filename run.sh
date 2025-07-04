@@ -1,3 +1,2 @@
 #!/bin/sh
-python main.py -c protein.ini
-python main.py -c yacht.ini
+python main.py -c debug_darcy.ini

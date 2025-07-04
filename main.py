@@ -29,7 +29,7 @@ msg = "Start main"
 
 # initialize parser
 parser = argparse.ArgumentParser(description=msg)
-default_config = "concrete.ini"
+default_config = "debug_pde.ini"
 
 parser.add_argument(
     "-c", "--config", help="Name of the config file:", default=default_config
