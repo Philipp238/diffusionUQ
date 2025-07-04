@@ -348,10 +348,10 @@ def start_evaluation(
         train_utils.log_and_save_evaluation(qice, "QICE" + name, results_dict, logging)
 
         # Plot CRPS and RMSE over the denoising timesteps
-        reversed_epochs = list(reversed(range(len(crps_over_time))))
-        plt.plot(reversed_epochs, crps_over_time, label="CRPS")
-        plt.plot(reversed_epochs, rmse_over_time, label="RMSE")
-        plt.xlabel("epochs")
+        reversed_timesteps = list(reversed(range(len(crps_over_time))))
+        plt.plot(reversed_timesteps, crps_over_time, label="CRPS")
+        plt.plot(reversed_timesteps, rmse_over_time, label="RMSE")
+        plt.xlabel("timesteps")
         plt.legend()
         plt.title(f"Metrics {name}")
         plt.tight_layout()
@@ -371,21 +371,21 @@ def start_evaluation(
             ).squeeze()
 
             plt.figure()
-            plt.plot(reversed_epochs, means_over_time, label="Prediction - Mean")
+            plt.plot(reversed_timesteps, means_over_time, label="Prediction - Mean")
             plt.plot(
-                reversed_epochs,
-                [loader.dataset[idx_sample][0].item() for _ in reversed_epochs],
+                reversed_timesteps,
+                [loader.dataset[idx_sample][0].item() for _ in reversed_timesteps],
                 label="Ground truth",
             )
             plt.fill_between(
-                np.array(reversed_epochs),
+                np.array(reversed_timesteps),
                 means_over_time - stds_over_time,
                 means_over_time + stds_over_time,
                 color="blue",
                 alpha=0.2,
                 label="±1 Std Dev",
             )
-            plt.xlabel("epochs")
+            plt.xlabel("timesteps")
             plt.legend()
             plt.title(f"Predictive distribution {name}")
             plt.tight_layout()
