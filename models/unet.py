@@ -23,6 +23,7 @@ from collections import OrderedDict
 
 import torch
 from torch import nn
+from models.new_unet import SongUNet
 
 EPS = 1e-9
 
@@ -215,6 +216,7 @@ class UNetDiffusion(nn.Module):
         out_channels=1,
         init_features=32,
         device="cuda",
+        domain_dim = 128,
     ):
         super().__init__()
         self.d = d
@@ -226,14 +228,16 @@ class UNetDiffusion(nn.Module):
         )  # the dimension of the target, is the dimension of the input of this MLP
         self.time_projection = nn.Linear(hidden_channels, hidden_channels)
         if d == 1:
-            self.unet = UNet1d(3 * hidden_channels, init_features)
+            #self.unet = UNet1d(3 * hidden_channels, init_features)
+            self.unet = SongUNet(img_resolution = domain_dim, in_channels = 4 , out_channels=1, d=1, attn_resolutions=[16], model_channels = hidden_channels)
             self.output_projection = nn.Conv1d(
-                in_channels=init_features, out_channels=out_channels, kernel_size=1
+                in_channels=init_features, out_channels=out_channels, kernel_size=3, padding = "same",
             )
         elif d == 2:
-            self.unet = UNet2d(3 * hidden_channels, init_features)
+            #self.unet = UNet2d(3 * hidden_channels, init_features)
+            self.unet = SongUNet(img_resolution = domain_dim, in_channels = 4 , out_channels=1, d = 2, attn_resolutions=[16], model_channels = hidden_channels)
             self.output_projection = nn.Conv2d(
-                in_channels=init_features, out_channels=out_channels, kernel_size=1
+                in_channels=init_features, out_channels=out_channels, kernel_size=3, padding = "same",
             )
         else:
             raise NotImplementedError("Only 1D U-Net is implemented in this example.")
@@ -254,27 +258,27 @@ class UNetDiffusion(nn.Module):
     def forward_body(self, x_t, t, condition_input, **kwargs):
         # x_t and condition input have shape [B, C, D1,..., DN]
         t = t.unsqueeze(-1).type(torch.float32)
-        t = self.pos_encoding(t, self.hidden_dim)
-        t = self.time_projection(t)
+        #t = self.pos_encoding(t, self.hidden_dim)
+      #  t = self.time_projection(t)
 
         # Reorder channel dimensions to last dimension
-        x_t = torch.swapaxes(x_t, 1, -1)
-        condition_input = torch.swapaxes(condition_input, 1, -1)
+       # x_t = torch.swapaxes(x_t, 1, -1)
+       # condition_input = torch.swapaxes(condition_input, 1, -1)
 
         # Projection
-        x_t = self.input_projection(x_t)
-        condition_input = self.conditioning_projection(condition_input)
+      #  x_t = self.input_projection(x_t)
+      #  condition_input = self.conditioning_projection(condition_input)
 
-        if self.d == 1:
-            t = torch.repeat_interleave(t.unsqueeze(1), x_t.shape[1], dim=1)
-        elif self.d == 2:
-            t = t.unsqueeze(1).unsqueeze(1).repeat((1, x_t.shape[1], x_t.shape[2], 1))
+      #  if self.d == 1:
+     #       t = torch.repeat_interleave(t.unsqueeze(1), x_t.shape[1], dim=1)
+      #  elif self.d == 2:
+     #       t = t.unsqueeze(1).unsqueeze(1).repeat((1, x_t.shape[1], x_t.shape[2], 1))
 
         # Concatenate
-        x_t = torch.cat([x_t, condition_input, t], dim=-1).to(x_t.device)
+      #  x_t = torch.cat([x_t, condition_input, t], dim=-1).to(x_t.device)
         # Reorder back to [B, C, D]
-        x_t = torch.swapaxes(x_t, 1, -1)
-        x_t = self.unet(x_t)
+     #   x_t = torch.swapaxes(x_t, 1, -1)
+        x_t = self.unet(x_t, t, condition_input)
         return x_t
 
     def forward(self, x_t, t, condition_input, **kwargs):
@@ -412,7 +416,7 @@ if __name__ == "__main__":
     output = torch.randn(8, 1, 128,128)
     t = torch.ones(8) * 0.5
 
-    backbone = UNetDiffusion(
+    unet = UNetDiffusion(
         d=2,
         conditioning_dim=2,
         hidden_channels=32,
@@ -420,7 +424,8 @@ if __name__ == "__main__":
         out_channels=1,
         init_features=32,
         device="cpu",
+        domain_dim=128,
     )
-    unet = UNet_diffusion_normal(backbone, d=2, target_dim=1)
+    #unet = UNetDiffusion(backbone, d=2, target_dim=1, domain_dim = 128)
     test = unet.forward(input, t, condition)
     print(test.shape)

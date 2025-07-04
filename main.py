@@ -340,8 +340,8 @@ if __name__ == "__main__":
                     logging=logging,
                     filename_ending=filename_ending,
                     d_time=d_time_train,
-                    image_dim=target_dim,
-                    label_dim=input_dim,
+                    target_dim=target_dim,
+                    input_dim=input_dim,
                     results_dict=results_dict,
                     regressor=regressor,
                 )

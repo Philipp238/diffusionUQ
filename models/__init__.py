@@ -21,3 +21,5 @@ from models.unet import (
     UNet_diffusion_sample,
     UNetDiffusion,
 )
+
+from models.new_unet import SongUNet

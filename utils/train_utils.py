@@ -116,8 +116,8 @@ def setup_model(
     data_parameters: dict,
     training_parameters: dict,
     device,
-    image_dim: int,
-    label_dim: int,
+    target_dim: int,
+    input_dim: int,
 ):
     """Return the model specified by the training parameters.
 
@@ -144,6 +144,7 @@ def setup_model(
             in_channels=1,
             out_channels=1,
             init_features=32,
+            domain_dim = target_dim[-1]
         )
         if training_parameters["distributional_method"] == "deterministic":
             hidden_model = backbone
@@ -176,8 +177,8 @@ def setup_model(
             use_regressor_pred = training_parameters["regressor"] is not None
             if training_parameters["backbone"] == "default":
                 backbone = MLP_diffusion(
-                    target_dim=image_dim,
-                    conditioning_dim=label_dim,
+                    target_dim=target_dim,
+                    conditioning_dim=input_dim,
                     concat=training_parameters["concat_condition_diffusion"],
                     use_regressor_pred=use_regressor_pred,
                     hidden_dim=training_parameters["hidden_dim"],
@@ -191,8 +192,8 @@ def setup_model(
                     else training_parameters["hidden_dim"]
                 )
                 backbone = MLP_diffusion_CARD(
-                    target_dim=image_dim,
-                    conditioning_dim=label_dim,
+                    target_dim=target_dim,
+                    conditioning_dim=input_dim,
                     hidden_dim=hidden_dim,
                     layers=training_parameters["n_layers"],
                     use_regressor_pred=use_regressor_pred,
@@ -210,21 +211,21 @@ def setup_model(
             ):
                 hidden_model = MLP_diffusion_normal(
                     backbone=backbone,
-                    target_dim=image_dim,
+                    target_dim=target_dim,
                     concat=training_parameters["concat_condition_diffusion"],
                     hidden_dim=training_parameters["hidden_dim"],
                 )
             elif training_parameters["distributional_method"] == "sample":
                 hidden_model = MLP_diffusion_sample(
                     backbone=backbone,
-                    target_dim=image_dim,
+                    target_dim=target_dim,
                     hidden_dim=training_parameters["hidden_dim"],
                     n_samples=50,
                 )
             elif training_parameters["distributional_method"] == "mixednormal":
                 hidden_model = MLP_diffusion_mixednormal(
                     backbone=backbone,
-                    target_dim=image_dim,
+                    target_dim=target_dim,
                     concat=training_parameters["concat_condition_diffusion"],
                     hidden_dim=training_parameters["hidden_dim"],
                     n_components=10,
@@ -232,8 +233,8 @@ def setup_model(
 
         else:
             hidden_model = MLP(
-                target_dim=image_dim,
-                conditioning_dim=label_dim,
+                target_dim=target_dim,
+                conditioning_dim=input_dim,
                 dropout=training_parameters["dropout"],
                 hidden_dim=training_parameters["hidden_dim"],
                 layers=training_parameters["n_layers"],
