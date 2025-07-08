@@ -320,6 +320,42 @@ class UNet_diffusion_normal(nn.Module):
         output = torch.stack([mu, sigma], dim=-1)
         return output
     
+class UNet_diffusion_mvnormal(nn.Module):
+    def __init__(self, backbone, d=1, target_dim=1, method = "lora", rank = 3):
+        super(UNet_diffusion_mvnormal, self).__init__()
+        self.backbone = backbone
+        hidden_dim = backbone.features
+        self.method = method
+        self.target_dim = target_dim
+        if method == "lora":
+            sigma_out_channels = target_dim * (rank+1) # Rank + diagonal
+        if d == 1:
+            self.mu_projection = nn.Conv1d(
+                in_channels=hidden_dim, out_channels=self.target_dim, kernel_size=1
+            )
+            self.sigma_projection = nn.Conv1d(
+                in_channels=hidden_dim, out_channels=sigma_out_channels, kernel_size=1
+            )
+        elif d == 2:
+            self.mu_projection = nn.Conv2d(
+                in_channels=hidden_dim, out_channels=self.target_dim, kernel_size=1
+            )
+            self.sigma_projection = nn.Conv2d(
+                in_channels=hidden_dim, out_channels=sigma_out_channels, kernel_size=1
+            )
+        self.sofplus = nn.Softplus()
+
+    def forward(self, x_t, t, condition_input, **kwargs):
+        x_t = self.backbone.forward_body(x_t, t, condition_input)
+
+        mu = self.mu_projection(x_t).unsqueeze(-1)
+        sigma = self.sigma_projection(x_t)        
+        diag = self.sofplus(sigma[:,0:self.target_dim]).unsqueeze(-1) + EPS
+        lora = sigma[:,self.target_dim:]
+        lora = lora.reshape(lora.shape[0], self.target_dim, -1, *lora.shape[2:]).moveaxis(2,-1)
+        output = torch.cat([mu, diag, lora], dim=-1)
+        return output
+    
 
 class UNet_diffusion_sample(nn.Module):
     def __init__(self, backbone, d=1, target_dim = 1, hidden_dim=32, n_samples = 50):
@@ -412,11 +448,11 @@ class UNet_diffusion_mixednormal(nn.Module):
 
 if __name__ == "__main__":
     input = torch.randn(8, 1, 128,128)
-    condition = torch.randn(8, 2, 128,128)
+    condition = torch.randn(8, 3, 128,128)
     output = torch.randn(8, 1, 128,128)
     t = torch.ones(8) * 0.5
 
-    unet = UNetDiffusion(
+    backbone = UNetDiffusion(
         d=2,
         conditioning_dim=2,
         hidden_channels=32,
@@ -426,6 +462,6 @@ if __name__ == "__main__":
         device="cpu",
         domain_dim=128,
     )
-    #unet = UNetDiffusion(backbone, d=2, target_dim=1, domain_dim = 128)
+    unet = UNet_diffusion_mvnormal(backbone, d=2, target_dim=2, rank = 1)
     test = unet.forward(input, t, condition)
     print(test.shape)

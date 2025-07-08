@@ -17,9 +17,11 @@ from models import (
     LA_Wrapper,
     UNetDiffusion,
     UNet_diffusion_normal,
+    UNet_diffusion_mvnormal,
     UNet_diffusion_mixednormal,
     UNet_diffusion_sample,
 )
+from torch.distributions.lowrank_multivariate_normal import LowRankMultivariateNormal
 
 
 def log_and_save_evaluation(value: float, key: str, results_dict: dict, logging):
@@ -89,6 +91,8 @@ def get_criterion(training_parameters, device):
             ).mean()
         elif training_parameters["distributional_method"] == "mixednormal":
             criterion = losses.NormalMixtureCRPS()
+        elif training_parameters["distributional_method"] == "mvnormal":
+            criterion = lambda truth, prediction: (-1)* LowRankMultivariateNormal(prediction[...,0], prediction[...,2:], prediction[...,1]).log_prob(truth).mean()
         else:
             raise ValueError(
                 f'"distributional_method" must be any of the following: "deterministic", "normal", "sample" or'
@@ -143,7 +147,7 @@ def setup_model(
             hidden_channels=training_parameters["hidden_dim"],
             in_channels=1,
             out_channels=1,
-            init_features=32,
+            init_features=64,
             domain_dim = target_dim[-1]
         )
         if training_parameters["distributional_method"] == "deterministic":
@@ -153,6 +157,13 @@ def setup_model(
                 backbone=backbone,
                 d=d,
                 target_dim=1,
+            )
+        elif training_parameters["distributional_method"] == "mvnormal":
+            hidden_model = UNet_diffusion_mvnormal(
+                backbone=backbone,
+                d=d,
+                target_dim=1,
+                rank = 1,
             )
         elif training_parameters["distributional_method"] == "sample":
             hidden_model = UNet_diffusion_sample(
