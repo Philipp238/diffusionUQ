@@ -22,6 +22,7 @@ from models import (
     UNet_diffusion_sample,
 )
 from torch.distributions.lowrank_multivariate_normal import LowRankMultivariateNormal
+from torch.distributions.multivariate_normal import MultivariateNormal
 
 
 def log_and_save_evaluation(value: float, key: str, results_dict: dict, logging):
@@ -92,7 +93,11 @@ def get_criterion(training_parameters, device):
         elif training_parameters["distributional_method"] == "mixednormal":
             criterion = losses.NormalMixtureCRPS()
         elif training_parameters["distributional_method"] == "mvnormal":
-            criterion = lambda truth, prediction: (-1)* LowRankMultivariateNormal(prediction[...,0], prediction[...,2:], prediction[...,1]).log_prob(truth).mean()
+            method = training_parameters.get("mvnormal_method", "lora")
+            if method == "lora":
+                criterion = lambda truth, prediction: (-1)* LowRankMultivariateNormal(prediction[...,0], prediction[...,2:], prediction[...,1]).log_prob(truth).mean()
+            elif method == "cholesky":
+                criterion = lambda truth, prediction: (-1)* MultivariateNormal(loc = prediction[...,0], scale_tril=prediction[...,1:]).log_prob(truth).mean()
         else:
             raise ValueError(
                 f'"distributional_method" must be any of the following: "deterministic", "normal", "sample" or'
@@ -147,7 +152,7 @@ def setup_model(
             hidden_channels=training_parameters["hidden_dim"],
             in_channels=1,
             out_channels=1,
-            init_features=64,
+            init_features=training_parameters["hidden_dim"],
             domain_dim = target_dim[-1]
         )
         if training_parameters["distributional_method"] == "deterministic":
@@ -163,7 +168,9 @@ def setup_model(
                 backbone=backbone,
                 d=d,
                 target_dim=1,
-                rank = 1,
+                domain_dim = target_dim[1:],
+                rank = 5,
+                method = training_parameters.get("mvnormal_method", "lora")
             )
         elif training_parameters["distributional_method"] == "sample":
             hidden_model = UNet_diffusion_sample(

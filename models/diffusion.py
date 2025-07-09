@@ -1,6 +1,7 @@
 import torch
 from scoringrules import crps_ensemble
 from torch.distributions.lowrank_multivariate_normal import LowRankMultivariateNormal
+from torch.distributions.multivariate_normal import MultivariateNormal
 
 
 class Diffusion:
@@ -313,10 +314,16 @@ class DistributionalDiffusion(Diffusion):
             ] * torch.randn_like(predicted_noise[..., 0], device=self.device)
         elif self.distributional_method == "mvnormal":
             predicted_noise = model(x, t, conditioning, pred = pred)
-            mu = predicted_noise[...,0]
-            diag = predicted_noise[...,1]
-            lora = predicted_noise[...,2:]
-            mvnorm = LowRankMultivariateNormal(mu, lora, diag)
+            if predicted_noise.shape[-1] == predicted_noise.shape[-2]+1:
+                # Cholesky
+                mu = predicted_noise[..., 0]
+                L_full = predicted_noise[..., 1:]
+                mvnorm = MultivariateNormal(loc = mu, scale_tril = L_full)
+            else: # Lora
+                mu = predicted_noise[...,0]
+                diag = predicted_noise[...,1]
+                lora = predicted_noise[...,2:]
+                mvnorm = LowRankMultivariateNormal(mu, lora, diag)
             predicted_noise = mvnorm.sample()
 
         elif self.distributional_method == "sample":

@@ -23,4 +23,4 @@ from models.unet import (
     UNetDiffusion,
 )
 
-from models.new_unet import SongUNet
+from models.unet_layers import SongUNet

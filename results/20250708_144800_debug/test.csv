@@ -27,8 +27,8 @@ weight_decay,0.0
 dropout,0.1
 hidden_dim,64
 n_layers,2
-n_timesteps,100
-distributional_method,deterministic
+n_timesteps,50
+distributional_method,normal
 concat_condition_diffusion,True
 evaluate,True
 x_T_sampling_method,standard
@@ -36,19 +36,19 @@ conditional_free_guidance_training,False
 ddim_sigma,1.0
 noise_schedule,linear
 regressor,
-t_training,36366.228
-NumberParameters,6459649
-MSEValidation,6e-05
-RMSEValidation,0.0077
-EnergyScoreValidation,0.02991
-CRPSValidation,0.00118
-Gaussian NLLValidation,-5.0598
-CoverageValidation,0.98441
-QICEValidation,0.07347
-MSETest,0.00013
-RMSETest,0.01138
-EnergyScoreTest,0.03635
-CRPSTest,0.00149
-Gaussian NLLTest,-5.01771
-CoverageTest,0.9816
-QICETest,0.07431
+t_training,12952.533
+NumberParameters,6459779
+MSEValidation,0.00039
+RMSEValidation,0.01987
+EnergyScoreValidation,0.06735
+CRPSValidation,0.00261
+Gaussian NLLValidation,-4.81169
+CoverageValidation,0.96411
+QICEValidation,0.06858
+MSETest,0.00069
+RMSETest,0.02622
+EnergyScoreTest,0.08408
+CRPSTest,0.00336
+Gaussian NLLTest,-4.7123
+CoverageTest,0.95976
+QICETest,0.06875
