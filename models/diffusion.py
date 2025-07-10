@@ -352,7 +352,7 @@ class DistributionalDiffusion(Diffusion):
                 1
                 / torch.sqrt(alpha)
                 * (x - ((1 - alpha) / (torch.sqrt(1 - alpha_hat))) * predicted_noise_mu)
-                + (variance_factor_default * predicted_noise_sigma + torch.sqrt(beta))
+                + torch.sqrt(variance_factor_default * predicted_noise_sigma**2 + beta)
                 * noise
             )
         elif self.x_T_sampling_method == "CARD":
@@ -380,9 +380,9 @@ class DistributionalDiffusion(Diffusion):
 
                 variance_factor_CARD = alpha_hat_t_minus_1 * variance_factor_default
 
-                x = (gamma_0 * y_hat_0 + gamma_1 * x + gamma_2 * pred) + (
-                    variance_factor_CARD * predicted_noise_sigma
-                    + self.ddim_sigma * torch.sqrt(beta_wiggle)
+                x = (gamma_0 * y_hat_0 + gamma_1 * x + gamma_2 * pred) + torch.sqrt(
+                    variance_factor_CARD * predicted_noise_sigma**2
+                    + self.ddim_sigma * beta_wiggle
                 ) * noise
 
             else:
