@@ -23,11 +23,16 @@ class Diffusion:
         self.x_T_sampling_method = x_T_sampling_method
         self.ddim_sigma = ddim_sigma
 
-    def sample_x_T(self, shape, pred):
-        if self.x_T_sampling_method in ["standard", "CARD"]:
+    def sample_x_T(self, shape, pred, inference):
+        if self.x_T_sampling_method in ["standard"]:
             x = torch.randn(shape).to(self.device)
         elif self.x_T_sampling_method == "naive-regressor-mean":
             x = torch.randn(shape).to(self.device) + pred
+        elif self.x_T_sampling_method == 'CARD':
+            if inference:
+                x = torch.randn(shape).to(self.device) + pred
+            else:
+                x = torch.randn(shape).to(self.device)
         else:
             raise NotImplementedError(
                 f'Please choose as the x_T_sampling_method "standard", "CARD", or "naive-regressor-mean". You chose'
@@ -142,7 +147,8 @@ class Diffusion:
     def noise_low_dimensional(self, x, t, pred=None):
         assert (self.x_T_sampling_method == "standard") or not (pred is None)
 
-        eps = self.sample_x_T(x.shape, pred)
+        # inference = False since this method is only used during training
+        eps = self.sample_x_T(x.shape, pred, inference=False)
         x_t = self.sample_x_t_training(x, eps, t, pred)
         return x_t, eps
 
@@ -164,7 +170,7 @@ class Diffusion:
 
         model.eval()
         with torch.no_grad():
-            x = self.sample_x_T((n, *self.img_size), pred)
+            x = self.sample_x_T((n, *self.img_size), pred, inference=True)
             for i in reversed(range(1, self.noise_steps)):
                 t = (torch.ones(n) * i).long().to(self.device)
                 predicted_noise = model(x, t, conditioning, pred)
@@ -409,7 +415,7 @@ class DistributionalDiffusion(Diffusion):
             distr_per_t = []
 
         with torch.no_grad():
-            x = self.sample_x_T((n, *self.img_size), pred)
+            x = self.sample_x_T((n, *self.img_size), pred, inference=True)
             if self.x_T_sampling_method == "CARD":
                 x += pred
             for i in reversed(range(1, self.noise_steps)):
@@ -439,7 +445,7 @@ class DistributionalDiffusion(Diffusion):
                     gt_images_t = self.noise_low_dimensional(
                         gt_images,
                         (torch.ones(gt_images.shape[0]) * i).long().to(self.device),
-                        pred=single_pred,
+                        pred=single_pred
                     )[0]
                     x_t = x.reshape(
                         gt_images.shape[0], n_samples, *self.img_size

@@ -323,7 +323,7 @@ def start_evaluation(
             plt.plot(reversed_epochs, means_over_time, label="Prediction - Mean")
             plt.plot(reversed_epochs, [loader.dataset[idx_sample][0].item() for _ in reversed_epochs], label="Ground truth")
             plt.fill_between(np.array(reversed_epochs), means_over_time - stds_over_time, means_over_time + stds_over_time, color='blue', alpha=0.2, label='±1 Std Dev')
-            plt.xlabel("epochs")
+            plt.xlabel("t")
             plt.legend()
             plt.title(f"Predictive distribution {name}")
             plt.tight_layout()
