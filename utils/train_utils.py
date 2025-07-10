@@ -17,9 +17,12 @@ from models import (
     LA_Wrapper,
     UNetDiffusion,
     UNet_diffusion_normal,
+    UNet_diffusion_mvnormal,
     UNet_diffusion_mixednormal,
     UNet_diffusion_sample,
 )
+from torch.distributions.lowrank_multivariate_normal import LowRankMultivariateNormal
+from torch.distributions.multivariate_normal import MultivariateNormal
 
 
 def log_and_save_evaluation(value: float, key: str, results_dict: dict, logging):
@@ -89,6 +92,12 @@ def get_criterion(training_parameters, device):
             ).mean()
         elif training_parameters["distributional_method"] == "mixednormal":
             criterion = losses.NormalMixtureCRPS()
+        elif training_parameters["distributional_method"] == "mvnormal":
+            method = training_parameters.get("mvnormal_method", "lora")
+            if method == "lora":
+                criterion = lambda truth, prediction: (-1)* LowRankMultivariateNormal(prediction[...,0], prediction[...,2:], prediction[...,1]).log_prob(truth).mean()
+            elif method == "cholesky":
+                criterion = lambda truth, prediction: (-1)* MultivariateNormal(loc = prediction[...,0], scale_tril=prediction[...,1:]).log_prob(truth).mean()
         else:
             raise ValueError(
                 f'"distributional_method" must be any of the following: "deterministic", "normal", "sample" or'
@@ -116,8 +125,8 @@ def setup_model(
     data_parameters: dict,
     training_parameters: dict,
     device,
-    image_dim: int,
-    label_dim: int,
+    target_dim: int,
+    input_dim: int,
 ):
     """Return the model specified by the training parameters.
 
@@ -143,7 +152,8 @@ def setup_model(
             hidden_channels=training_parameters["hidden_dim"],
             in_channels=1,
             out_channels=1,
-            init_features=32,
+            init_features=training_parameters["hidden_dim"],
+            domain_dim = target_dim[-1]
         )
         if training_parameters["distributional_method"] == "deterministic":
             hidden_model = backbone
@@ -152,6 +162,15 @@ def setup_model(
                 backbone=backbone,
                 d=d,
                 target_dim=1,
+            )
+        elif training_parameters["distributional_method"] == "mvnormal":
+            hidden_model = UNet_diffusion_mvnormal(
+                backbone=backbone,
+                d=d,
+                target_dim=1,
+                domain_dim = target_dim[1:],
+                rank = 5,
+                method = training_parameters.get("mvnormal_method", "lora")
             )
         elif training_parameters["distributional_method"] == "sample":
             hidden_model = UNet_diffusion_sample(
@@ -176,8 +195,8 @@ def setup_model(
             use_regressor_pred = training_parameters["regressor"] is not None
             if training_parameters["backbone"] == "default":
                 backbone = MLP_diffusion(
-                    target_dim=image_dim,
-                    conditioning_dim=label_dim,
+                    target_dim=target_dim,
+                    conditioning_dim=input_dim,
                     concat=training_parameters["concat_condition_diffusion"],
                     use_regressor_pred=use_regressor_pred,
                     hidden_dim=training_parameters["hidden_dim"],
@@ -191,8 +210,8 @@ def setup_model(
                     else training_parameters["hidden_dim"]
                 )
                 backbone = MLP_diffusion_CARD(
-                    target_dim=image_dim,
-                    conditioning_dim=label_dim,
+                    target_dim=target_dim,
+                    conditioning_dim=input_dim,
                     hidden_dim=hidden_dim,
                     layers=training_parameters["n_layers"],
                     use_regressor_pred=use_regressor_pred,
@@ -210,21 +229,21 @@ def setup_model(
             ):
                 hidden_model = MLP_diffusion_normal(
                     backbone=backbone,
-                    target_dim=image_dim,
+                    target_dim=target_dim,
                     concat=training_parameters["concat_condition_diffusion"],
                     hidden_dim=training_parameters["hidden_dim"],
                 )
             elif training_parameters["distributional_method"] == "sample":
                 hidden_model = MLP_diffusion_sample(
                     backbone=backbone,
-                    target_dim=image_dim,
+                    target_dim=target_dim,
                     hidden_dim=training_parameters["hidden_dim"],
                     n_samples=50,
                 )
             elif training_parameters["distributional_method"] == "mixednormal":
                 hidden_model = MLP_diffusion_mixednormal(
                     backbone=backbone,
-                    target_dim=image_dim,
+                    target_dim=target_dim,
                     concat=training_parameters["concat_condition_diffusion"],
                     hidden_dim=training_parameters["hidden_dim"],
                     n_components=10,
@@ -232,8 +251,8 @@ def setup_model(
 
         else:
             hidden_model = MLP(
-                target_dim=image_dim,
-                conditioning_dim=label_dim,
+                target_dim=target_dim,
+                conditioning_dim=input_dim,
                 dropout=training_parameters["dropout"],
                 hidden_dim=training_parameters["hidden_dim"],
                 layers=training_parameters["n_layers"],

@@ -29,7 +29,7 @@ msg = "Start main"
 
 # initialize parser
 parser = argparse.ArgumentParser(description=msg)
-default_config = "concrete.ini"
+default_config = "debug_pde.ini"
 
 parser.add_argument(
     "-c", "--config", help="Name of the config file:", default=default_config
@@ -340,8 +340,8 @@ if __name__ == "__main__":
                     logging=logging,
                     filename_ending=filename_ending,
                     d_time=d_time_train,
-                    image_dim=target_dim,
-                    label_dim=input_dim,
+                    target_dim=target_dim,
+                    input_dim=input_dim,
                     results_dict=results_dict,
                     regressor=regressor,
                 )

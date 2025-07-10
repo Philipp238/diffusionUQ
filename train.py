@@ -93,8 +93,8 @@ def trainer(
     data_parameters,
     logging,
     filename_ending,
-    image_dim,
-    label_dim,
+    target_dim,
+    input_dim,
     d_time,
     results_dict,
     regressor,
@@ -127,7 +127,7 @@ def trainer(
         energy_score  # torch.nn.MSELoss() # MSE loss for evaluating generated samples
     )
 
-    model = train_utils.setup_model(data_parameters,training_parameters, device, image_dim, label_dim)
+    model = train_utils.setup_model(data_parameters,training_parameters, device, target_dim, input_dim)
 
     if training_parameters["init"] != "default":
         train_utils.initialize_weights(model, training_parameters["init"])
@@ -192,7 +192,7 @@ def trainer(
         if distributional_method == "deterministic":
             diffusion = Diffusion(
                 noise_steps=training_parameters["n_timesteps"],
-                img_size=image_dim,
+                img_size=target_dim,
                 device=device,
                 x_T_sampling_method=training_parameters['x_T_sampling_method'],
                 noise_schedule=noise_schedule
@@ -200,7 +200,7 @@ def trainer(
         else:
             diffusion = DistributionalDiffusion(
                 noise_steps=training_parameters["n_timesteps"],
-                img_size=image_dim,
+                img_size=target_dim,
                 device=device,
                 distributional_method=distributional_method,
                 x_T_sampling_method=training_parameters['x_T_sampling_method'],
