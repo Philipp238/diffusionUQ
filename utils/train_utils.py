@@ -15,7 +15,14 @@ from models import (
     MLP_diffusion_sample,
     MLP_diffusion_mixednormal,
     LA_Wrapper,
+    UNetDiffusion,
+    UNet_diffusion_normal,
+    UNet_diffusion_mvnormal,
+    UNet_diffusion_mixednormal,
+    UNet_diffusion_sample,
 )
+from torch.distributions.lowrank_multivariate_normal import LowRankMultivariateNormal
+from torch.distributions.multivariate_normal import MultivariateNormal
 
 
 def log_and_save_evaluation(value: float, key: str, results_dict: dict, logging):
@@ -65,22 +72,37 @@ def get_criterion(training_parameters, device):
     """Define criterion for the model.
     Criterion gets as arguments (truth, prediction) and returns a loss value.
     """
-    if training_parameters['uncertainty_quantification'] == 'diffusion':
+    if training_parameters["uncertainty_quantification"] == "diffusion":
         if training_parameters["distributional_method"] == "deterministic":
             criterion = nn.MSELoss()
-        elif training_parameters["distributional_method"] == "normal" or training_parameters["distributional_method"] == "closed_form_normal":
+        elif (
+            training_parameters["distributional_method"] == "normal"
+            or training_parameters["distributional_method"] == "closed_form_normal"
+        ):
             criterion = lambda truth, prediction: sr.crps_normal(
                 truth, prediction[..., 0], prediction[..., 1], backend="torch"
             ).mean()
         elif training_parameters["distributional_method"] == "sample":
             criterion = lambda truth, prediction: sr.energy_score(
-                truth.flatten(start_dim = 1, end_dim = -1), prediction.flatten(start_dim = 1, end_dim = -2), m_axis=-1, v_axis=-2, backend="torch"
+                truth.flatten(start_dim=1, end_dim=-1),
+                prediction.flatten(start_dim=1, end_dim=-2),
+                m_axis=-1,
+                v_axis=-2,
+                backend="torch",
             ).mean()
         elif training_parameters["distributional_method"] == "mixednormal":
             criterion = losses.NormalMixtureCRPS()
+        elif training_parameters["distributional_method"] == "mvnormal":
+            method = training_parameters.get("mvnormal_method", "lora")
+            if method == "lora":
+                criterion = lambda truth, prediction: (-1)* LowRankMultivariateNormal(prediction[...,0], prediction[...,2:], prediction[...,1]).log_prob(truth).mean()
+            elif method == "cholesky":
+                criterion = lambda truth, prediction: (-1)* MultivariateNormal(loc = prediction[...,0], scale_tril=prediction[...,1:]).log_prob(truth).mean()
         else:
-            raise ValueError(f'"distributional_method" must be any of the following: "deterministzic", "normal", "sample" or'
-                             f'"mixednormal". You chose {training_parameters["distributional_method"]}.')
+            raise ValueError(
+                f'"distributional_method" must be any of the following: "deterministic", "normal", "sample" or'
+                f'"mixednormal". You chose {training_parameters["distributional_method"]}.'
+            )
     else:
         criterion = nn.MSELoss()
     return criterion
@@ -99,7 +121,13 @@ def initialize_weights(model, init):
                 )
 
 
-def setup_model(training_parameters: dict, device, image_dim: int, label_dim: int):
+def setup_model(
+    data_parameters: dict,
+    training_parameters: dict,
+    device,
+    target_dim: int,
+    input_dim: int,
+):
     """Return the model specified by the training parameters.
 
     Args:
@@ -111,70 +139,126 @@ def setup_model(training_parameters: dict, device, image_dim: int, label_dim: in
     Returns:
         _type_: Specified model
     """
-    if training_parameters["uncertainty_quantification"] == "scoring-rule-reparam":
-        raise NotImplementedError("Implement a model with parametrization trick.")
-    elif training_parameters["uncertainty_quantification"] == "diffusion":
-        use_regressor_pred = training_parameters["regressor"] is not None
-        if training_parameters["backbone"] == "default":
-            backbone = MLP_diffusion(
-                    target_dim=image_dim,
-                    conditioning_dim=label_dim,
+    if data_parameters["dataset_name"] in [
+        "1D_Advection",
+        "1D_ReacDiff",
+        "1D_Burgers",
+        "2D_DarcyFlow",
+    ]:
+        d = int(data_parameters["dataset_name"][0])
+        backbone = UNetDiffusion(
+            d=d,
+            conditioning_dim=3,
+            hidden_channels=training_parameters["hidden_dim"],
+            in_channels=1,
+            out_channels=1,
+            init_features=training_parameters["hidden_dim"],
+            domain_dim = target_dim[-1]
+        )
+        if training_parameters["distributional_method"] == "deterministic":
+            hidden_model = backbone
+        elif training_parameters["distributional_method"] == "normal":
+            hidden_model = UNet_diffusion_normal(
+                backbone=backbone,
+                d=d,
+                target_dim=1,
+            )
+        elif training_parameters["distributional_method"] == "mvnormal":
+            hidden_model = UNet_diffusion_mvnormal(
+                backbone=backbone,
+                d=d,
+                target_dim=1,
+                domain_dim = target_dim[1:],
+                rank = 5,
+                method = training_parameters.get("mvnormal_method", "lora")
+            )
+        elif training_parameters["distributional_method"] == "sample":
+            hidden_model = UNet_diffusion_sample(
+                backbone=backbone,
+                d=d,
+                target_dim=1,
+                hidden_dim=training_parameters["hidden_dim"],
+                n_samples=10,
+            )
+        elif training_parameters["distributional_method"] == "mixednormal":
+            hidden_model = UNet_diffusion_mixednormal(
+                backbone=backbone,
+                d=d,
+                target_dim=1,
+                n_components=10,
+            )
+
+    else:
+        if training_parameters["uncertainty_quantification"] == "scoring-rule-reparam":
+            raise NotImplementedError("Implement a model with parametrization trick.")
+        elif training_parameters["uncertainty_quantification"] == "diffusion":
+            use_regressor_pred = training_parameters["regressor"] is not None
+            if training_parameters["backbone"] == "default":
+                backbone = MLP_diffusion(
+                    target_dim=target_dim,
+                    conditioning_dim=input_dim,
                     concat=training_parameters["concat_condition_diffusion"],
                     use_regressor_pred=use_regressor_pred,
                     hidden_dim=training_parameters["hidden_dim"],
                     layers=training_parameters["n_layers"],
                     dropout=training_parameters["dropout"],
                 )
-        elif training_parameters["backbone"] == "CARD":
-            hidden_dim = 2*training_parameters["hidden_dim"] if training_parameters["concat_condition_diffusion"] else training_parameters["hidden_dim"]
-            backbone = MLP_diffusion_CARD(
-                target_dim=image_dim,
-                conditioning_dim=label_dim,
-                hidden_dim=hidden_dim,
-                layers=training_parameters["n_layers"],
-                use_regressor_pred=use_regressor_pred,
-            )
+            elif training_parameters["backbone"] == "CARD":
+                hidden_dim = (
+                    2 * training_parameters["hidden_dim"]
+                    if training_parameters["concat_condition_diffusion"]
+                    else training_parameters["hidden_dim"]
+                )
+                backbone = MLP_diffusion_CARD(
+                    target_dim=target_dim,
+                    conditioning_dim=input_dim,
+                    hidden_dim=hidden_dim,
+                    layers=training_parameters["n_layers"],
+                    use_regressor_pred=use_regressor_pred,
+                )
+            else:
+                raise KeyError(
+                    f"No such backbone architecture: {training_parameters['backbone']}"
+                )
+
+            if training_parameters["distributional_method"] == "deterministic":
+                hidden_model = backbone
+            elif (
+                training_parameters["distributional_method"] == "normal"
+                or training_parameters["distributional_method"] == "closed_form_normal"
+            ):
+                hidden_model = MLP_diffusion_normal(
+                    backbone=backbone,
+                    target_dim=target_dim,
+                    concat=training_parameters["concat_condition_diffusion"],
+                    hidden_dim=training_parameters["hidden_dim"],
+                )
+            elif training_parameters["distributional_method"] == "sample":
+                hidden_model = MLP_diffusion_sample(
+                    backbone=backbone,
+                    target_dim=target_dim,
+                    hidden_dim=training_parameters["hidden_dim"],
+                    n_samples=50,
+                )
+            elif training_parameters["distributional_method"] == "mixednormal":
+                hidden_model = MLP_diffusion_mixednormal(
+                    backbone=backbone,
+                    target_dim=target_dim,
+                    concat=training_parameters["concat_condition_diffusion"],
+                    hidden_dim=training_parameters["hidden_dim"],
+                    n_components=10,
+                )
+
         else:
-            raise KeyError(f"No such backbone architecture: {training_parameters['backbone']}")
-        
-        if training_parameters["distributional_method"] == "deterministic":
-            hidden_model = backbone
-        elif training_parameters["distributional_method"] == "normal" or training_parameters["distributional_method"] == "closed_form_normal":
-            hidden_model = MLP_diffusion_normal(
-                backbone=backbone,
-                target_dim=image_dim,
-                concat=training_parameters["concat_condition_diffusion"],
+            hidden_model = MLP(
+                target_dim=target_dim,
+                conditioning_dim=input_dim,
+                dropout=training_parameters["dropout"],
                 hidden_dim=training_parameters["hidden_dim"],
-            )
-        elif training_parameters["distributional_method"] == "sample":
-            hidden_model = MLP_diffusion_sample(
-                backbone=backbone,
-                target_dim=image_dim,
-                hidden_dim=training_parameters["hidden_dim"],
-            )
-        elif training_parameters["distributional_method"] == "mixednormal":
-            hidden_model = MLP_diffusion_mixednormal(
-                backbone=backbone,
-                target_dim=image_dim,
-                concat=training_parameters["concat_condition_diffusion"],
-                hidden_dim=training_parameters["hidden_dim"],
-                n_components=2,
+                layers=training_parameters["n_layers"],
             )
 
-    else:
-        hidden_model = MLP(
-            target_dim=image_dim,
-            conditioning_dim=label_dim,
-            dropout=training_parameters["dropout"],
-            hidden_dim=training_parameters["hidden_dim"],
-            layers=training_parameters["n_layers"],
-        )
-
-    if training_parameters["uncertainty_quantification"] == "scoring-rule-dropout":
-        # return PNO_Wrapper(hidden_model, n_samples=training_parameters["n_samples"]).to(device)
-        return None
-    else:
-        return hidden_model.to(device)
+    return hidden_model.to(device)
 
 
 class EarlyStopper:
@@ -230,20 +314,21 @@ def get_hyperparameters_combination(hp_dict, except_keys=[]):
     return combination_dicts
 
 
-def setup_CARD_model(image_dim: int,
-                     label_dim: int,
-                     hidden_layers=[100, 50],
-                     use_batchnorm=False,
-                     negative_slope=0.01,
-                     dropout_rate=0.1
-                     ):
+def setup_CARD_model(
+    image_dim: int,
+    label_dim: int,
+    hidden_layers=[100, 50],
+    use_batchnorm=False,
+    negative_slope=0.01,
+    dropout_rate=0.1,
+):
     return MLP_CARD(
         input_dim=label_dim,
         target_dim=image_dim,
         hid_layers=hidden_layers,
         use_batchnorm=use_batchnorm,
         negative_slope=negative_slope,
-        dropout_rate=dropout_rate
+        dropout_rate=dropout_rate,
     )
 
 
@@ -258,12 +343,11 @@ def evaluate_CARD_model(model, loader, device, standardized=False):
         images = images.cpu()
 
         if standardized:
-            images = loader.dataset.destandardize_image(images)
-            images_pred = loader.dataset.destandardize_image(images_pred)
+            images = loader.dataset.destandardize_output(images)
+            images_pred = loader.dataset.destandardize_output(images_pred)
 
         mses = (images_pred - images) ** 2
         total_mse += mses.sum().item()
         count += images_pred.shape[0]
-        
-    return total_mse / count
 
+    return total_mse / count

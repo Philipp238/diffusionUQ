@@ -29,7 +29,7 @@ msg = "Start main"
 
 # initialize parser
 parser = argparse.ArgumentParser(description=msg)
-default_config = "concrete.ini"
+default_config = "debug_pde.ini"
 
 parser.add_argument(
     "-c", "--config", help="Name of the config file:", default=default_config
@@ -187,9 +187,9 @@ if __name__ == "__main__":
                 standardize=data_parameters["standardize"],
                 validation_ratio=validation_ratio_on_train_set,
             )
-            dataset, image_dim, label_dim = uci_data
+            dataset, target_dim, input_dim = uci_data
         else:
-            dataset, image_dim, label_dim = get_data(
+            dataset, target_dim, input_dim = get_data(
                 dataset_name, data_dir, data_parameters
             )
 
@@ -219,10 +219,8 @@ if __name__ == "__main__":
                     training_dataset, test_dataset = dataset
                     validation_dataset = None
             else:
-                logging.info(f"Use random split for dataset {dataset_name}")
-                training_dataset, validation_dataset, test_dataset = random_split(
-                    dataset, [0.8, 0.1, 0.1]
-                )
+                logging.info(f"Use pre-defined val split for dataset {dataset_name}")
+                training_dataset, validation_dataset, test_dataset = dataset
 
             train_loader = DataLoader(
                 training_dataset, batch_size=batch_size, shuffle=True
@@ -257,8 +255,8 @@ if __name__ == "__main__":
                     card_config = yaml.unsafe_load(f)
 
                 regressor = train_utils.setup_CARD_model(
-                    image_dim=image_dim,
-                    label_dim=label_dim,
+                    image_dim=target_dim,
+                    label_dim=input_dim,
                     hidden_layers=card_config.diffusion.nonlinear_guidance.hid_layers,
                     use_batchnorm=card_config.diffusion.nonlinear_guidance.use_batchnorm,
                     negative_slope=card_config.diffusion.nonlinear_guidance.negative_slope,
@@ -302,7 +300,7 @@ if __name__ == "__main__":
                 )
 
                 regressor = train_utils.setup_model(
-                    regressor_parameters_dict[0], device, image_dim, label_dim
+                    regressor_parameters_dict[0], device, target_dim, input_dim
                 )
                 train_utils.resume(regressor, os.path.join(folder_path, weight_file))
                 regressor.eval()
@@ -315,7 +313,7 @@ if __name__ == "__main__":
                 # out_channels = next(iter(train_loader))[1].shape[1]
 
                 model = train_utils.setup_model(
-                    training_parameters, device, image_dim, label_dim
+                    training_parameters, device, target_dim, input_dim
                 )
                 filename = training_parameters["filename_to_validate"]
                 if training_parameters["uncertainty_quantification"] == "laplace":
@@ -342,8 +340,8 @@ if __name__ == "__main__":
                     logging=logging,
                     filename_ending=filename_ending,
                     d_time=d_time_train,
-                    image_dim=image_dim,
-                    label_dim=label_dim,
+                    target_dim=target_dim,
+                    input_dim=input_dim,
                     results_dict=results_dict,
                     regressor=regressor,
                 )

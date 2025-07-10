@@ -12,11 +12,13 @@ from models import EMA, Diffusion, DistributionalDiffusion
 import copy
 import numpy as np
 import configparser
+from scoringrules import energy_score
+
 
 def using(point=""):
     usage = resource.getrusage(resource.RUSAGE_SELF)
     # you can convert that object to a dictionary
-    return f'{point}: mem (CPU python)={usage[2]/1024.0}MB; mem (CPU total)={dict(psutil.virtual_memory()._asdict())["used"] / 1024**2}MB'
+    return f"{point}: mem (CPU python)={usage[2] / 1024.0}MB; mem (CPU total)={dict(psutil.virtual_memory()._asdict())['used'] / 1024**2}MB"
 
 
 if torch.cuda.is_available():
@@ -26,8 +28,21 @@ else:
 print(f"Using {device}.")
 
 
-def train(net, optimizer, images, labels, criterion, gradient_clipping, uncertainty_quantification, ema, ema_model, diffusion=None, 
-          conditional_free_guidance_training=True, regressor=None,**kwargs):
+def train(
+    net,
+    optimizer,
+    images,
+    labels,
+    criterion,
+    gradient_clipping,
+    uncertainty_quantification,
+    ema,
+    ema_model,
+    diffusion=None,
+    conditional_free_guidance_training=True,
+    regressor=None,
+    **kwargs,
+):
     """Function that perfroms a training step for a given model.
 
     Args:
@@ -41,20 +56,20 @@ def train(net, optimizer, images, labels, criterion, gradient_clipping, uncertai
     Returns:
         _type_: Loss and gradient norm.
     """
-    optimizer.zero_grad(set_to_none=True)        
-    
-    if uncertainty_quantification == 'diffusion':
+    optimizer.zero_grad(set_to_none=True)
+
+    if uncertainty_quantification == "diffusion":
         assert not (diffusion is None)
         t = diffusion.sample_timesteps(images.shape[0]).to(device)
         if regressor is None:
             pred = None
         else:
             pred = regressor(labels)
-        
+
         x_t, noise = diffusion.noise_low_dimensional(images, t, pred=pred)
         if np.random.random() < 0.1 and conditional_free_guidance_training:
             labels = None
-        predicted_noise = net(x_t, t, labels, pred)
+        predicted_noise = net(x_t, t, labels, pred = pred)
         loss = criterion(noise, predicted_noise)
     else:
         predicted_images = net(labels)
@@ -69,6 +84,7 @@ def train(net, optimizer, images, labels, criterion, gradient_clipping, uncertai
 
     return loss
 
+
 def trainer(
     train_loader,
     val_loader,
@@ -77,13 +93,13 @@ def trainer(
     data_parameters,
     logging,
     filename_ending,
-    image_dim,
-    label_dim,
+    target_dim,
+    input_dim,
     d_time,
     results_dict,
-    regressor
+    regressor,
 ):
-    """ Trainer function that takes a parameter dictionaray and dataloaders, trains the models and logs the results.
+    """Trainer function that takes a parameter dictionaray and dataloaders, trains the models and logs the results.
 
     Args:
         train_loader (_type_): The training dataloader.
@@ -100,23 +116,25 @@ def trainer(
     Returns:
         _type_: Trained model and corresponding filename.
     """
-        
+
     if device == "cpu":
         assert not training_parameters["data_loader_pin_memory"]
 
-    criterion = train_utils.get_criterion(training_parameters, device=device) # Different loss functions for noise prediction
-    eval_criterion = torch.nn.MSELoss() # MSE loss for evaluating generated samples
-    
-    model = train_utils.setup_model(
-        training_parameters, device, image_dim, label_dim
+    criterion = train_utils.get_criterion(
+        training_parameters, device=device
+    )  # Different loss functions for noise prediction
+    eval_criterion = (
+        energy_score  # torch.nn.MSELoss() # MSE loss for evaluating generated samples
     )
+
+    model = train_utils.setup_model(data_parameters,training_parameters, device, target_dim, input_dim)
 
     if training_parameters["init"] != "default":
         train_utils.initialize_weights(model, training_parameters["init"])
 
-    if training_parameters.get('finetuning', None):
-        train_utils.resume(model, training_parameters.get('finetuning', None))
-    
+    if training_parameters.get("finetuning", None):
+        train_utils.resume(model, training_parameters.get("finetuning", None))
+
     n_parameters = 0
     for parameter in model.parameters():
         n_parameters += parameter.nelement()
@@ -148,7 +166,7 @@ def trainer(
             model.parameters(), lr=training_parameters["learning_rate"]
         )
 
-    report_every = training_parameters['report_every']
+    report_every = training_parameters["report_every"]
     early_stopper = train_utils.EarlyStopper(
         patience=int(training_parameters["early_stopping"] / report_every),
         min_delta=0.0001,
@@ -174,7 +192,7 @@ def trainer(
         if distributional_method == "deterministic":
             diffusion = Diffusion(
                 noise_steps=training_parameters["n_timesteps"],
-                img_size=image_dim,
+                img_size=target_dim,
                 device=device,
                 x_T_sampling_method=training_parameters['x_T_sampling_method'],
                 noise_schedule=noise_schedule
@@ -182,7 +200,7 @@ def trainer(
         else:
             diffusion = DistributionalDiffusion(
                 noise_steps=training_parameters["n_timesteps"],
-                img_size=image_dim,
+                img_size=target_dim,
                 device=device,
                 distributional_method=distributional_method,
                 x_T_sampling_method=training_parameters['x_T_sampling_method'],
@@ -190,7 +208,7 @@ def trainer(
             )
     else:
         diffusion = None
-    
+
     ema = EMA(0.995)
     ema_model = copy.deepcopy(model).eval().requires_grad_(False)
 
@@ -199,10 +217,7 @@ def trainer(
     # Iterate over autoregressive steps, if necessary
     logging.info(f"Training starts now.")
 
-
-    filename = os.path.join(
-        directory, f"Datetime_{d_time}_Loss_{filename_ending}.pt"
-    )
+    filename = os.path.join(directory, f"Datetime_{d_time}_Loss_{filename_ending}.pt")
 
     for epoch in range(training_parameters["n_epochs"]):
         gc.collect()
@@ -221,11 +236,13 @@ def trainer(
                 criterion,
                 training_parameters["gradient_clipping"],
                 uncertainty_quantification=uncertainty_quantification,
-                ema=ema, 
-                ema_model=ema_model, 
+                ema=ema,
+                ema_model=ema_model,
                 diffusion=diffusion,
-                conditional_free_guidance_training=training_parameters["conditional_free_guidance_training"],
-                regressor=regressor
+                conditional_free_guidance_training=training_parameters[
+                    "conditional_free_guidance_training"
+                ],
+                regressor=regressor,
             )
             running_loss += batch_loss
 
@@ -233,18 +250,16 @@ def trainer(
             # stepwise scheduler only happens once per epoch and only if the validation has not been going down for at least 10 epochs
             if scheduler.get_last_lr()[0] > 0.0001:
                 scheduler.step()
-                logging.info(
-                    f"Learning rate reduced to: {scheduler.get_last_lr()[0]}"
-                )
+                logging.info(f"Learning rate reduced to: {scheduler.get_last_lr()[0]}")
 
         if epoch % report_every == report_every - 1:
             epochs.append(epoch)
-            training_loss_list.append(
-                running_loss / report_every / (len(train_loader))
-            )
+            training_loss_list.append(running_loss / report_every / (len(train_loader)))
             running_loss = 0.0
 
-            logging_str = f"[{epoch + 1:5d}] Training loss: {training_loss_list[-1]:.8f}"
+            logging_str = (
+                f"[{epoch + 1:5d}] Training loss: {training_loss_list[-1]:.8f}"
+            )
 
             if val_loader is not None:
                 if not uncertainty_quantification.endswith("dropout"):
@@ -252,15 +267,15 @@ def trainer(
 
                 validation_loss = 0
                 validation_loss_ema = 0
-                
+
                 with torch.no_grad():
                     for target, input in val_loader:
                         target = target.to(device)
                         input = input.to(device)
-                        
-                        if uncertainty_quantification == 'diffusion':
+
+                        if uncertainty_quantification == "diffusion":
                             n_samples = 10
-                            
+
                             if regressor is None:
                                 repeated_pred = None
                             else:
@@ -268,64 +283,78 @@ def trainer(
                                 repeated_pred = pred.repeat_interleave(n_samples, dim=0)
 
                             repeated_labels = input.repeat_interleave(n_samples, dim=0)
-                            sampled_images = diffusion.sample_low_dimensional(
+                            sampled_targets = diffusion.sample_low_dimensional(
                                 model,
                                 n=repeated_labels.shape[0],
                                 conditioning=repeated_labels,
                                 pred=repeated_pred,
-                                cfg_scale=cfg_scale
-                                )
-                            sampled_images_ema = diffusion.sample_low_dimensional(
+                                cfg_scale=cfg_scale,
+                            )
+                            sampled_targets_ema = diffusion.sample_low_dimensional(
                                 ema_model,
                                 n=repeated_labels.shape[0],
                                 conditioning=repeated_labels,
                                 pred=repeated_pred,
-                                cfg_scale=cfg_scale
-                                )
-                            sampled_images = sampled_images.reshape(input.shape[0], n_samples, *target.shape[1:]).mean(dim=1)
-                            sampled_images_ema = sampled_images_ema.reshape(input.shape[0], n_samples, *target.shape[1:]).mean(dim=1)
+                                cfg_scale=cfg_scale,
+                            )
+                            sampled_targets = sampled_targets.reshape(
+                                input.shape[0], n_samples, *target.shape[1:]
+                            ).moveaxis(1,-1)
+                            sampled_targets_ema = sampled_targets_ema.reshape(
+                                input.shape[0], n_samples, *target.shape[1:]
+                            ).moveaxis(1,-1)
                         else:
-                            sampled_images = model(input)
-                            sampled_images_ema = ema_model(input)
-                        
-                        validation_loss += eval_criterion(sampled_images, target).item()
-                        validation_loss_ema += eval_criterion(sampled_images_ema, target).item()
-                
-                validation_loss_list.append(
-                    validation_loss / len(val_loader)
-                )
-                validation_loss_list_ema.append(
-                    validation_loss_ema / len(val_loader)
-                )
+                            sampled_targets = model(input)
+                            sampled_targets_ema = ema_model(input)
+
+                        validation_loss += eval_criterion(
+                            target.flatten(start_dim=1, end_dim=-1),
+                            sampled_targets.flatten(start_dim=1, end_dim=-2),
+                            m_axis=-1,
+                            v_axis=-2,
+                            backend = "torch",
+                        ).mean().item()
+                        validation_loss_ema += eval_criterion(
+                            target.flatten(start_dim=1, end_dim=-1),
+                            sampled_targets_ema.flatten(start_dim=1, end_dim=-2),
+                            m_axis=-1,
+                            v_axis=-2,
+                            backend = "torch",
+                        ).mean().item()
+
+                validation_loss_list.append(validation_loss / len(val_loader))
+                validation_loss_list_ema.append(validation_loss_ema / len(val_loader))
 
                 if validation_loss < best_loss:
                     best_loss = validation_loss
                     train_utils.checkpoint(model, filename)
 
                 # Early stopping (If the model is only getting finetuned, run at least 5 epochs. Otherwise at least 50.)
-                if training_parameters.get('finetuning', None):
+                if training_parameters.get("finetuning", None):
                     min_n_epochs = 5
                 else:
                     min_n_epochs = 50
-                    
-                if training_parameters['early_stopping'] and (epoch > min_n_epochs):
 
+                if training_parameters["early_stopping"] and (epoch > min_n_epochs):
                     if early_stopper.early_stop(validation_loss):
                         logging.info(f"EP {epoch}: Early stopping")
                         break
-                
-                logging_str += (",Validation loss: "
+
+                logging_str += (
+                    ",Validation loss: "
                     f"{validation_loss_list[-1]:.8f}, Validation loss EMA: {validation_loss_list_ema[-1]:.8f}"
                 )
-            logging.info(logging_str)   
-        
+            logging.info(logging_str)
+
     logging.info(using("After finishing all epochs"))
 
     optimizer.zero_grad(set_to_none=True)
     try:
         train_utils.resume(model, filename)
     except:
-        logging.info(f"Proceeding with diffusion model after {training_parameters['n_epochs']} epochs of training")
+        logging.info(
+            f"Proceeding with diffusion model after {training_parameters['n_epochs']} epochs of training"
+        )
         train_utils.checkpoint(model, filename)
 
     # Plot training and validation loss
@@ -347,17 +376,26 @@ def trainer(
     #     os.path.join(directory, f"Datetime_{d_time}_analytics_{filename_ending}.png")
     # )
     plt.close()
-    
-    
-    if data_parameters['dataset_name'] in ['x-squared', 'uniform-regression']:
-        input = (torch.rand(1024, dtype=torch.float32, device=device) * 3 ).sort().values.unsqueeze(-1)
-        with torch.no_grad():
-            if uncertainty_quantification == 'diffusion':
-                sampled_images = diffusion.sample_low_dimensional(model, n=input.shape[0], conditioning=input).squeeze(1).to('cpu')
-            else:
-                sampled_images = model(input).squeeze(1).to('cpu')
 
-            plt.plot(input.cpu(), sampled_images, 'x')
+    if data_parameters["dataset_name"] in ["x-squared", "uniform-regression"]:
+        input = (
+            (torch.rand(1024, dtype=torch.float32, device=device) * 3)
+            .sort()
+            .values.unsqueeze(-1)
+        )
+        with torch.no_grad():
+            if uncertainty_quantification == "diffusion":
+                sampled_targets = (
+                    diffusion.sample_low_dimensional(
+                        model, n=input.shape[0], conditioning=input
+                    )
+                    .squeeze(1)
+                    .to("cpu")
+                )
+            else:
+                sampled_targets = model(input).squeeze(1).to("cpu")
+
+            plt.plot(input.cpu(), sampled_targets, "x")
 
             plt.savefig(os.path.join(directory, f"Datetime_{d_time}_visualisation.png"))
             plt.close()
