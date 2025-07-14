@@ -19,7 +19,7 @@ class GaussianKernelScore(nn.Module):
     """Computes the Gaussian kernel score for a predictive normal distribution and corresponding observations."""
 
     def __init__(
-        self, reduction="mean", dimension="univariate", gamma: float = 10.0
+        self, reduction="mean", dimension="univariate", gamma: float = 1.0
     ) -> None:
         super().__init__()
         self.reduction = reduction
