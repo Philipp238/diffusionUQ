@@ -25,14 +25,14 @@ import torch
 from torch import nn
 from models.unet_layers import SongUNet, Conv1d, Conv2d
 
-EPS = 1e-9
+EPS = 1e-6
 
 
 class UNetDiffusion(nn.Module):
     def __init__(
         self,
         d=1,
-        conditioning_dim=2,
+        conditioning_dim=3,
         hidden_channels=16,
         in_channels=1,
         out_channels=1,
@@ -53,7 +53,7 @@ class UNetDiffusion(nn.Module):
             # self.unet = UNet1d(3 * hidden_channels, init_features)
             self.unet = SongUNet(
                 img_resolution=domain_dim,
-                in_channels=4,
+                in_channels=(in_channels + conditioning_dim),
                 out_channels=1,
                 d=1,
                 attn_resolutions=[16],
@@ -69,7 +69,7 @@ class UNetDiffusion(nn.Module):
             # self.unet = UNet2d(3 * hidden_channels, init_features)
             self.unet = SongUNet(
                 img_resolution=domain_dim,
-                in_channels=4,
+                in_channels=(in_channels + conditioning_dim),
                 out_channels=1,
                 d=2,
                 attn_resolutions=[16],
@@ -87,15 +87,6 @@ class UNetDiffusion(nn.Module):
         if conditioning_dim:
             self.conditioning_projection = nn.Linear(conditioning_dim, hidden_channels)
 
-    def pos_encoding(self, t, channels):
-        inv_freq = 1.0 / (
-            10000
-            ** (torch.arange(0, channels, 2, device=self.device).float() / channels)
-        )
-        pos_enc_a = torch.sin(t.repeat_interleave(channels // 2, dim=-1) * inv_freq)
-        pos_enc_b = torch.cos(t.repeat_interleave(channels // 2, dim=-1) * inv_freq)
-        pos_enc = torch.cat([pos_enc_a, pos_enc_b], dim=-1)
-        return pos_enc
 
     def forward_body(self, x_t, t, condition_input, **kwargs):
         # x_t and condition input have shape [B, C, D1,..., DN]
@@ -206,6 +197,7 @@ class UNet_diffusion_mvnormal(nn.Module):
             lora = lora.reshape(
                 lora.shape[0], self.target_dim, -1, *lora.shape[2:]
             ).moveaxis(2, -1)
+            lora = lora/(torch.norm(lora, dim=(-2,-1), keepdim=True) + EPS)
             output = torch.cat([mu, diag, lora], dim=-1)
 
         elif self.method == "cholesky":
@@ -214,9 +206,10 @@ class UNet_diffusion_mvnormal(nn.Module):
             L_full[:, self.tril_indices[0], self.tril_indices[1]] = sigma.flatten(start_dim = 1)[:,0:self.tril_indices[0].shape[0]]
 
             # Enforce positive diagonal via exp()
-            diag = nn.functional.softplus(torch.diagonal(L_full, dim1=-2, dim2=-1)) + 1e-6
+            diag = nn.functional.softplus(torch.diagonal(L_full, dim1=-2, dim2=-1)) + EPS
             L = torch.tril(L_full)
-            L[:, torch.arange(self.domain_dim), torch.arange(self.domain_dim)] = diag
+            L = L/(torch.norm(L, dim=-1, keepdim=True) + EPS)
+            L[:, torch.arange(self.domain_dim), torch.arange(self.domain_dim)] = diag.squeeze()
             L = L.unsqueeze(1)
             output = torch.cat([mu, L], dim=-1)
         return output

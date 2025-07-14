@@ -102,6 +102,42 @@ class PDE1D(Dataset):
         target_tensor = torch.tensor(target).unsqueeze(0)
 
         return target_tensor, input_tensor
+    
+    def get_trajectory(self, idx:int, length:int = 10) -> torch.Tensor:
+        """Returns a trajectory of the idx-th element of the dataset
+
+        Args:
+            idx (int): Index of the element to be returned
+            length (int, optional): Length of the trajectory. Defaults to 10.
+
+        Returns:
+            torch.Tensor: Trajectory tensor
+        """
+        input_downscaled = self.dataset.u[
+            :, :: self.temporal_downscaling_factor, :: self.downscaling_factor
+        ]
+        target_downscaled = self.dataset.u[
+            :, :: self.temporal_downscaling_factor, :: self.downscaling_factor
+        ]
+        input = input_downscaled[idx, 0 : self.last_t_steps].to_numpy()
+        target = target_downscaled[idx, self.last_t_steps:(self.last_t_steps + length)].to_numpy()
+
+        # Normalize
+        if self.normalize:
+            input = (input - self.mean) / self.std
+            target = (target - self.mean) / self.std
+
+
+        # Add grid
+        grid = self.dataset["x-coordinate"][:: self.downscaling_factor].to_numpy()
+
+        input_tensor = torch.cat(
+            [torch.tensor(input), torch.tensor(grid).unsqueeze(0)], dim=0
+        ).float()
+        target_tensor = torch.tensor(target).unsqueeze(0)
+
+        return target_tensor, input_tensor
+
 
     def get_coordinates(self) -> Tuple:
         """Returns the x and y coordinates of the dataset

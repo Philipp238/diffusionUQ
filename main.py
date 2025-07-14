@@ -22,6 +22,7 @@ from data.data_utils import UCI_DATASET_NAMES, get_data, get_uci_data
 from evaluate import start_evaluation
 from train import trainer, using
 from utils import train_utils
+from utils import process_dict
 
 torch.autograd.set_detect_anomaly(False)
 
@@ -127,11 +128,20 @@ if __name__ == "__main__":
         f"############### Starting experiment with config file {config_name} ###############"
     )
 
+    # Get training and data dictionaries
     training_parameters_dict = dict(config.items("TRAININGPARAMETERS"))
     training_parameters_dict = {
         key: ast.literal_eval(training_parameters_dict[key])
         for key in training_parameters_dict.keys()
     }
+    data_parameters_dict = dict(config.items("DATAPARAMETERS"))
+    data_parameters_dict = {
+        key: ast.literal_eval(data_parameters_dict[key])
+        for key in data_parameters_dict.keys()
+    }
+    # Process dictionaries
+    data_parameters_dict = process_dict.process_data_parameters(data_parameters_dict)
+    train_parameters_dict = process_dict.process_training_parameters(training_parameters_dict)
 
     # In case you ONLY want to validate all models in a certain directory:
     # This prepares the filename_to_validate field in training_parameters_dict to contain the names of all weight files in the directory you want to validate
@@ -150,12 +160,6 @@ if __name__ == "__main__":
         training_parameters_dict,
         except_keys=["uno_out_channels", "uno_scalings", "uno_n_modes"],
     )
-
-    data_parameters_dict = dict(config.items("DATAPARAMETERS"))
-    data_parameters_dict = {
-        key: ast.literal_eval(data_parameters_dict[key])
-        for key in data_parameters_dict.keys()
-    }
     data_parameters_dict = train_utils.get_hyperparameters_combination(
         data_parameters_dict
     )  # except_keys for keys that are coming as a list for each training process
