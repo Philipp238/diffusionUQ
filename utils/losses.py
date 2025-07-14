@@ -6,6 +6,102 @@ from typing import List
 import torch
 import torch.nn as nn
 from torch import Tensor
+from torch.distributions.lowrank_multivariate_normal import (
+    LowRankMultivariateNormal,
+    _batch_lowrank_logdet,
+    _batch_lowrank_mahalanobis,
+)
+
+EPS = 1e-9
+
+
+class GaussianKernelScore(nn.Module):
+    """Computes the Gaussian kernel score for a predictive normal distribution and corresponding observations."""
+
+    def __init__(
+        self, reduction="mean", dimension="univariate", gamma: float = 10.0
+    ) -> None:
+        super().__init__()
+        self.reduction = reduction
+        self.gamma = gamma
+        self.dimension = dimension
+
+    def univariate(self, observation: Tensor, prediction: Tensor) -> Tensor:
+        # Sizes are [B x c x d0 x ... x dn] for mu and sigma and observation
+        mu, sigma = torch.split(prediction, 1, dim=-1)
+        # Use power of sigma
+        sigma2 = torch.pow(sigma, 2)
+        # Flatten values
+        mu = torch.flatten(mu, start_dim=1)
+        sigma2 = torch.flatten(sigma2, start_dim=1)
+        observation = torch.flatten(observation, start_dim=1)
+        gamma = (
+            torch.tensor(self.gamma, device=mu.device)
+        )
+        gamma2 = torch.pow(gamma, 2)
+        # Calculate the Gaussian kernel score
+        fac1 = (
+            1
+            / (torch.sqrt(1 + 2 * sigma2 / gamma2))
+            * torch.exp(-torch.pow(observation - mu, 2) / (gamma2 + 2 * sigma2))
+        )
+        fac2 = 1 / (2 * torch.sqrt(1 + 4 * sigma2 / gamma2))
+        score = 0.5 - fac1 + fac2
+        return score
+
+    def multivariate(self, observation: Tensor, prediction: Tensor) -> Tensor:
+        mu = prediction[..., 0]
+        diag = prediction[..., 1]
+        lowrank = prediction[..., 2:]
+        gamma = (
+            torch.tensor(self.gamma, device=mu.device)
+        )
+        gamma2 = torch.pow(gamma, 2)
+        diff = observation - mu
+        # Create diagonals and lowrank distributions
+        diag1 = (2.0/gamma2)*diag +torch.ones_like(diag).to(mu.device)
+        diag2 = (4.0/gamma2)*diag +torch.ones_like(diag).to(mu.device)
+        lowrank1 = torch.sqrt(2.0/gamma2) * lowrank
+        lowrank2 = torch.sqrt(4.0/gamma2) * lowrank
+        lora1 = LowRankMultivariateNormal(loc=mu, cov_factor=lowrank1, cov_diag=diag1)
+        lora2 = LowRankMultivariateNormal(loc=mu, cov_factor=lowrank2, cov_diag=diag2)
+
+        # Calculate score
+        M = _batch_lowrank_mahalanobis(
+                lora1._unbroadcasted_cov_factor,
+                lora1._unbroadcasted_cov_diag,
+                diff,
+                lora1._capacitance_tril,
+            )
+        det1 = _batch_lowrank_logdet(
+            lora1._unbroadcasted_cov_factor,
+            lora1._unbroadcasted_cov_diag,
+            lora1._capacitance_tril,
+        ).exp()
+        det2 = _batch_lowrank_logdet(
+            lora2._unbroadcasted_cov_factor,
+            lora2._unbroadcasted_cov_diag,
+            lora2._capacitance_tril,
+        ).exp()
+
+        fac1 = 1/torch.sqrt(det1) * torch.exp(-1/gamma2 * M)
+        fac2 = 1 / (torch.sqrt(det2))
+        score = 0.5*(1+fac2)-fac1
+        return score 
+
+    def forward(self, observation: Tensor, prediction: Tensor) -> Tensor:
+        if self.dimension == "univariate":
+            score = self.univariate(observation, prediction)
+        elif self.dimension == "multivariate":
+            score = self.multivariate(observation, prediction)
+
+        if self.reduction == "sum":
+            return torch.sum(score)
+        elif self.reduction == "mean":
+            return torch.mean(score)
+        else:
+            return score
+
 
 class QICE(nn.Module):
     """Implements QICE metric for quantile calibration.
@@ -13,13 +109,13 @@ class QICE(nn.Module):
     Args:
         nn (_type_): _description_
     """
-    def __init__(self, n_bins = 10):
+
+    def __init__(self, n_bins=10):
         super(QICE, self).__init__()
         self.n_bins = n_bins
         self.quantile_list = torch.linspace(0, 1, n_bins + 1)
         self.quantile_bin_count = torch.zeros(n_bins)
         self.n_samples = 0
-
 
     def aggregate(self, prediction, truth):
         """_summary_
@@ -35,11 +131,11 @@ class QICE(nn.Module):
         prediction = torch.flatten(prediction, start_dim=1, end_dim=-2)
         truth = torch.flatten(truth, start_dim=1).unsqueeze(0)
         quantiles = torch.quantile(prediction, self.quantile_list, dim=-1)
-        quantile_membership = (truth-quantiles>0).sum(axis = 0)
+        quantile_membership = (truth - quantiles > 0).sum(axis=0)
 
         quantile_bin_count = torch.tensor(
             [(quantile_membership == v).sum() for v in range(self.n_bins + 2)],
-            dtype=torch.int64
+            dtype=torch.int64,
         )
         # Combine outside (left/right) end intervals
         quantile_bin_count[1] += quantile_bin_count[0]
@@ -48,7 +144,6 @@ class QICE(nn.Module):
 
         # Add to quantile bin count
         self.quantile_bin_count += quantile_bin_count
-
 
     def compute(self):
         quantile_ratio = self.quantile_bin_count / self.n_samples
@@ -80,7 +175,7 @@ class NormalCRPS(nn.Module):
 
     def __init__(
         self,
-        reduction = "mean",
+        reduction="mean",
     ) -> None:
         super().__init__()
         self.reduction = reduction
@@ -89,7 +184,7 @@ class NormalCRPS(nn.Module):
         if not (mu.size() == sigma.size() == observation.size()):
             raise ValueError("Mismatching target and prediction shapes")
         # Use absolute value of sigma
-        sigma = torch.abs(sigma) +1e-12
+        sigma = torch.abs(sigma) + EPS
         loc = (observation - mu) / sigma
         Phi = 0.5 * (1 + torch.special.erf(loc / np.sqrt(2.0)))
         phi = 1 / (np.sqrt(2.0 * np.pi)) * torch.exp(-torch.pow(loc, 2) / 2.0)
@@ -110,7 +205,7 @@ class NormalMixtureCRPS(nn.Module):
         super().__init__()
         self.reduction = reduction
         self.normal = torch.distributions.Normal(loc=0.0, scale=1.0)
-        self.norm_crps = NormalCRPS(reduction = None)
+        self.norm_crps = NormalCRPS(reduction=None)
 
     def _A(self, mu: torch.Tensor, sigma: torch.Tensor):
         Phi = self.normal.cdf(mu / sigma)
@@ -122,23 +217,15 @@ class NormalMixtureCRPS(nn.Module):
         self,
         observation: torch.torch.Tensor,
         prediction: torch.torch.Tensor,
-    ) -> torch.Tensor:      
-        
+    ) -> torch.Tensor:
         # Split
-        mu, sigma, weights = torch.split(prediction, 1, dim = -1)
-        sigma = torch.abs(sigma) + 1e-12
-
-
-        # Reshape
-        # observation = torch.flatten(observation.unsqueeze(-1), start_dim = 1, end_dim = -2)
-        # mu = torch.flatten(mu, start_dim = 1, end_dim = -2)
-        # sigma = torch.flatten(sigma, start_dim = 1, end_dim = -2)
-        # weights = torch.flatten(weights, start_dim = 1, end_dim = -2)
+        mu, sigma, weights = torch.split(prediction, 1, dim=-1)
+        sigma = torch.abs(sigma) + EPS
 
         # First term
         diff = observation.unsqueeze(-1).unsqueeze(-1) - mu
         t1 = self._A(diff, sigma)
-        t1 = (t1 * weights).sum(axis=(-2,-1)).squeeze()
+        t1 = (t1 * weights).sum(axis=(-2, -1)).squeeze()
 
         # Second term
         mu_diff = mu - mu.transpose(dim0=-2, dim1=-1)
@@ -146,10 +233,10 @@ class NormalMixtureCRPS(nn.Module):
             torch.pow(sigma, 2) + torch.pow(sigma, 2).transpose(dim0=-2, dim1=-1)
         )
         t2 = self._A(mu_diff, sigma_sum)
-        w = weights * weights.transpose(dim0 = -2, dim1 = -1)
-        t2 = (w*t2).sum(axis = (-2,-1))
+        w = weights * weights.transpose(dim0=-2, dim1=-1)
+        t2 = (w * t2).sum(axis=(-2, -1))
 
-        crps = t1-0.5*t2
+        crps = t1 - 0.5 * t2
 
         if self.reduction == "sum":
             return torch.sum(crps)
@@ -330,7 +417,7 @@ class EnergyScore(object):
         type: str = "lp",
         reduction: str = "mean",
         reduce_dims: bool = True,
-        **kwargs: dict
+        **kwargs: dict,
     ):
         """Initializes the Energy score class.
 
@@ -455,6 +542,7 @@ class EnergyScore(object):
 
     def __call__(self, y_pred, y, **kwargs):
         return self.calculate_score(y_pred, y, **kwargs)
+
 
 class CRPS(object):
     """
@@ -594,7 +682,6 @@ class GaussianNLL(object):
         gaussian = torch.distributions.Normal(mu, sigma)
         score = -gaussian.log_prob(y)
 
-
         if self.reduce_dims:
             # Aggregate CRPS over spatial dimensions
             score = score.mean(dim=[d for d in range(1, n_dims + 1)])
@@ -615,7 +702,7 @@ class Coverage(object):
         alpha: float = 0.05,
         reduction: str = "mean",
         reduce_dims: bool = True,
-        **kwargs: dict
+        **kwargs: dict,
     ):
         """Initializes the Coverage probability class.
 
@@ -646,7 +733,9 @@ class Coverage(object):
             x = torch.mean(x, dim=0, keepdim=True)
         return x
 
-    def calculate_score(self, x: torch.Tensor, y: torch.Tensor, ensemble_dim: int=-1) -> torch.Tensor:
+    def calculate_score(
+        self, x: torch.Tensor, y: torch.Tensor, ensemble_dim: int = -1
+    ) -> torch.Tensor:
         """Calculates the Coverage probability between two tensors with respect to the significance level alpha.
 
         Args:
@@ -693,7 +782,7 @@ class IntervalWidth(object):
         alpha: float = 0.05,
         reduction: str = "mean",
         reduce_dims: bool = True,
-        **kwargs: dict
+        **kwargs: dict,
     ):
         """Initializes the Intervalwidth class.
 
@@ -760,3 +849,15 @@ class IntervalWidth(object):
 
     def __call__(self, y_pred, y, **kwargs):
         return self.calculate_score(y_pred, y, **kwargs)
+
+
+if __name__ == "__main__":
+    # Example usage
+    y = torch.randn(5, 1, 10)
+    mu = torch.zeros(5, 1, 10,1)
+    diag = torch.ones(5, 1, 10,1)
+    lora = torch.rand(5,1,10,1)
+    loss = GaussianKernelScore(gamma=1.0, reduction=None, dimension = "multivariate")
+    score = loss(y, torch.cat([mu, diag, lora], dim=-1))
+    print("Gaussian Kernel Score:", score.mean().item())
+    print("Shape:", score.shape)

@@ -79,9 +79,13 @@ def get_criterion(training_parameters, device):
             training_parameters["distributional_method"] == "normal"
             or training_parameters["distributional_method"] == "closed_form_normal"
         ):
-            criterion = lambda truth, prediction: sr.crps_normal(
-                truth, prediction[..., 0], prediction[..., 1], backend="torch"
-            ).mean()
+            loss = training_parameters.get("loss", "crps")
+            if loss == "crps":
+                criterion = lambda truth, prediction: sr.crps_normal(
+                    truth, prediction[..., 0], prediction[..., 1], backend="torch"
+                ).mean()
+            else:
+                criterion = losses.GaussianKernelScore(dimension = "univariate")
         elif training_parameters["distributional_method"] == "sample":
             criterion = lambda truth, prediction: sr.energy_score(
                 truth.flatten(start_dim=1, end_dim=-1),
@@ -95,7 +99,8 @@ def get_criterion(training_parameters, device):
         elif training_parameters["distributional_method"] == "mvnormal":
             method = training_parameters.get("mvnormal_method", "lora")
             if method == "lora":
-                criterion = lambda truth, prediction: (-1)* LowRankMultivariateNormal(prediction[...,0], prediction[...,2:], prediction[...,1]).log_prob(truth).mean()
+                #criterion = lambda truth, prediction: (-1)* LowRankMultivariateNormal(prediction[...,0], prediction[...,2:], prediction[...,1]).log_prob(truth).mean()
+                criterion = losses.GaussianKernelScore(dimension = "multivariate")
             elif method == "cholesky":
                 criterion = lambda truth, prediction: (-1)* MultivariateNormal(loc = prediction[...,0], scale_tril=prediction[...,1:]).log_prob(truth).mean()
         else:
@@ -169,10 +174,19 @@ def setup_model(
                 d=d,
                 target_dim=1,
                 domain_dim = target_dim[1:],
-                rank = 5,
+                rank = 10,
                 method = training_parameters.get("mvnormal_method", "lora")
             )
         elif training_parameters["distributional_method"] == "sample":
+            backbone = UNetDiffusion(
+                d=d,
+                conditioning_dim=4,
+                hidden_channels=training_parameters["hidden_dim"],
+                in_channels=1,
+                out_channels=1,
+                init_features=training_parameters["hidden_dim"],
+                domain_dim = target_dim[-1]
+            )
             hidden_model = UNet_diffusion_sample(
                 backbone=backbone,
                 d=d,
