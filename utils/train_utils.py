@@ -79,13 +79,13 @@ def get_criterion(training_parameters, device):
             training_parameters["distributional_method"] == "normal"
             or training_parameters["distributional_method"] == "closed_form_normal"
         ):
-            loss = training_parameters.get("loss", "crps")
+            loss = training_parameters["loss"]
             if loss == "crps":
                 criterion = lambda truth, prediction: sr.crps_normal(
                     truth, prediction[..., 0], prediction[..., 1], backend="torch"
                 ).mean()
             else:
-                criterion = losses.GaussianKernelScore(dimension = "univariate")
+                criterion = losses.GaussianKernelScore(dimension = "univariate", gamma = training_parameters["gamma"])
         elif training_parameters["distributional_method"] == "sample":
             criterion = lambda truth, prediction: sr.energy_score(
                 truth.flatten(start_dim=1, end_dim=-1),
@@ -97,10 +97,10 @@ def get_criterion(training_parameters, device):
         elif training_parameters["distributional_method"] == "mixednormal":
             criterion = losses.NormalMixtureCRPS()
         elif training_parameters["distributional_method"] == "mvnormal":
-            method = training_parameters.get("mvnormal_method", "lora")
+            method = training_parameters["mvnormal_method"]
             if method == "lora":
                 #criterion = lambda truth, prediction: (-1)* LowRankMultivariateNormal(prediction[...,0], prediction[...,2:], prediction[...,1]).log_prob(truth).mean()
-                criterion = losses.GaussianKernelScore(dimension = "multivariate")
+                criterion = losses.GaussianKernelScore(dimension = "multivariate", gamma = training_parameters["gamma"])
             elif method == "cholesky":
                 criterion = lambda truth, prediction: (-1)* MultivariateNormal(loc = prediction[...,0], scale_tril=prediction[...,1:]).log_prob(truth).mean()
         else:

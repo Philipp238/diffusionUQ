@@ -141,7 +141,7 @@ if __name__ == "__main__":
     }
     # Process dictionaries
     data_parameters_dict = process_dict.process_data_parameters(data_parameters_dict)
-    train_parameters_dict = process_dict.process_training_parameters(training_parameters_dict)
+    training_parameters_dict = process_dict.process_training_parameters(training_parameters_dict)
 
     # In case you ONLY want to validate all models in a certain directory:
     # This prepares the filename_to_validate field in training_parameters_dict to contain the names of all weight files in the directory you want to validate
