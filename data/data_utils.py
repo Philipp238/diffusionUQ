@@ -28,13 +28,17 @@ def get_data(
     logging=None,
 ):
     standardize = data_parameters["standardize"]
-    if dataset_name in ["1D_Advection", "1D_ReacDiff", "1D_Burgers"]:
+    select_timesteps = data_parameters["select_timesteps"]
+    temporal_downscaling_factor = data_parameters["temporal_downscaling_factor"]
+    if dataset_name in ["1D_Advection", "1D_ReacDiff", "1D_Burgers", "1D_KS"]:
         train_dataset = PDE1D(
             data_dir=dataset_path,
             pde=dataset_name.split("_")[1],
             var="train",
             downscaling_factor=data_parameters["downscaling_factor"],
             normalize=standardize,
+            select_timesteps=select_timesteps,
+            temporal_downscaling_factor=temporal_downscaling_factor,
         )
         val_dataset = PDE1D(
             data_dir=dataset_path,
@@ -42,6 +46,8 @@ def get_data(
             var="val",
             downscaling_factor=data_parameters["downscaling_factor"],
             normalize=standardize,
+            select_timesteps=select_timesteps,
+            temporal_downscaling_factor=temporal_downscaling_factor,
         )
         test_dataset = PDE1D(
             data_dir=dataset_path,
@@ -49,6 +55,8 @@ def get_data(
             var="test",
             downscaling_factor=data_parameters["downscaling_factor"],
             normalize=standardize,
+            select_timesteps=select_timesteps,
+            temporal_downscaling_factor=temporal_downscaling_factor,
         )
     elif dataset_name in ["2D_DarcyFlow"]:
         train_dataset = PDE2D(

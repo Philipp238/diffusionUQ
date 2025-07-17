@@ -7,10 +7,7 @@ from torchvision.datasets.utils import download_url
 
 # Dictionary with datasets and urls
 DATASETS = {
-    "1D_Advection": "https://darus.uni-stuttgart.de/api/access/datafile/255674",
-    "1D_ReacDiff": "https://darus.uni-stuttgart.de/api/access/datafile/133177",
     "1D_Burgers": "https://darus.uni-stuttgart.de/api/access/datafile/281363",
-    "2D_DarcyFlow": "https://darus.uni-stuttgart.de/api/access/datafile/133219",
 }
 
 

@@ -72,6 +72,8 @@ def get_criterion(training_parameters, device):
     """Define criterion for the model.
     Criterion gets as arguments (truth, prediction) and returns a loss value.
     """
+    method = training_parameters["mvnormal_method"]
+    loss = training_parameters["loss"]
     if training_parameters["uncertainty_quantification"] == "diffusion":
         if training_parameters["distributional_method"] == "deterministic":
             criterion = nn.MSELoss()
@@ -79,7 +81,6 @@ def get_criterion(training_parameters, device):
             training_parameters["distributional_method"] == "normal"
             or training_parameters["distributional_method"] == "closed_form_normal"
         ):
-            loss = training_parameters["loss"]
             if loss == "crps":
                 criterion = lambda truth, prediction: sr.crps_normal(
                     truth, prediction[..., 0], prediction[..., 1], backend="torch"
@@ -97,10 +98,11 @@ def get_criterion(training_parameters, device):
         elif training_parameters["distributional_method"] == "mixednormal":
             criterion = losses.NormalMixtureCRPS()
         elif training_parameters["distributional_method"] == "mvnormal":
-            method = training_parameters["mvnormal_method"]
             if method == "lora":
-                #criterion = lambda truth, prediction: (-1)* LowRankMultivariateNormal(prediction[...,0], prediction[...,2:], prediction[...,1]).log_prob(truth).mean()
-                criterion = losses.GaussianKernelScore(dimension = "multivariate", gamma = training_parameters["gamma"])
+                if loss == "kernel":
+                    criterion = losses.GaussianKernelScore(dimension = "multivariate", gamma = training_parameters["gamma"])
+                else:
+                    criterion = lambda truth, prediction: (-1)* LowRankMultivariateNormal(prediction[...,0], prediction[...,2:], prediction[...,1]).log_prob(truth).mean()
             elif method == "cholesky":
                 criterion = lambda truth, prediction: (-1)* MultivariateNormal(loc = prediction[...,0], scale_tril=prediction[...,1:]).log_prob(truth).mean()
         else:
@@ -148,6 +150,7 @@ def setup_model(
         "1D_Advection",
         "1D_ReacDiff",
         "1D_Burgers",
+        "1D_KS",
         "2D_DarcyFlow",
     ]:
         d = int(data_parameters["dataset_name"][0])
@@ -174,8 +177,8 @@ def setup_model(
                 d=d,
                 target_dim=1,
                 domain_dim = target_dim[1:],
-                rank = 10,
-                method = training_parameters.get("mvnormal_method", "lora")
+                rank = training_parameters["rank"],
+                method = training_parameters["mvnormal_method"]
             )
         elif training_parameters["distributional_method"] == "sample":
             backbone = UNetDiffusion(
