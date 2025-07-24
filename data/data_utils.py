@@ -7,7 +7,7 @@ import torchvision
 
 from data.images import CustomImageDataset
 from data.low_dimensional import RegressionDataset
-from data.datasets import PDE1D, PDE2D
+from data.datasets import PDE1D
 
 UCI_DATASET_NAMES = [
     "concrete",
@@ -58,28 +58,7 @@ def get_data(
             select_timesteps=select_timesteps,
             temporal_downscaling_factor=temporal_downscaling_factor,
         )
-    elif dataset_name in ["2D_DarcyFlow"]:
-        train_dataset = PDE2D(
-            data_dir=dataset_path,
-            pde=dataset_name.split("_")[1],
-            var="train",
-            downscaling_factor=data_parameters["downscaling_factor"],
-            normalize=standardize,
-        )
-        val_dataset = PDE2D(
-            data_dir=dataset_path,
-            pde=dataset_name.split("_")[1],
-            var="val",
-            downscaling_factor=data_parameters["downscaling_factor"],
-            normalize=standardize,
-        )
-        test_dataset = PDE2D(
-            data_dir=dataset_path,
-            pde=dataset_name.split("_")[1],
-            var="test",
-            downscaling_factor=data_parameters["downscaling_factor"],
-            normalize=standardize,
-        )
+    
     dataset = (train_dataset, val_dataset,test_dataset)
     target_dim, input_dim = (
         (1, *train_dataset.get_dimensions()),

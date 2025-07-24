@@ -23,6 +23,7 @@ from models import (
 )
 from torch.distributions.lowrank_multivariate_normal import LowRankMultivariateNormal
 from torch.distributions.multivariate_normal import MultivariateNormal
+from torch.distributions.normal import Normal
 
 
 def log_and_save_evaluation(value: float, key: str, results_dict: dict, logging):
@@ -85,8 +86,14 @@ def get_criterion(training_parameters, device):
                 criterion = lambda truth, prediction: sr.crps_normal(
                     truth, prediction[..., 0], prediction[..., 1], backend="torch"
                 ).mean()
-            else:
+
+            elif loss == "kernel":
                 criterion = losses.GaussianKernelScore(dimension = "univariate", gamma = training_parameters["gamma"])
+            elif loss == "log":
+                criterion = lambda truth, prediction: (-1)* Normal(prediction[...,0], prediction[...,1]).log_prob(truth).mean()
+            else:
+                raise AssertionError("Loss function not implemented")
+
         elif training_parameters["distributional_method"] == "sample":
             criterion = lambda truth, prediction: sr.energy_score(
                 truth.flatten(start_dim=1, end_dim=-1),
@@ -165,7 +172,7 @@ def setup_model(
         )
         if training_parameters["distributional_method"] == "deterministic":
             hidden_model = backbone
-        elif training_parameters["distributional_method"] == "normal":
+        elif training_parameters["distributional_method"] == "normal" or training_parameters["distributional_method"] == "closed_form_normal":
             hidden_model = UNet_diffusion_normal(
                 backbone=backbone,
                 d=d,
