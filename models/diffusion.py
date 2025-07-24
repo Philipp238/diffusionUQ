@@ -25,7 +25,7 @@ class Diffusion:
         self.x_T_sampling_method = x_T_sampling_method
         self.ddim_sigma = ddim_sigma
 
-    def sample_x_T(self, shape, pred, inference):
+    def sample_x_T(self, shape, pred, inference = True):
         if self.x_T_sampling_method in ["standard"]:
             x = torch.randn(shape).to(self.device)
         elif self.x_T_sampling_method == "naive-regressor-mean":
@@ -359,9 +359,16 @@ class DistributionalDiffusion(Diffusion):
         predicted_noise_mu = predicted_noise_distribution_params[..., 0]
         predicted_noise_sigma = predicted_noise_distribution_params[..., 1]
 
-        alpha = self.alpha[t][:, None]
-        alpha_hat = self.alpha_hat[t][:, None]
-        beta = self.beta[t][:, None]
+        alpha = self.alpha[t]
+        alpha_hat = self.alpha_hat[t]
+        beta = self.beta[t]
+        # Reshape
+        alpha = alpha.view(*alpha.shape, *(1,) * (x.ndim - alpha.ndim)).expand(x.shape)
+        alpha_hat = alpha_hat.view(
+            *alpha_hat.shape, *(1,) * (x.ndim - alpha_hat.ndim)
+        ).expand(x.shape)
+        beta = beta.view(*beta.shape, *(1,) * (x.ndim - beta.ndim)).expand(x.shape)
+        
         if i > 1:
             noise = torch.randn_like(x)
         else:
@@ -435,7 +442,7 @@ class DistributionalDiffusion(Diffusion):
                 t = (torch.ones(n) * i).long().to(self.device)
                 if self.distributional_method == "closed_form_normal":
                     predicted_noise_distribution_params = model(
-                        x, t, conditioning, pred
+                        x, t, conditioning, pred=pred
                     )
                 else:
                     predicted_noise = self.sample_noise(model, x, t, conditioning, pred)

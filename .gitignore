@@ -196,5 +196,6 @@ cython_debug/
 # Exclude datasets
 *.nc
 *.hdf5
+*.npy
 
 !results/results_yacht_CARD_pretrain_CARD_backbone/20250708_180112_yacht/*.pt
