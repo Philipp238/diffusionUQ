@@ -9,6 +9,8 @@ def process_data_parameters(data_dict: dict) -> dict:
     processed_dict["yarin_gal_uci_split_indices"] = data_dict.get("yarin_gal_uci_split_indices", 0)
     processed_dict["max_dataset_size"] = data_dict.get("max_dataset_size",1000)
     processed_dict["standardize"] = data_dict.get("standardize", True)
+    processed_dict["validation_ratio"] = data_dict.get("validation_ratio", 0.0)
+    
     return processed_dict
 
 def process_training_parameters(train_dict: dict)-> dict:
