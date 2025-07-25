@@ -351,30 +351,46 @@ class DistributionalDiffusion(Diffusion):
 
         return predicted_noise
 
-    def sample_x_t_closed_form_normal(
-        self, x, t, predicted_noise_distribution_params, pred, i
+    def sample_x_t_closed_form(
+        self, x, t, predicted_noise_distribution_params, pred, i, method,
     ):
-        # assert self.x_T_sampling_method in ['standard', 'naive-regressor-mean'], f"Closed form normal sampling not supported for {self.x_T_sampling_method}"
+        if method == "closed_form_normal":
+            predicted_noise_mu = predicted_noise_distribution_params[..., 0]
+            predicted_noise_sigma = predicted_noise_distribution_params[..., 1]
+        elif method == "closed_form_mixednormal":
+            mu = predicted_noise_distribution_params[..., 0]
+            sigma = predicted_noise_distribution_params[..., 1]
+            weights = predicted_noise_distribution_params[..., 2]
+            sampled_weights = torch.distributions.Categorical(weights).sample()
+            predicted_noise_mu = torch.gather(mu, dim=-1, index=sampled_weights.unsqueeze(-1)).squeeze(-1)
+            predicted_noise_sigma = torch.gather(
+                sigma, dim=-1, index=sampled_weights.unsqueeze(-1)
+            ).squeeze(-1)
+        else:
+            raise Exception(f"Invalid method {method}")
 
-        predicted_noise_mu = predicted_noise_distribution_params[..., 0]
-        predicted_noise_sigma = predicted_noise_distribution_params[..., 1]
-
-        alpha = self.alpha[t][:, None]
-        alpha_hat = self.alpha_hat[t][:, None]
-        beta = self.beta[t][:, None]
+        alpha = self.alpha[t]
+        alpha_hat = self.alpha_hat[t]
+        beta = self.beta[t]
+        # Reshape
+        alpha = alpha.view(*alpha.shape, *(1,) * (x.ndim - alpha.ndim)).expand(x.shape)
+        alpha_hat = alpha_hat.view(
+            *alpha_hat.shape, *(1,) * (x.ndim - alpha_hat.ndim)
+        ).expand(x.shape)
+        beta = beta.view(*beta.shape, *(1,) * (x.ndim - beta.ndim)).expand(x.shape)
         if i > 1:
             noise = torch.randn_like(x)
         else:
             noise = torch.zeros_like(x)
 
-        variance_factor_default = beta**2 / (alpha * (1 - alpha_hat))
+        variance_factor_default = beta**2 / (alpha_hat * (1 - alpha_hat))
 
         if self.x_T_sampling_method in ["standard", "naive-regressor-mean"]:
             x = (
                 1
                 / torch.sqrt(alpha)
                 * (x - ((1 - alpha) / (torch.sqrt(1 - alpha_hat))) * predicted_noise_mu)
-                + torch.sqrt(variance_factor_default * predicted_noise_sigma**2 + beta)
+                + torch.sqrt((variance_factor_default * predicted_noise_sigma**2 + beta))
                 * noise
             )
         elif self.x_T_sampling_method == "CARD":
@@ -388,7 +404,11 @@ class DistributionalDiffusion(Diffusion):
                 )
             )
             if i > 1:
-                alpha_hat_t_minus_1 = self.alpha_hat[t - 1][:, None]
+                alpha_hat_t_minus_1 = self.alpha_hat[t - 1]
+                alpha_hat_t_minus_1 = alpha_hat_t_minus_1.view(
+                    *alpha_hat_t_minus_1.shape,
+                    *(1,) * (x.ndim - alpha_hat_t_minus_1.ndim),
+                ).expand(x.shape)
 
                 gamma_0 = beta * torch.sqrt(alpha_hat_t_minus_1) / (1 - alpha_hat)
                 gamma_1 = (
@@ -402,9 +422,8 @@ class DistributionalDiffusion(Diffusion):
 
                 variance_factor_CARD = alpha_hat_t_minus_1 * variance_factor_default
 
-                x = (gamma_0 * y_hat_0 + gamma_1 * x + gamma_2 * pred) + torch.sqrt(
-                    variance_factor_CARD * predicted_noise_sigma**2
-                    + self.ddim_sigma * beta_wiggle
+                x = (gamma_0 * y_hat_0 + gamma_1 * x + gamma_2 * pred) + self.ddim_sigma * torch.sqrt(
+                    variance_factor_CARD * predicted_noise_sigma**2 + beta_wiggle
                 ) * noise
 
             else:
@@ -429,26 +448,22 @@ class DistributionalDiffusion(Diffusion):
 
         with torch.no_grad():
             x = self.sample_x_T((n, *self.img_size), pred, inference=True)
-            if self.x_T_sampling_method == "CARD":
-                x += pred
             for i in reversed(range(1, self.noise_steps)):
                 t = (torch.ones(n) * i).long().to(self.device)
-                if self.distributional_method == "closed_form_normal":
+                if self.distributional_method.startswith("closed_form"):
                     predicted_noise_distribution_params = model(
                         x, t, conditioning, pred
                     )
+                    x = self.sample_x_t_closed_form(
+                        x, t, predicted_noise_distribution_params, pred, i, method=self.distributional_method,
+                    )
                 else:
                     predicted_noise = self.sample_noise(model, x, t, conditioning, pred)
-                if cfg_scale > 0:
-                    uncond_predicted_noise = self.sample_noise(model, x, t, None, pred)
-                    predicted_noise = torch.lerp(
-                        uncond_predicted_noise, predicted_noise, cfg_scale
-                    )
-                if self.distributional_method == "closed_form_normal":
-                    x = self.sample_x_t_closed_form_normal(
-                        x, t, predicted_noise_distribution_params, pred, i
-                    )
-                else:
+                    if cfg_scale > 0:
+                        uncond_predicted_noise = self.sample_noise(model, x, t, None, pred)
+                        predicted_noise = torch.lerp(
+                            uncond_predicted_noise, predicted_noise, cfg_scale
+                        )
                     x = self.sample_x_t_inference(x, t, predicted_noise, pred, i)
 
                 if gt_images is not None:
