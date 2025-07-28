@@ -54,7 +54,7 @@ def process_training_parameters(train_dict: dict)-> dict:
     processed_dict["evaluate"] = train_dict.get("evaluate", True)
     processed_dict["x_T_sampling_method"] = train_dict.get("x_T_sampling_method", ["standard"])
     processed_dict["conditional_free_guidance_training"] = train_dict.get("conditional_free_guidance_training", False)
-    processed_dict["ddim_sigma"] = train_dict.get("ddim_sigma", 1.0)
+    processed_dict["ddim_churn"] = train_dict.get("ddim_churn", 1.0)
     processed_dict["noise_schedule"] = train_dict.get("noise_schedule", "linear")
     processed_dict["regressor"] = train_dict.get("regressor", None)
 
