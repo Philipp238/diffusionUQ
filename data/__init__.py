@@ -1,1 +1,1 @@
-from data.datasets import PDE1D, PDE2D
+from data.datasets import PDE1D

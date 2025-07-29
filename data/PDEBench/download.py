@@ -7,14 +7,11 @@ from torchvision.datasets.utils import download_url
 
 # Dictionary with datasets and urls
 DATASETS = {
-    "1D_Advection": "https://darus.uni-stuttgart.de/api/access/datafile/255674",
-    "1D_ReacDiff": "https://darus.uni-stuttgart.de/api/access/datafile/133177",
     "1D_Burgers": "https://darus.uni-stuttgart.de/api/access/datafile/281363",
-    "2D_DarcyFlow": "https://darus.uni-stuttgart.de/api/access/datafile/133219",
 }
 
 
-def data_split(ds, train_test_split, train_val_split, filename):
+def data_split(ds, train_test_split, train_val_split, filename, max_steps = 101):
     """Split darcy flow dataset into training and testing datasets
 
     Args:
@@ -27,9 +24,10 @@ def data_split(ds, train_test_split, train_val_split, filename):
     """
 
     if filename.startswith("1D"):
-        t_reduced = ds["t-coordinate"][:-1]
-        ds = ds.drop_vars("t-coordinate")
-        ds["t-coordinate"] = t_reduced 
+        ds = ds.isel(phony_dim_2 = slice(0,max_steps), phony_dim_0 = slice(0,max_steps))
+        # t_reduced = ds["t-coordinate"][:-1]
+        # ds = ds.drop_vars("t-coordinate")
+        # ds["t-coordinate"] = t_reduced 
         ds = ds.rename(
             {
                 "phony_dim_0": "t",
@@ -38,16 +36,6 @@ def data_split(ds, train_test_split, train_val_split, filename):
                 "phony_dim_3": "x",
             }
         ).rename_vars({"tensor": "u"})
-    elif filename.startswith("2D_DarcyFlow"):
-        ds = ds.rename(
-            {
-                "phony_dim_0": "samples",
-                "phony_dim_1": "x",
-                "phony_dim_2": "y",
-                "phony_dim_3": "channel",
-            }
-        ).rename_vars({"tensor" : "u", "nu" : "a"})
-
     n_samples = ds.sizes["samples"]
 
     # Train test split
@@ -114,7 +102,7 @@ if __name__ == "__main__":
     train_val_split = 0.9
     seed = 42
     np.random.seed(seed)
-    download = True
+    download = False
     remove = False
     data_dir = "data/"
     for dataset in DATASETS:

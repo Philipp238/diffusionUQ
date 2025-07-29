@@ -27,7 +27,7 @@ class Diffusion:
         self.x_T_sampling_method = x_T_sampling_method
         self.ddim_churn = ddim_churn
 
-    def sample_x_T(self, shape, pred, inference):
+    def sample_x_T(self, shape, pred, inference = True):
         if self.x_T_sampling_method in ["standard"]:
             x = torch.randn(shape).to(self.device)
         elif self.x_T_sampling_method == "naive-regressor-mean":

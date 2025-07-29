@@ -9,6 +9,8 @@ def process_data_parameters(data_dict: dict) -> dict:
     processed_dict["yarin_gal_uci_split_indices"] = data_dict.get("yarin_gal_uci_split_indices", 0)
     processed_dict["max_dataset_size"] = data_dict.get("max_dataset_size",1000)
     processed_dict["standardize"] = data_dict.get("standardize", True)
+    processed_dict["select_timesteps"] = data_dict.get("select_timesteps", "zero")
+    processed_dict["temporal_downscaling_factor"] = data_dict.get("temporal_downscaling_factor", 1)
     processed_dict["validation_ratio"] = data_dict.get("validation_ratio", 0.0)
     
     return processed_dict
@@ -49,6 +51,7 @@ def process_training_parameters(train_dict: dict)-> dict:
     processed_dict["distributional_method"] = train_dict.get("distributional_method", ["mvnormal"])
     processed_dict["loss"] = train_dict.get("loss", ["crps"])
     processed_dict["gamma"] = train_dict.get("gamma", 1.0)
+    processed_dict["rank"] = train_dict.get("rank",10)
     processed_dict["mvnormal_method"] = train_dict.get("mvnormal_method", ["lora"])
     processed_dict["concat_condition_diffusion"] = train_dict.get("concat_condition_diffusion", True)
     processed_dict["evaluate"] = train_dict.get("evaluate", True)
