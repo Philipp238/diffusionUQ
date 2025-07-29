@@ -210,8 +210,17 @@ if __name__ == "__main__":
             np.random.seed(seed)
             torch.manual_seed(seed)
 
-            filename_ending = f"{data_parameters['dataset_name']}_{training_parameters['model']}_{training_parameters['uncertainty_quantification']}_"
-
+            if dataset_name in UCI_DATASET_NAMES:
+                splitstring = f"{split}"
+            else:
+                splitstring = ""
+            filename_ending = (
+                f"{data_parameters['dataset_name']}{splitstring}_"
+                f"{training_parameters['model']}_"
+                f"{training_parameters['uncertainty_quantification']}_"
+                f"{training_parameters['distributional_method']}_"
+                f"DDIM{round(training_parameters['ddim_churn'])}"
+            )
             batch_size = training_parameters["batch_size"]
             eval_batch_size = training_parameters["eval_batch_size"]
 
@@ -388,6 +397,8 @@ if __name__ == "__main__":
                     logging,
                     filename,
                     regressor,
+                    filename_ending=filename_ending,
+                    metrics_plots=training_parameters["metrics_plots"],
                     directory=directory,
                 )
 

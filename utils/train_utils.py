@@ -102,7 +102,10 @@ def get_criterion(training_parameters, device):
                 v_axis=-2,
                 backend="torch",
             ).mean()
-        elif training_parameters["distributional_method"] == "mixednormal":
+        elif (
+            training_parameters["distributional_method"] == "mixednormal"
+            or training_parameters["distributional_method"] == "closed_form_normal"
+        ):
             criterion = losses.NormalMixtureCRPS()
         elif training_parameters["distributional_method"] == "mvnormal":
             if method == "lora":
@@ -264,7 +267,10 @@ def setup_model(
                     hidden_dim=training_parameters["hidden_dim"],
                     n_samples=50,
                 )
-            elif training_parameters["distributional_method"] == "mixednormal":
+            elif (
+                training_parameters["distributional_method"] == "mixednormal"
+                or training_parameters["distributional_method"] == "closed_form_mixednormal"
+            ):
                 hidden_model = MLP_diffusion_mixednormal(
                     backbone=backbone,
                     target_dim=target_dim,

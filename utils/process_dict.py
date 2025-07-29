@@ -11,6 +11,8 @@ def process_data_parameters(data_dict: dict) -> dict:
     processed_dict["standardize"] = data_dict.get("standardize", True)
     processed_dict["select_timesteps"] = data_dict.get("select_timesteps", "zero")
     processed_dict["temporal_downscaling_factor"] = data_dict.get("temporal_downscaling_factor", 1)
+    processed_dict["validation_ratio"] = data_dict.get("validation_ratio", 0.0)
+    
     return processed_dict
 
 def process_training_parameters(train_dict: dict)-> dict:
@@ -56,8 +58,10 @@ def process_training_parameters(train_dict: dict)-> dict:
     processed_dict["evaluate"] = train_dict.get("evaluate", True)
     processed_dict["x_T_sampling_method"] = train_dict.get("x_T_sampling_method", ["standard"])
     processed_dict["conditional_free_guidance_training"] = train_dict.get("conditional_free_guidance_training", False)
-    processed_dict["ddim_sigma"] = train_dict.get("ddim_sigma", 1.0)
+    processed_dict["ddim_churn"] = train_dict.get("ddim_churn", 1.0)
     processed_dict["noise_schedule"] = train_dict.get("noise_schedule", "linear")
     processed_dict["regressor"] = train_dict.get("regressor", None)
-
+    
+    # Misc
+    processed_dict["metrics_plots"] = train_dict.get("metrics_plots", False)
     return processed_dict
