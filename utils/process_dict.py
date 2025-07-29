@@ -57,5 +57,7 @@ def process_training_parameters(train_dict: dict)-> dict:
     processed_dict["ddim_churn"] = train_dict.get("ddim_churn", 1.0)
     processed_dict["noise_schedule"] = train_dict.get("noise_schedule", "linear")
     processed_dict["regressor"] = train_dict.get("regressor", None)
-
+    
+    # Misc
+    processed_dict["metrics_plots"] = train_dict.get("metrics_plots", False)
     return processed_dict

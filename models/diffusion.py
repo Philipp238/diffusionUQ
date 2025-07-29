@@ -48,8 +48,10 @@ class Diffusion:
         alpha = reshape_to_x_sample(self.alpha[t], x)
         alpha_hat = reshape_to_x_sample(self.alpha_hat[t], x) 
 
-        x_0_hat = (x - torch.sqrt(1 - alpha_hat) * predicted_noise) / torch.sqrt(alpha_hat) # DDIM eq. 9
-
+        x_0_hat = (x 
+                   - torch.sqrt(1 - alpha_hat) * predicted_noise
+                   - (1 - torch.sqrt(alpha_hat)) * pred
+                   ) / torch.sqrt(alpha_hat) # DDIM eq. 9
 
         if i > 1:
             alpha_hat_t_minus_1 = reshape_to_x_sample(self.alpha_hat[t - 1], x)
@@ -58,7 +60,7 @@ class Diffusion:
             if self.x_T_sampling_method == "standard":
                 predicted_noise_ddim = predicted_noise
             elif self.x_T_sampling_method == "CARD":
-                predicted_noise_ddim = predicted_noise + (1 - torch.sqrt(alpha_hat)) * pred
+                predicted_noise_ddim = predicted_noise + (1 - torch.sqrt(alpha_hat))/(torch.sqrt(1 - alpha_hat)) * pred
             else:
                 raise NotImplementedError(
                     f'Please choose as the x_T_sampling_method "standard" or "CARD". You chose'
@@ -80,6 +82,9 @@ class Diffusion:
         return new_x
 
     def sample_x_t_inference_DDPM(self, x, t, predicted_noise, pred, i):
+        """
+        Deprecated. Use sample_x_t_inference_DDIM instead.
+        """
         alpha = self.alpha[t]
         alpha_hat = self.alpha_hat[t]
         beta = self.beta[t]
@@ -128,12 +133,23 @@ class Diffusion:
 
                 beta_wiggle = (1 - alpha_hat_t_minus_1) / (1 - alpha_hat) * beta
 
-                x = (
+                new_x = (
                     gamma_0 * y_hat_0
                     + gamma_1 * x
                     + gamma_2 * pred
                     + torch.sqrt(beta_wiggle) * noise
                 )
+
+                # new_x = (
+                #     1 / torch.sqrt(alpha)
+                #     * (
+                #         x
+                #         - (1 - torch.sqrt(alpha)) * pred
+                #         -  ((1 - alpha) / (torch.sqrt(1 - alpha_hat))) * predicted_noise
+                #     ) + torch.sqrt(beta_wiggle) * noise
+                # )
+
+                # x = new_x
 
             else:
                 x = y_hat_0

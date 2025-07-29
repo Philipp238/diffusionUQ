@@ -23,8 +23,9 @@ def generate_samples(
     distributional_method: str = "deterministic",
     regressor=None,
     cfg_scale=3,
-    ddim_sigma=1.0,
+    ddim_churn=1.0,
     noise_schedule=None,
+    metrics_plots=False,
 ) -> torch.Tensor:
     """Mehtod to generate samples from the underlying model with the specified uncertainty quantification method.
 
@@ -53,7 +54,7 @@ def generate_samples(
             model, a, n_timesteps=n_timesteps, n_samples=n_samples
         )
     elif uncertainty_quantification == "diffusion":
-        if u is not None and regressor is not None and distributional_method != "deterministic":
+        if metrics_plots and u is not None and regressor is not None and distributional_method != "deterministic":
             out, crps_over_time, rmse_over_time, distr_over_time = (
                 generate_diffusion_samples_low_dimensional(
                     model,
@@ -66,8 +67,9 @@ def generate_samples(
                     x_T_sampling_method=x_T_sampling_method,
                     cfg_scale=cfg_scale,
                     gt_images=u,
-                    ddim_sigma=ddim_sigma,
-                    noise_schedule=noise_schedule
+                    ddim_churn=ddim_churn,
+                    noise_schedule=noise_schedule,
+                    metrics_plots=metrics_plots,
                 )
             )
             return out, crps_over_time, rmse_over_time, distr_over_time
@@ -83,8 +85,9 @@ def generate_samples(
                 x_T_sampling_method=x_T_sampling_method,
                 cfg_scale=cfg_scale,
                 gt_images=u,
-                ddim_sigma=ddim_sigma,
-                noise_schedule=noise_schedule
+                ddim_churn=ddim_churn,
+                noise_schedule=noise_schedule,
+                metrics_plots=metrics_plots,
             )
     return out
 
@@ -96,7 +99,7 @@ def evaluate(
     device,
     regressor,
     standardized: bool = False,
-    filename=None,
+    metrics_plots: bool = False,
 ):
     """Method to evaluate the given model.
 
@@ -146,14 +149,16 @@ def evaluate(
                 training_parameters["distributional_method"],
                 regressor,
                 cfg_scale=cfg_scale,
-                ddim_sigma=training_parameters["ddim_sigma"],
-                noise_schedule=training_parameters["noise_schedule"]
+                ddim_churn=training_parameters["ddim_churn"],
+                noise_schedule=training_parameters["noise_schedule"],
+                metrics_plots=metrics_plots
             )
 
             if (
                 uncertainty_quantification == "diffusion"
                 and regressor is not None
                 and training_parameters["distributional_method"] != "deterministic"
+                and metrics_plots
             ):
                 (
                     predicted_images,
@@ -254,6 +259,8 @@ def start_evaluation(
     logging,
     filename: str,
     regressor,
+    filename_ending: str,
+    metrics_plots: bool,
     **kwargs,
 ):
     """Performs evaluation of the model on the given data sets.
@@ -327,7 +334,7 @@ def start_evaluation(
             device,
             regressor,
             standardized=data_parameters["standardize"],
-            filename=filename,
+            metrics_plots=metrics_plots,
         )
         # mse, es, crps, gaussian_nll, coverage, int_width = evaluate(model, training_parameters, loader, device, domain_range)
 
@@ -347,52 +354,53 @@ def start_evaluation(
         )
         train_utils.log_and_save_evaluation(qice, "QICE" + name, results_dict, logging)
 
-        # Plot CRPS and RMSE over the denoising timesteps
-        reversed_timesteps = list(reversed(range(len(crps_over_time))))
-        plt.plot(reversed_timesteps, crps_over_time, label="CRPS")
-        plt.plot(reversed_timesteps, rmse_over_time, label="RMSE")
-        plt.xlabel("timesteps")
-        plt.legend()
-        plt.title(f"Metrics {name}")
-        plt.tight_layout()
-
-        if directory is not None:
-            plt.savefig(f"{directory}/{name}_metrics_over_timesteps.png")
-
-        plt.close()
-
-        NUM_SAMPLES = 5
-        for idx_sample in range(NUM_SAMPLES):
-            means_over_time = np.array(
-                [distr_over_time[t][0][idx_sample] for t in range(len(crps_over_time))]
-            ).squeeze()
-            stds_over_time = np.array(
-                [distr_over_time[t][1][idx_sample] for t in range(len(crps_over_time))]
-            ).squeeze()
-
-            plt.figure()
-            plt.plot(reversed_timesteps, means_over_time, label="Prediction - Mean")
-            plt.plot(
-                reversed_timesteps,
-                [loader.dataset[idx_sample][0].item() for _ in reversed_timesteps],
-                label="Ground truth",
-            )
-            plt.fill_between(
-                np.array(reversed_timesteps),
-                means_over_time - stds_over_time,
-                means_over_time + stds_over_time,
-                color="blue",
-                alpha=0.2,
-                label="±1 Std Dev",
-            )
+        if metrics_plots:
+            # Plot CRPS and RMSE over the denoising timesteps
+            reversed_timesteps = list(reversed(range(len(crps_over_time))))
+            plt.plot(reversed_timesteps, crps_over_time, label="CRPS")
+            plt.plot(reversed_timesteps, rmse_over_time, label="RMSE")
             plt.xlabel("timesteps")
             plt.legend()
-            plt.title(f"Predictive distribution {name}")
+            plt.title(f"Metrics {name}")
             plt.tight_layout()
 
             if directory is not None:
-                plt.savefig(
-                    f"{directory}/{name}_pred_distr_over_timesteps_sample{idx_sample}.png"
-                )
+                plt.savefig(f"{directory}/{name}_metrics_over_timesteps.png")
 
             plt.close()
+
+            NUM_SAMPLES = 5
+            for idx_sample in range(NUM_SAMPLES):
+                means_over_time = np.array(
+                    [distr_over_time[t][0][idx_sample] for t in range(len(crps_over_time))]
+                ).squeeze()
+                stds_over_time = np.array(
+                    [distr_over_time[t][1][idx_sample] for t in range(len(crps_over_time))]
+                ).squeeze()
+
+                plt.figure()
+                plt.plot(reversed_timesteps, means_over_time, label="Prediction - Mean")
+                plt.plot(
+                    reversed_timesteps,
+                    [loader.dataset[idx_sample][0].item() for _ in reversed_timesteps],
+                    label="Ground truth",
+                )
+                plt.fill_between(
+                    np.array(reversed_timesteps),
+                    means_over_time - stds_over_time,
+                    means_over_time + stds_over_time,
+                    color="blue",
+                    alpha=0.2,
+                    label="±1 Std Dev",
+                )
+                plt.xlabel("timesteps")
+                plt.legend()
+                plt.title(f"Predictive distribution {name}")
+                plt.tight_layout()
+
+                if directory is not None:
+                    plt.savefig(
+                        f"{directory}/{name}_pred_distr_over_timesteps_sample{idx_sample}_{filename_ending}.png"
+                    )
+
+                plt.close()

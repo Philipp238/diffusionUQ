@@ -193,7 +193,7 @@ def trainer(
             diffusion = Diffusion(
                 noise_steps=training_parameters["n_timesteps"],
                 img_size=target_dim,
-                ddim_sigma=training_parameters['ddim_sigma'],
+                ddim_churn=training_parameters['ddim_churn'],
                 device=device,
                 x_T_sampling_method=training_parameters['x_T_sampling_method'],
                 noise_schedule=noise_schedule
@@ -203,7 +203,7 @@ def trainer(
                 noise_steps=training_parameters["n_timesteps"],
                 img_size=target_dim,
                 device=device,
-                ddim_sigma=training_parameters['ddim_sigma'],
+                ddim_churn=training_parameters['ddim_churn'],
                 distributional_method=distributional_method,
                 x_T_sampling_method=training_parameters['x_T_sampling_method'],
                 noise_schedule=noise_schedule
