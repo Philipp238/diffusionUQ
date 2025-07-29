@@ -288,7 +288,7 @@ def start_evaluation(
     if data_parameters["dataset_name"].startswith("1D") or data_parameters[
         "dataset_name"
     ].startswith("2D"):
-        data_loaders = {"Validation": validation_loader, "Test": test_loader}
+        data_loaders = {"Test": test_loader}
     else:
         data_loaders = {
             "Train": train_loader,

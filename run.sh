@@ -1,2 +1,3 @@
 #!/bin/sh
-python main.py -c debug_pde.ini
+python main.py -c KS/deterministic.ini
+python main.py -c KS/normal.ini
