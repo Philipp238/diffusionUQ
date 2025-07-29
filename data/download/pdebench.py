@@ -11,7 +11,7 @@ DATASETS = {
 }
 
 
-def data_split(ds, train_test_split, train_val_split, filename, max_steps = 101):
+def data_split(ds, train_test_split, train_val_split, filename, max_steps = 104):
     """Split darcy flow dataset into training and testing datasets
 
     Args:

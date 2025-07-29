@@ -108,7 +108,7 @@ def get_criterion(training_parameters, device):
             if method == "lora":
                 if loss == "kernel":
                     criterion = losses.GaussianKernelScore(dimension = "multivariate", gamma = training_parameters["gamma"])
-                else:
+                elif loss == "log":
                     criterion = lambda truth, prediction: (-1)* LowRankMultivariateNormal(prediction[...,0], prediction[...,2:], prediction[...,1]).log_prob(truth).mean()
             elif method == "cholesky":
                 criterion = lambda truth, prediction: (-1)* MultivariateNormal(loc = prediction[...,0], scale_tril=prediction[...,1:]).log_prob(truth).mean()
@@ -209,7 +209,7 @@ def setup_model(
                 backbone=backbone,
                 d=d,
                 target_dim=1,
-                n_components=10,
+                n_components=training_parameters["n_components"],
             )
 
     else:

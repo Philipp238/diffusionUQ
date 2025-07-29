@@ -13,6 +13,7 @@ import copy
 import numpy as np
 import configparser
 from scoringrules import energy_score
+import time 
 
 
 def using(point=""):
@@ -221,9 +222,13 @@ def trainer(
 
     filename = os.path.join(directory, f"Datetime_{d_time}_Loss_{filename_ending}.pt")
 
+    # Gather training times
+    t_training = []
+
     for epoch in range(training_parameters["n_epochs"]):
         gc.collect()
         # logging.info(using("At the start of the epoch"))
+        t_current_epoch = time.time()
 
         model.train()
         for target, input in train_loader:
@@ -247,6 +252,10 @@ def trainer(
                 regressor=regressor,
             )
             running_loss += batch_loss
+
+        # Get time
+        t_elapsed = time.time() - t_current_epoch
+        t_training.append(t_elapsed)
 
         if lr_schedule == "step" and early_stopper.counter > 5:
             # stepwise scheduler only happens once per epoch and only if the validation has not been going down for at least 10 epochs
@@ -347,6 +356,18 @@ def trainer(
                     f"{validation_loss_list[-1]:.8f}, Validation loss EMA: {validation_loss_list_ema[-1]:.8f}"
                 )
             logging.info(logging_str)
+
+    # Save training time
+    t_training = np.array(t_training)
+    train_utils.log_and_save_evaluation(
+        t_training.mean(), "t_training_avg", results_dict, logging
+    )
+    train_utils.log_and_save_evaluation(
+        np.median(t_training), "t_training_med", results_dict, logging
+    )
+    train_utils.log_and_save_evaluation(
+        t_training.std(), "t_training_std", results_dict, logging
+    )
 
     logging.info(using("After finishing all epochs"))
 

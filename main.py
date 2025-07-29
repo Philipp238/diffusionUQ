@@ -317,7 +317,7 @@ if __name__ == "__main__":
                 # out_channels = next(iter(train_loader))[1].shape[1]
 
                 model = train_utils.setup_model(
-                    training_parameters, device, target_dim, input_dim
+                    data_parameters, training_parameters, device, target_dim, input_dim
                 )
                 filename = training_parameters["filename_to_validate"]
                 if training_parameters["uncertainty_quantification"] == "laplace":
@@ -402,3 +402,11 @@ if __name__ == "__main__":
                 del model
                 torch.cuda.empty_cache()
                 gc.collect()
+
+            else:
+                append_results_dict(
+                    results_dict, data_parameters, training_parameters, t_training
+                )
+                results_pd = pd.DataFrame(results_dict)
+                results_pd.T.to_csv(os.path.join(directory, "train.csv"))
+

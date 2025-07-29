@@ -39,7 +39,7 @@ def get_sim(grid, n_steps: int, t_range: int = 150, dt: float = 0.001) -> np.nda
     return res
 
 
-def load_config(path: str = "data/generation/ks_config.yaml") -> dict:
+def load_config(path: str = "data/process/ks_config.yaml") -> dict:
     """Load the configuration file for the simulation.
 
     Args:
@@ -90,7 +90,7 @@ def simulate(config: dict) -> None:
         np.save(f"data/1D_KS/raw/ks_data_{i + 1}.npy", result_array)
 
 
-def aggregate(config: dict, remove: bool) -> None:
+def aggregate(config: dict, remove: bool, max_steps = 104) -> None:
     """Aggregate the raw data into a train and test dataset and save to disk.
 
     Args:
@@ -114,6 +114,8 @@ def aggregate(config: dict, remove: bool) -> None:
     ds = xr.Dataset(
         {"u": data_array, "x-coordinate": x_coordinate, "t-coordinate": t_coordinate}
     )
+
+    ds = ds.isel(t = slice(0,max_steps))
 
     # Train test split
     n_samples = config["sim"]["num_samples"]
