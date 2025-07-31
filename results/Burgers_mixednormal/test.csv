@@ -4,13 +4,15 @@ downscaling_factor,4
 yarin_gal_uci_split_indices,0
 max_dataset_size,1000
 standardize,True
-report_every,50
-seed,1234
+select_timesteps,random
+temporal_downscaling_factor,2
 model,UNet
 uncertainty_quantification,diffusion
+report_every,25
+seed,1234
 backbone,default
-batch_size,128
-eval_batch_size,512
+batch_size,1024
+eval_batch_size,1024
 n_epochs,1000
 early_stopping,100
 init,default
@@ -18,8 +20,6 @@ learning_rate,0.0001
 lr_schedule,step
 optimizer,adam
 gradient_clipping,1
-data_loader_pin_memory,False
-data_loader_num_workers,0
 distributed_training,False
 alpha,0.05
 n_samples_uq,100
@@ -29,6 +29,9 @@ hidden_dim,64
 n_layers,2
 n_timesteps,50
 distributional_method,mixednormal
+loss,crps
+gamma,5
+rank,10
 mvnormal_method,lora
 concat_condition_diffusion,True
 evaluate,True
@@ -37,19 +40,19 @@ conditional_free_guidance_training,False
 ddim_sigma,1.0
 noise_schedule,linear
 regressor,
-t_training,17205.99
+t_training,8009.995
 NumberParameters,6461599
-MSEValidation,0.00035
-RMSEValidation,0.0188
-EnergyScoreValidation,0.06242
-CRPSValidation,0.00235
-Gaussian NLLValidation,-4.93612
-CoverageValidation,0.96948
-QICEValidation,0.08414
-MSETest,0.00063
-RMSETest,0.02513
-EnergyScoreTest,0.07952
-CRPSTest,0.00309
-Gaussian NLLTest,-4.83267
-CoverageTest,0.96432
-QICETest,0.08389
+MSEValidation,0.00017
+RMSEValidation,0.01286
+EnergyScoreValidation,0.04776
+CRPSValidation,0.00167
+Gaussian NLLValidation,-4.42636
+CoverageValidation,0.99711
+QICEValidation,0.1213
+MSETest,0.00021
+RMSETest,0.01465
+EnergyScoreTest,0.05205
+CRPSTest,0.00189
+Gaussian NLLTest,-4.40465
+CoverageTest,0.99582
+QICETest,0.11985

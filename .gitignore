@@ -198,4 +198,7 @@ cython_debug/
 *.hdf5
 *.npy
 
+# Exclude Git subprojects
+data/weatherbench2
+
 !results/results_yacht_CARD_pretrain_CARD_backbone/20250708_180112_yacht/*.pt
