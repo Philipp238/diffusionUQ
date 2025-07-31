@@ -149,7 +149,7 @@ class Diffusion:
                 #     ) + torch.sqrt(beta_wiggle) * noise
                 # )
 
-                # x = new_x
+                x = new_x
 
             else:
                 x = y_hat_0
