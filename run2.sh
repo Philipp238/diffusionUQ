@@ -1,2 +1,2 @@
 #!/bin/sh
-python main.py -c Burgers/mixednormal.ini
+python main.py -c WeatherBench/debug.ini

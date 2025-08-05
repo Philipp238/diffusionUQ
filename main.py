@@ -30,7 +30,7 @@ msg = "Start main"
 
 # initialize parser
 parser = argparse.ArgumentParser(description=msg)
-default_config = "debug_pde.ini"
+default_config = "Burgers/hparams/mixednormal.ini"
 
 parser.add_argument(
     "-c", "--config", help="Name of the config file:", default=default_config
@@ -180,23 +180,6 @@ if __name__ == "__main__":
 
         dataset_name = data_parameters["dataset_name"]
         dataset_size = data_parameters["max_dataset_size"]
-        if dataset_name in UCI_DATASET_NAMES:
-            split = data_parameters["yarin_gal_uci_split_indices"]
-            validation_ratio_on_train_set = data_parameters["validation_ratio"] / (
-                1 - data_parameters["validation_ratio"]
-            )
-            uci_data = get_uci_data(
-                dataset_name,
-                splits=split,
-                standardize=data_parameters["standardize"],
-                validation_ratio=validation_ratio_on_train_set,
-            )
-            dataset, target_dim, input_dim = uci_data
-        else:
-            dataset, target_dim, input_dim = get_data(
-                dataset_name, data_dir, data_parameters
-            )
-
         logging.info(using("After loading the datasets"))
 
         for i, training_parameters in enumerate(training_parameters_dict):
@@ -209,6 +192,24 @@ if __name__ == "__main__":
             seed = training_parameters["seed"]
             np.random.seed(seed)
             torch.manual_seed(seed)
+
+            # Load data based on seed
+            if dataset_name in UCI_DATASET_NAMES:
+                split = data_parameters["yarin_gal_uci_split_indices"]
+                validation_ratio_on_train_set = data_parameters["validation_ratio"] / (
+                    1 - data_parameters["validation_ratio"]
+                )
+                uci_data = get_uci_data(
+                    dataset_name,
+                    splits=split,
+                    standardize=data_parameters["standardize"],
+                    validation_ratio=validation_ratio_on_train_set,
+                )
+                dataset, target_dim, input_dim = uci_data
+            else:
+                dataset, target_dim, input_dim = get_data(
+                    dataset_name, data_dir, data_parameters, seed = seed,
+                )
 
             if dataset_name in UCI_DATASET_NAMES:
                 splitstring = f"{split}"

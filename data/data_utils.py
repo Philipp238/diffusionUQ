@@ -7,7 +7,7 @@ import torchvision
 
 from data.images import CustomImageDataset
 from data.low_dimensional import RegressionDataset
-from data.datasets import PDE1D
+from data.datasets import PDE1D, WeatherBench
 
 UCI_DATASET_NAMES = [
     "concrete",
@@ -25,46 +25,58 @@ def get_data(
     dataset_name,
     dataset_path,
     data_parameters,
+    seed,
     logging=None,
 ):
     standardize = data_parameters["standardize"]
     select_timesteps = data_parameters["select_timesteps"]
     temporal_downscaling_factor = data_parameters["temporal_downscaling_factor"]
+    downscaling_factor = data_parameters["downscaling_factor"]
     if dataset_name in ["1D_Advection", "1D_ReacDiff", "1D_Burgers", "1D_KS"]:
         train_dataset = PDE1D(
             data_dir=dataset_path,
             pde=dataset_name.split("_")[1],
             var="train",
-            downscaling_factor=data_parameters["downscaling_factor"],
+            downscaling_factor=downscaling_factor,
             normalize=standardize,
             select_timesteps=select_timesteps,
             temporal_downscaling_factor=temporal_downscaling_factor,
+            seed = seed,
         )
         val_dataset = PDE1D(
             data_dir=dataset_path,
             pde=dataset_name.split("_")[1],
             var="val",
-            downscaling_factor=data_parameters["downscaling_factor"],
+            downscaling_factor=downscaling_factor,
             normalize=standardize,
             select_timesteps=select_timesteps,
             temporal_downscaling_factor=temporal_downscaling_factor,
+            seed = seed,
         )
         test_dataset = PDE1D(
             data_dir=dataset_path,
             pde=dataset_name.split("_")[1],
             var="test",
-            downscaling_factor=data_parameters["downscaling_factor"],
+            downscaling_factor=downscaling_factor,
             normalize=standardize,
             select_timesteps=select_timesteps,
             temporal_downscaling_factor=temporal_downscaling_factor,
+            seed = seed
+        )
+        target_dim, input_dim = (
+            (1, *train_dataset.get_dimensions()),
+            (3, *train_dataset.get_dimensions()),
+        )
+    elif dataset_name == "WeatherBench":
+        train_dataset = WeatherBench(var = "train", normalize = standardize, downscaling_factor = downscaling_factor)
+        val_dataset = WeatherBench(var = "val", normalize = standardize, downscaling_factor = downscaling_factor)
+        test_dataset = WeatherBench(var = "test", normalize = standardize, downscaling_factor = downscaling_factor)
+        target_dim, input_dim = (
+            (1, *train_dataset.get_dimensions()),
+            (train_dataset.n_vars*train_dataset.last_t_steps-2, *train_dataset.get_dimensions()),
         )
     
     dataset = (train_dataset, val_dataset,test_dataset)
-    target_dim, input_dim = (
-        (1, *train_dataset.get_dimensions()),
-        (3, *train_dataset.get_dimensions()),
-    )
-
     return dataset, target_dim, input_dim
 
 

@@ -47,10 +47,12 @@ class Diffusion:
     def sample_x_t_inference_DDIM(self, x, t, predicted_noise, pred, i):
         alpha = reshape_to_x_sample(self.alpha[t], x)
         alpha_hat = reshape_to_x_sample(self.alpha_hat[t], x) 
+        if pred is None:
+            pred = 0
 
         x_0_hat = (x 
                    - torch.sqrt(1 - alpha_hat) * predicted_noise
-                   - (1 - torch.sqrt(alpha_hat)) * pred
+                   - (1 - torch.sqrt(alpha_hat)) * pred # CARD only
                    ) / torch.sqrt(alpha_hat) # DDIM eq. 9
 
         if i > 1:

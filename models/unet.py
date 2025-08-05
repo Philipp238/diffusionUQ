@@ -205,7 +205,7 @@ class UNet_diffusion_mvnormal(nn.Module):
             L_full = torch.zeros(mu.shape[0], self.domain_dim, self.domain_dim, device=x_t.device)
             L_full[:, self.tril_indices[0], self.tril_indices[1]] = sigma.flatten(start_dim = 1)[:,0:self.tril_indices[0].shape[0]]
 
-            # Enforce positive diagonal via exp()
+            # Enforce positive diagonal via softplus()
             diag = nn.functional.softplus(torch.diagonal(L_full, dim1=-2, dim2=-1)) + EPS
             L = torch.tril(L_full)
             L = L/(torch.norm(L, dim=-1, keepdim=True) + EPS)

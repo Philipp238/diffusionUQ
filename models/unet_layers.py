@@ -11,6 +11,42 @@
 import numpy as np
 import torch
 from torch.nn.functional import silu
+import math
+import torch.nn as nn
+
+# Padding function
+def get_padding(image_size: tuple, depth: int) -> tuple:
+    """Calculates the padding factor to the nearest power of 2 and
+        returns the corresponding torch padding functions.
+
+    Args:
+        image_size (tuple): Image size of the (square) image.
+        depth (int): Depth of the network.
+
+    Returns:
+        tuple: Tuple of padding and unpadding functaion.
+    """
+    img_size_y, img_size_x = image_size
+    depth_factor = 2 ** depth
+    pad_factor_x = depth_factor * math.ceil(img_size_x / depth_factor) - img_size_x
+    pad_factor_y = depth_factor * math.ceil(img_size_y / depth_factor) - img_size_y
+    padding = nn.ZeroPad2d(
+        (
+            math.ceil(pad_factor_x / 2),
+            math.floor(pad_factor_x / 2),
+            math.ceil(pad_factor_y / 2),
+            math.floor(pad_factor_y / 2),
+        )
+    )
+    unpadding = nn.ZeroPad2d(
+        (
+            -math.ceil(pad_factor_x / 2),
+            -math.floor(pad_factor_x / 2),
+            -math.ceil(pad_factor_y / 2),
+            -math.floor(pad_factor_y / 2),
+        )
+    )
+    return padding, unpadding, pad_factor_y, pad_factor_x
 
 # ----------------------------------------------------------------------------
 # Unified routine for initializing weights and biases.
@@ -527,6 +563,18 @@ class SongUNet(torch.nn.Module):
         emb_channels = model_channels * channel_mult_emb
         noise_channels = model_channels * channel_mult_noise
 
+        # Padding if necessary
+        if d == 2:
+            self.pad = True
+            self.padding, self.unpadding, pad_factor_x, pad_factor_y = get_padding(img_resolution[-2:], 4)
+            adjusted_img_resolution = img_resolution[-1] + pad_factor_y
+        else:
+            self.pad = False
+            adjusted_img_resolution = img_resolution[-1]
+
+
+
+
         # Define convolution based on dimension
         dconv = Conv1d if d == 1 else Conv2d
         resample_filter = [1] if d == 1 else resample_filter
@@ -547,8 +595,6 @@ class SongUNet(torch.nn.Module):
             init_zero=init_zero,
             init_attn=init_attn,
         )
-
-
 
         # Mapping.
         self.map_noise = (
@@ -580,7 +626,7 @@ class SongUNet(torch.nn.Module):
         cout = in_channels
         caux = in_channels
         for level, mult in enumerate(channel_mult):
-            res = img_resolution >> level
+            res = adjusted_img_resolution >> level
             if level == 0:
                 cin = cout
                 cout = model_channels
@@ -627,7 +673,7 @@ class SongUNet(torch.nn.Module):
         # Decoder.
         self.dec = torch.nn.ModuleDict()
         for level, mult in reversed(list(enumerate(channel_mult))):
-            res = img_resolution >> level
+            res = adjusted_img_resolution >> level
             if level == len(channel_mult) - 1:
                 self.dec[f"{res}x{res}_in0"] = UNetBlock(
                     in_channels=cout, out_channels=cout, attention=True, d=d, **block_kwargs
@@ -663,6 +709,10 @@ class SongUNet(torch.nn.Module):
                 )
 
     def forward(self, x, noise_labels, class_labels, augment_labels=None):
+        # Padding
+        if self.pad:
+            x = self.padding(x)
+            class_labels = self.padding(class_labels)
         noise_labels = noise_labels.flatten()
         x = torch.cat((x, class_labels), dim=1)
 
@@ -714,6 +764,9 @@ class SongUNet(torch.nn.Module):
                 if x.shape[1] != block.in_channels:
                     x = torch.cat([x, skips.pop()], dim=1)
                 x = block(x, emb)
+        # Unpad
+        if self.pad:
+            aux = self.unpadding(aux)
         return aux
     
 
@@ -755,33 +808,38 @@ if __name__=='__main__':
     # params = sum([np.prod(p.size()) for p in model_parameters])
     # print(params)
     
-    # 1D
+    # 2D
 
-    input_grid = torch.rand(3, 2, 256).to(device)
-    model = SongUNet(img_resolution=256, in_channels=3, out_channels=1, attn_resolutions=[16], model_channels = 32, d = 1).to(device)
+    x_t = torch.rand(2,1, 40).to(device)
+    t = torch.rand(2,1).to(device)
+    t = t.unsqueeze(-1).type(torch.float32)
+    condition = torch.rand(2, 14, 40,).to(device)
+    img_resolution = 55
+    model = SongUNet(img_resolution=[40], in_channels=15, out_channels=1, attn_resolutions=[16], model_channels = 16, d = 1).to(device)
+    test = model(x_t, t, condition)
     # print(model)
 
-    true_states = torch.rand(input_grid.shape[0], 1, input_grid.shape[2]).to(device)
+    # true_states = torch.rand(input_grid.shape[0], 1, input_grid.shape[2]).to(device)
 
-    # Sample from F inverse
-    rnd_uniform = torch.rand([input_grid.shape[0], 1, 1], device=input_grid.device)
-    rho = 7
-    sigma_min = 0.02
-    sigma_max = 88
-    rho_inv = 1 / rho
-    sigma_max_rho = sigma_max ** rho_inv
-    sigma_min_rho = sigma_min ** rho_inv
-    sigma = (sigma_max_rho + rnd_uniform * (sigma_min_rho - sigma_max_rho)) ** rho
-    y = true_states
+    # # Sample from F inverse
+    # rnd_uniform = torch.rand([input_grid.shape[0], 1, 1], device=input_grid.device)
+    # rho = 7
+    # sigma_min = 0.02
+    # sigma_max = 88
+    # rho_inv = 1 / rho
+    # sigma_max_rho = sigma_max ** rho_inv
+    # sigma_min_rho = sigma_min ** rho_inv
+    # sigma = (sigma_max_rho + rnd_uniform * (sigma_min_rho - sigma_max_rho)) ** rho
+    # y = true_states
 
-    n = torch.randn_like(y) * sigma
+    # n = torch.randn_like(y) * sigma
 
-    noisy_input = y+n
+    # noisy_input = y+n
 
-    y = model(noisy_input, sigma.flatten(), class_labels = input_grid)
-    print(y.size())
-    model_parameters = filter(lambda p: p.requires_grad, model.parameters())
-    params = sum([np.prod(p.size()) for p in model_parameters])
-    print(params)
+    # y = model(noisy_input, sigma.flatten(), class_labels = input_grid)
+    # print(y.size())
+    # model_parameters = filter(lambda p: p.requires_grad, model.parameters())
+    # params = sum([np.prod(p.size()) for p in model_parameters])
+    # print(params)
 
 
