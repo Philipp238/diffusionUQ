@@ -424,71 +424,48 @@ class DistributionalDiffusion(Diffusion):
         else:
             raise Exception(f"Invalid method {method}")
 
-        alpha = self.alpha[t]
-        alpha_hat = self.alpha_hat[t]
-        beta = self.beta[t]
-        # Reshape
-        alpha = alpha.view(*alpha.shape, *(1,) * (x.ndim - alpha.ndim)).expand(x.shape)
-        alpha_hat = alpha_hat.view(
-            *alpha_hat.shape, *(1,) * (x.ndim - alpha_hat.ndim)
-        ).expand(x.shape)
-        beta = beta.view(*beta.shape, *(1,) * (x.ndim - beta.ndim)).expand(x.shape)
+        alpha = reshape_to_x_sample(self.alpha[t], x)
+        alpha_hat = reshape_to_x_sample(self.alpha_hat[t], x)
+
+        noise = torch.randn_like(x)
+
+        x_0_hat = (x 
+                   - torch.sqrt(1 - alpha_hat) * predicted_noise_mu
+                   - (1 - torch.sqrt(alpha_hat)) * pred
+                   ) / torch.sqrt(alpha_hat) # DDIM eq. 9
+
         if i > 1:
-            noise = torch.randn_like(x)
-        else:
-            noise = torch.zeros_like(x)
+            alpha_hat_t_minus_1 = reshape_to_x_sample(self.alpha_hat[t - 1], x)
+            ddim_sigma = self.ddim_churn * torch.sqrt((1 - alpha_hat_t_minus_1) / (1 - alpha_hat)) * torch.sqrt(1 - alpha)
 
-        variance_factor_default = beta**2 / (alpha_hat * (1 - alpha_hat))
-
-        if self.x_T_sampling_method in ["standard", "naive-regressor-mean"]:
-            x = (
-                1
-                / torch.sqrt(alpha)
-                * (x - ((1 - alpha) / (torch.sqrt(1 - alpha_hat))) * predicted_noise_mu)
-                + torch.sqrt((variance_factor_default * predicted_noise_sigma**2 + beta))
-                * noise
-            )
-        elif self.x_T_sampling_method == "CARD":
-            y_hat_0 = (
-                1
-                / torch.sqrt(alpha_hat)
-                * (
-                    x
-                    - (1 - torch.sqrt(alpha_hat)) * pred
-                    - torch.sqrt(1 - alpha_hat) * predicted_noise_mu
-                )
-            )
-            if i > 1:
-                alpha_hat_t_minus_1 = self.alpha_hat[t - 1]
-                alpha_hat_t_minus_1 = alpha_hat_t_minus_1.view(
-                    *alpha_hat_t_minus_1.shape,
-                    *(1,) * (x.ndim - alpha_hat_t_minus_1.ndim),
-                ).expand(x.shape)
-
-                gamma_0 = beta * torch.sqrt(alpha_hat_t_minus_1) / (1 - alpha_hat)
-                gamma_1 = (
-                    (1 - alpha_hat_t_minus_1) * torch.sqrt(alpha) / (1 - alpha_hat)
-                )
-                gamma_2 = 1 + (torch.sqrt(alpha_hat) - 1) * (
-                    torch.sqrt(alpha) + torch.sqrt(alpha_hat_t_minus_1)
-                ) / (1 - alpha_hat)
-
-                beta_wiggle = (1 - alpha_hat_t_minus_1) / (1 - alpha_hat) * beta
-
-                variance_factor_CARD = alpha_hat_t_minus_1 * variance_factor_default
-
-                x = (gamma_0 * y_hat_0 + gamma_1 * x + gamma_2 * pred) + self.ddim_sigma * torch.sqrt(
-                    variance_factor_CARD * predicted_noise_sigma**2 + beta_wiggle
-                ) * noise
-
+            if self.x_T_sampling_method == "standard":
+                predicted_noise_ddim = predicted_noise_mu
+            elif self.x_T_sampling_method == "CARD":
+                predicted_noise_ddim = predicted_noise_mu + (1 - torch.sqrt(alpha_hat))/(torch.sqrt(1 - alpha_hat)) * pred
             else:
-                x = y_hat_0
-        else:
-            raise NotImplementedError(
-                f'Please choose as the x_T_sampling_method "standard", "CARD", or "naive-regressor-mean". You chose'
-                f"{self.x_T_sampling_method}"
+                raise NotImplementedError(
+                    f'Please choose as the x_T_sampling_method "standard" or "CARD". You chose'
+                    f"{self.x_T_sampling_method}"
+                )
+            reverse_posterior_mean = (
+                torch.sqrt(alpha_hat_t_minus_1) * x_0_hat + 
+                torch.sqrt(1 - alpha_hat_t_minus_1 - ddim_sigma**2) * predicted_noise_ddim
             )
-        return x
+        else:
+            alpha_hat_t_minus_1 = torch.ones_like(alpha_hat)
+            ddim_sigma = self.ddim_churn * torch.sqrt((1 - alpha_hat_t_minus_1) / (1 - alpha_hat)) * torch.sqrt(1 - alpha)
+
+            reverse_posterior_mean = x_0_hat
+
+        noise = torch.randn_like(x)
+        closed_form_variance_term = torch.sqrt((1 - alpha_hat) * alpha_hat_t_minus_1 / alpha_hat)
+        new_x = (
+            reverse_posterior_mean + 
+            (ddim_sigma + predicted_noise_sigma * closed_form_variance_term) * noise
+        )
+
+        return new_x
+
 
     def sample_low_dimensional(
         self, model, n, conditioning=None, cfg_scale=3, pred=None, gt_images=None
