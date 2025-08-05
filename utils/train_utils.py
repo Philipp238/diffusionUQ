@@ -161,17 +161,19 @@ def setup_model(
         "1D_ReacDiff",
         "1D_Burgers",
         "1D_KS",
-        "2D_DarcyFlow",
+        "WeatherBench",
     ]:
-        d = int(data_parameters["dataset_name"][0])
+        if data_parameters["dataset_name"] == "WeatherBench":
+            d = 2
+        else:
+            d = 1
+        conditioning_dim = input_dim[0]
         backbone = UNetDiffusion(
             d=d,
-            conditioning_dim=3,
+            conditioning_dim=conditioning_dim,
             hidden_channels=training_parameters["hidden_dim"],
-            in_channels=1,
-            out_channels=1,
             init_features=training_parameters["hidden_dim"],
-            domain_dim = target_dim[-1]
+            domain_dim = target_dim
         )
         if training_parameters["distributional_method"] == "deterministic":
             hidden_model = backbone
@@ -193,19 +195,17 @@ def setup_model(
         elif training_parameters["distributional_method"] == "sample":
             backbone = UNetDiffusion(
                 d=d,
-                conditioning_dim=4,
+                conditioning_dim=conditioning_dim+1,
                 hidden_channels=training_parameters["hidden_dim"],
-                in_channels=1,
-                out_channels=1,
                 init_features=training_parameters["hidden_dim"],
-                domain_dim = target_dim[-1]
+                domain_dim = target_dim
             )
             hidden_model = UNet_diffusion_sample(
                 backbone=backbone,
                 d=d,
                 target_dim=1,
                 hidden_dim=training_parameters["hidden_dim"],
-                n_samples=10,
+                n_samples=training_parameters["n_train_samples"],
             )
         elif training_parameters["distributional_method"] == "mixednormal":
             hidden_model = UNet_diffusion_mixednormal(
@@ -214,7 +214,6 @@ def setup_model(
                 target_dim=1,
                 n_components=training_parameters["n_components"],
             )
-
     else:
         if training_parameters["uncertainty_quantification"] == "scoring-rule-reparam":
             raise NotImplementedError("Implement a model with parametrization trick.")
