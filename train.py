@@ -32,8 +32,8 @@ print(f"Using {device}.")
 def train(
     net,
     optimizer,
-    images,
-    labels,
+    target,
+    input,
     criterion,
     gradient_clipping,
     uncertainty_quantification,
@@ -61,20 +61,20 @@ def train(
 
     if uncertainty_quantification == "diffusion":
         assert not (diffusion is None)
-        t = diffusion.sample_timesteps(images.shape[0]).to(device)
+        t = diffusion.sample_timesteps(target.shape[0]).to(device)
         if regressor is None:
             pred = None
         else:
-            pred = regressor(labels)
+            pred = regressor(input)
 
-        x_t, noise = diffusion.noise_low_dimensional(images, t, pred=pred)
+        x_t, noise = diffusion.noise_low_dimensional(target, t, pred=pred)
         if np.random.random() < 0.1 and conditional_free_guidance_training:
-            labels = None
-        predicted_noise = net(x_t, t, labels, pred = pred)
+            input = None
+        predicted_noise = net(x_t, t, input, pred = pred)
         loss = criterion(noise, predicted_noise)
     else:
-        predicted_images = net(labels)
-        loss = criterion(images, predicted_images)
+        predicted_images = net(input)
+        loss = criterion(target, predicted_images)
 
     loss.backward()
 
@@ -148,23 +148,24 @@ def trainer(
     logging.info(using("After setting up the model"))
 
     # create your optimizer
+    lr = training_parameters["learning_rate"]
     if training_parameters["optimizer"] == "adam":
         optimizer = optim.Adam(
             model.parameters(),
-            lr=training_parameters["learning_rate"],
+            lr=lr,
             betas=(0.9, 0.999),
             weight_decay=training_parameters["weight_decay"],
         )
     elif training_parameters["optimizer"] == "adamw":
         optimizer = optim.AdamW(
             model.parameters(),
-            lr=training_parameters["learning_rate"],
+            lr=lr,
             betas=(0.9, 0.999),
             weight_decay=training_parameters["weight_decay"],
         )
     elif training_parameters["optimizer"] == "sgd":
         optimizer = optim.SGD(
-            model.parameters(), lr=training_parameters["learning_rate"]
+            model.parameters(), lr=lr
         )
 
     report_every = training_parameters["report_every"]
@@ -184,6 +185,11 @@ def trainer(
     lr_schedule = training_parameters["lr_schedule"]
     if lr_schedule == "step":
         scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.5)
+
+    warmup_lr = training_parameters["warmup_lr"]
+    if warmup_lr > 0:
+        warmup_schedule = np.linspace(lr*0.1, lr, warmup_lr)
+        
 
     # Additional parameters
     uncertainty_quantification = training_parameters["uncertainty_quantification"]
@@ -226,8 +232,16 @@ def trainer(
     t_training = []
 
     for epoch in range(training_parameters["n_epochs"]):
+        # Set learning rate warm up
+        if epoch < warmup_lr:
+            for param_group in optimizer.param_groups:
+                param_group['lr'] = warmup_schedule[epoch]
+        elif epoch == warmup_lr & warmup_lr != 0:
+            for param_group in optimizer.param_groups:
+                param_group['lr'] = lr
+            logging.info(f"Warmup finished.")
+
         gc.collect()
-        # logging.info(using("At the start of the epoch"))
         t_current_epoch = time.time()
 
         model.train()
@@ -257,13 +271,16 @@ def trainer(
         t_elapsed = time.time() - t_current_epoch
         t_training.append(t_elapsed)
 
-        if lr_schedule == "step" and early_stopper.counter > 5:
+        if lr_schedule == "step" and early_stopper.counter > int(training_parameters["early_stopping"] // (report_every * 2)):
             # stepwise scheduler only happens once per epoch and only if the validation has not been going down for at least 10 epochs
-            if scheduler.get_last_lr()[0] > 0.0001:
+            if scheduler.get_last_lr()[0] > 10e-9:
                 scheduler.step()
                 logging.info(f"Learning rate reduced to: {scheduler.get_last_lr()[0]}")
+                logging.info(f"Early stopping counter set to 0")
+                early_stopper.counter = 0
 
         if epoch % report_every == report_every - 1:
+            logging.info(using(f"At the start of the epoch {epoch+1}"))
             epochs.append(epoch)
             training_loss_list.append(running_loss / report_every / (len(train_loader)))
             running_loss = 0.0
@@ -285,7 +302,7 @@ def trainer(
                         input = input.to(device)
 
                         if uncertainty_quantification == "diffusion":
-                            n_samples = 10
+                            n_samples = training_parameters["n_val_samples"]
 
                             if regressor is None:
                                 repeated_pred = None

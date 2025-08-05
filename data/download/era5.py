@@ -11,7 +11,7 @@ import os
 
 if __name__ == "__main__":
     # Set parameters
-    date_range = pd.date_range(f"2011-01-01", f"2023-12-31T18", freq = "6h")
+    date_range = pd.date_range(f"2010-01-01", f"2022-12-31T18", freq = "6h")
     path = "/home/groups/ai/datasets/weather_forecasting/"
     # # Europe grid
     lat_range = np.arange(35, 75, 0.25)
@@ -29,6 +29,19 @@ if __name__ == "__main__":
     data_reduced["temperature"] = data_reduced["temperature"].sel(level = 850)
     # Rechunk and save
     data_reduced.chunk("auto").to_zarr(path + filename+".zarr", zarr_format = 2, consolidated = False)
+
+    # Save statistics
+    statistics = np.zeros((len(variables), 2))
+    for i,var in enumerate(variables):
+        if var == "land_sea_mask":
+            statistics[i,0] = 0
+            statistics[i,1] = 1
+        else:
+            statistics[i,0] = data_reduced[var].mean().compute()
+            statistics[i,1] = data_reduced[var].std().compute()
+
+    np.save(path + "era5_statistics.npy", statistics)
+
     data_reduced.close()
     data.close()
 
@@ -43,5 +56,18 @@ if __name__ == "__main__":
     data_reduced = data[variables].sel(latitude = lat_range, longitude = lon_range, method = "nearest").isel(prediction_timedelta = 1)
     # Rechunk and save
     data_reduced.chunk("auto").to_zarr(path + filename+".zarr", zarr_format = 2, consolidated = False)
+
+    # Save statistics
+    statistics = np.zeros((len(variables), 2))
+    for i,var in enumerate(variables):
+        if var == "land_sea_mask":
+            statistics[i,0] = 0
+            statistics[i,1] = 1
+        else:
+            statistics[i,0] = data_reduced[var].mean().compute()
+            statistics[i,1] = data_reduced[var].std().compute()
+
+    np.save(path + "ifs_ens_statistics.npy", statistics)
+
     data_reduced.close()
     data.close()

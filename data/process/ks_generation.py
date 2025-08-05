@@ -90,7 +90,7 @@ def simulate(config: dict) -> None:
         np.save(f"data/1D_KS/raw/ks_data_{i + 1}.npy", result_array)
 
 
-def aggregate(config: dict, remove: bool, max_steps = 104) -> None:
+def aggregate(config: dict, remove: bool, max_steps = 104, start_step = 6) -> None:
     """Aggregate the raw data into a train and test dataset and save to disk.
 
     Args:
@@ -115,21 +115,17 @@ def aggregate(config: dict, remove: bool, max_steps = 104) -> None:
         {"u": data_array, "x-coordinate": x_coordinate, "t-coordinate": t_coordinate}
     )
 
-    ds = ds.isel(t = slice(0,max_steps))
+    ds = ds.isel(t = slice(start_step,max_steps+start_step))
 
     # Train test split
     n_samples = config["sim"]["num_samples"]
     indices = np.random.permutation(n_samples)
-    n_train_val = int(n_samples * train_split)
-    n_train = int(n_train_val * train_split)
-    n_val = n_train_val - n_train
+    n_train = int(n_samples * train_split)
     train_indices = indices[:n_train]
-    val_indices = indices[n_train : n_train + n_val]
-    test_indices = indices[n_train + n_val :]
+    test_indices = indices[n_train :]
 
     # Create data
     train_data = ds.isel(samples=train_indices)
-    val_data = ds.isel(samples=val_indices)
     test_data = ds.isel(samples=test_indices)
 
     # Save standardization constants as attributes
@@ -138,13 +134,10 @@ def aggregate(config: dict, remove: bool, max_steps = 104) -> None:
 
     train_data.attrs["mean"] = mean
     train_data.attrs["std"] = std
-    val_data.attrs["mean"] = mean
-    val_data.attrs["std"] = std
     test_data.attrs["mean"] = mean
     test_data.attrs["std"] = std
 
     train_data.to_netcdf("data/1D_KS/processed/train.nc")
-    val_data.to_netcdf("data/1D_KS/processed/val.nc")
     test_data.to_netcdf("data/1D_KS/processed/test.nc")
 
     if remove:

@@ -289,6 +289,11 @@ def start_evaluation(
         "dataset_name"
     ].startswith("2D"):
         data_loaders = {"Test": test_loader}
+    elif data_parameters["dataset_name"] == "WeatherBench":
+        data_loaders = {
+            "Validation": validation_loader,
+            "Test": test_loader,
+        }
     else:
         data_loaders = {
             "Train": train_loader,

@@ -77,12 +77,12 @@ class GaussianKernelScore(nn.Module):
             lora1._unbroadcasted_cov_factor,
             lora1._unbroadcasted_cov_diag,
             lora1._capacitance_tril,
-        ).exp()
+        ).clamp_max(80).exp()
         det2 = _batch_lowrank_logdet(
             lora2._unbroadcasted_cov_factor,
             lora2._unbroadcasted_cov_diag,
             lora2._capacitance_tril,
-        ).exp()
+        ).clamp_max(80).exp()
 
         fac1 = 1/torch.sqrt(det1) * torch.exp(-1/gamma2 * M)
         fac2 = 1 / (torch.sqrt(det2))
