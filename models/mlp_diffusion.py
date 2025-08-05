@@ -203,14 +203,14 @@ class MLP_diffusion_normal(nn.Module):
         else:
             self.mu_projection = nn.Linear(hidden_dim, target_dim)
             self.sigma_projection = nn.Linear(hidden_dim, target_dim)
-        self.sofplus = nn.Softplus()
+        self.softplus = nn.Softplus()
 
     def forward(self, x_t, t, y=None, pred=None):
         x_t = self.backbone.forward_body(x_t, t, y, pred)
 
         mu = self.mu_projection(x_t)
         sigma = self.sigma_projection(x_t)
-        sigma = self.sofplus(sigma) + EPS
+        sigma = self.softplus(sigma) + EPS
         output = torch.stack([mu, sigma], dim=-1)
         return output.unsqueeze(1)
 
