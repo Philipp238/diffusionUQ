@@ -194,6 +194,7 @@ def trainer(
     # Additional parameters
     uncertainty_quantification = training_parameters["uncertainty_quantification"]
     distributional_method = training_parameters["distributional_method"]
+    closed_form = training_parameters["closed_form"]
     noise_schedule = training_parameters['noise_schedule']
     if uncertainty_quantification == 'diffusion':
         if distributional_method == "deterministic":
@@ -212,6 +213,7 @@ def trainer(
                 device=device,
                 ddim_churn=training_parameters['ddim_churn'],
                 distributional_method=distributional_method,
+                closed_form=closed_form,
                 x_T_sampling_method=training_parameters['x_T_sampling_method'],
                 noise_schedule=noise_schedule
             )

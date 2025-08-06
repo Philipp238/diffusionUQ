@@ -78,10 +78,7 @@ def get_criterion(training_parameters, device):
     if training_parameters["uncertainty_quantification"] == "diffusion":
         if training_parameters["distributional_method"] == "deterministic":
             criterion = nn.MSELoss()
-        elif (
-            training_parameters["distributional_method"] == "normal"
-            or training_parameters["distributional_method"] == "closed_form_normal"
-        ):
+        elif training_parameters["distributional_method"] == "normal":
             if loss == "crps":
                 criterion = lambda truth, prediction: sr.crps_normal(
                     truth, prediction[..., 0], prediction[..., 1], backend="torch"
@@ -102,10 +99,7 @@ def get_criterion(training_parameters, device):
                 v_axis=-2,
                 backend="torch",
             ).mean()
-        elif (
-            training_parameters["distributional_method"] == "mixednormal"
-            or training_parameters["distributional_method"] == "closed_form_normal"
-        ):
+        elif training_parameters["distributional_method"] == "mixednormal":
             criterion = losses.NormalMixtureCRPS()
         elif training_parameters["distributional_method"] == "mvnormal":
             if method == "lora":
