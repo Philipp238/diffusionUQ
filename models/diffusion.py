@@ -475,7 +475,7 @@ class DistributionalDiffusion(Diffusion):
             reverse_posterior_mean = x_0_hat
 
         # Sample from final closed form normal
-        A = torch.sqrt((1 - alpha_hat) * alpha_hat_t_minus_1 / alpha_hat)
+        A = torch.sqrt(1 - alpha_hat_t_minus_1 - ddim_sigma) - torch.sqrt((1 - alpha_hat) / alpha)
         covariance_matrix = A**2 * predicted_noise_covariance + torch.diag_embed(reshape_to_x_sample(ddim_sigma,x))
         mvnormal = MultivariateNormal(loc = reverse_posterior_mean, covariance_matrix=covariance_matrix)
         new_x = mvnormal.sample()
