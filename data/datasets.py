@@ -236,7 +236,7 @@ class WeatherBench(Dataset):
         normalize=True,
         downscaling_factor: int = 1,
         last_t_steps: int = 2,
-        preload: bool = False,
+        preload: bool = True,
     ):
         self.var = var
         self.normalize = normalize
@@ -249,22 +249,15 @@ class WeatherBench(Dataset):
             time=time_slice
         )
         self.mean, self.std = self.get_statistics(data_path)
-
-        self.data_array = None
+        self.dataset = self.dataset.isel(
+                        latitude=slice(None, None, downscaling_factor),
+                        longitude=slice(None, None, downscaling_factor),
+                    )
         if preload:
-            self.data_array = (
-                self.dataset.isel(
-                    latitude=slice(None, None, downscaling_factor),
-                    longitude=slice(None, None, downscaling_factor),
-                )
-                .to_array()
-                .load()
-            )
+            self.data_array = self.dataset.to_array().load()
         else:
-            self.dataset = self.dataset.isel(
-                latitude=slice(None, None, downscaling_factor),
-                longitude=slice(None, None, downscaling_factor),
-            )
+            self.data_array = None
+           
         self.time_len = self.dataset.sizes["time"] - last_t_steps
         self.n_vars = len(WB_INPUT)
 
@@ -338,9 +331,10 @@ class WeatherBench(Dataset):
 
     def destandardize_output(self, u):
         if self.normalize:
+            target_idx = np.isin(WB_INPUT, WB_TARGET)
             return (
-                u * self.std[WB_TARGET].squeeze().item()
-                + self.mean[WB_TARGET].squeeze().item()
+                u * self.std[target_idx].squeeze().item()
+                + self.mean[target_idx].squeeze().item()
             )
         else:
             return u
@@ -359,48 +353,50 @@ class WeatherBench(Dataset):
 
 if __name__ == "__main__":
     # # Example usage
-    # dataset = WeatherBench(var="train", normalize=True, downscaling_factor=1, preload = True)
-    # print(f"Dataset length: {len(dataset)}")
-    # print(f"Temporal: {dataset.time_len}")
-    # target_tensor, input_tensor = dataset.__getitem__(14605)
-    # print(f"Input tensor shape: {input_tensor.shape}")
-    # print(f"Target tensor shape: {target_tensor.shape}")
-
-    # ll, t = dataset.get_grid()
-    # lat, lon = ll
-    # print(lat.shape, lon.shape, t.shape)
-
-
-    # import resource
-    # point = ""
-    # usage = resource.getrusage(resource.RUSAGE_SELF)
-    # # you can convert that object to a dictionary
-    # print(f"{point}: mem (CPU python)={usage[2] / 1024.0}MB;")
-
-    data_dir = "data"
-    dataset = PDE1D(
-        data_dir,
-        pde="Burgers",
-        var="train",
-        downscaling_factor=4,
-        temporal_downscaling_factor=2,
-        normalize=True,
-        last_t_steps=2,
-        select_timesteps="zero",
-        seed = 0
-    )
+    dataset = WeatherBench(var="test", normalize=True, downscaling_factor=2, preload = True)
     print(f"Dataset length: {len(dataset)}")
-    print(f"Temporal: {dataset.t_size}")
-    target_tensor, input_tensor = dataset.__getitem__(899)
+    print(f"Temporal: {dataset.time_len}")
+    target_tensor, input_tensor = dataset.__getitem__(2)
     print(f"Input tensor shape: {input_tensor.shape}")
     print(f"Target tensor shape: {target_tensor.shape}")
-    x_coordinates = dataset.get_coordinates()
-    print(f"x-coordinates shape: {x_coordinates[0].shape}")
-    print(
-        input_tensor[0].mean(),
-        target_tensor.mean(),
-        input_tensor[0].std(),
-        target_tensor.std(),
-    )
-    x, t = dataset.get_grid()
-    print(x.shape, t.shape)
+
+    ll, t = dataset.get_grid()
+    lat, lon = ll
+    print(lat.shape, lon.shape, t.shape)
+    x,y = dataset.get_dimensions()
+    print(x, y)
+
+
+    import resource
+    point = ""
+    usage = resource.getrusage(resource.RUSAGE_SELF)
+    # you can convert that object to a dictionary
+    print(f"{point}: mem (CPU python)={usage[2] / 1024.0}MB;")
+
+    # data_dir = "data"
+    # dataset = PDE1D(
+    #     data_dir,
+    #     pde="Burgers",
+    #     var="train",
+    #     downscaling_factor=4,
+    #     temporal_downscaling_factor=2,
+    #     normalize=True,
+    #     last_t_steps=2,
+    #     select_timesteps="zero",
+    #     seed = 0
+    # )
+    # print(f"Dataset length: {len(dataset)}")
+    # print(f"Temporal: {dataset.t_size}")
+    # target_tensor, input_tensor = dataset.__getitem__(899)
+    # print(f"Input tensor shape: {input_tensor.shape}")
+    # print(f"Target tensor shape: {target_tensor.shape}")
+    # x_coordinates = dataset.get_coordinates()
+    # print(f"x-coordinates shape: {x_coordinates[0].shape}")
+    # print(
+    #     input_tensor[0].mean(),
+    #     target_tensor.mean(),
+    #     input_tensor[0].std(),
+    #     target_tensor.std(),
+    # )
+    # x, t = dataset.get_grid()
+    # print(x.shape, t.shape)

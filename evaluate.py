@@ -21,6 +21,7 @@ def generate_samples(
     n_samples: int,
     x_T_sampling_method: str,
     distributional_method: str = "deterministic",
+    closed_form:bool = False,
     regressor=None,
     cfg_scale=3,
     ddim_churn=1.0,
@@ -54,7 +55,12 @@ def generate_samples(
             model, a, n_timesteps=n_timesteps, n_samples=n_samples
         )
     elif uncertainty_quantification == "diffusion":
-        if metrics_plots and u is not None and regressor is not None and distributional_method != "deterministic":
+        if (
+            metrics_plots
+            and u is not None
+            and regressor is not None
+            and distributional_method != "deterministic"
+        ):
             out, crps_over_time, rmse_over_time, distr_over_time = (
                 generate_diffusion_samples_low_dimensional(
                     model,
@@ -63,6 +69,7 @@ def generate_samples(
                     target_shape=u.shape,
                     n_samples=n_samples,
                     distributional_method=distributional_method,
+                    closed_form = closed_form,
                     regressor=regressor,
                     x_T_sampling_method=x_T_sampling_method,
                     cfg_scale=cfg_scale,
@@ -81,6 +88,7 @@ def generate_samples(
                 target_shape=u.shape,
                 n_samples=n_samples,
                 distributional_method=distributional_method,
+                closed_form = closed_form,
                 regressor=regressor,
                 x_T_sampling_method=x_T_sampling_method,
                 cfg_scale=cfg_scale,
@@ -137,7 +145,7 @@ def evaluate(
             input = input.to(device)
             target = target.to(device)
             batch_size = input.shape[0]
-            # predicted_images.shape = (batch_size, n_samples, n_variables)
+            # res.shape = (batch_size, n_samples, n_variables)
             res = generate_samples(
                 uncertainty_quantification,
                 model,
@@ -147,11 +155,12 @@ def evaluate(
                 training_parameters["n_samples_uq"],
                 training_parameters["x_T_sampling_method"],
                 training_parameters["distributional_method"],
+                training_parameters["closed_form"],
                 regressor,
                 cfg_scale=cfg_scale,
                 ddim_churn=training_parameters["ddim_churn"],
                 noise_schedule=training_parameters["noise_schedule"],
-                metrics_plots=metrics_plots
+                metrics_plots=metrics_plots,
             )
 
             if (
@@ -161,7 +170,7 @@ def evaluate(
                 and metrics_plots
             ):
                 (
-                    predicted_images,
+                    prediction,
                     curr_crps_over_time,
                     curr_rmse_over_time,
                     curr_distr_over_time,
@@ -181,21 +190,21 @@ def evaluate(
                     ]
                     distr_over_time = curr_distr_over_time
             else:
-                predicted_images = res
+                prediction = res
 
             if standardized:
                 target = loader.dataset.destandardize_output(target)
-                predicted_images = loader.dataset.destandardize_output(predicted_images)
+                prediction = loader.dataset.destandardize_output(prediction)
 
             mse += (
-                mse_loss(predicted_images.mean(axis=-1), target).item()
+                mse_loss(prediction.mean(axis=-1), target).item()
                 * batch_size
                 / len(loader.dataset)
             )
             es += (
                 energy_score(
                     target.flatten(start_dim=1, end_dim=-1),
-                    predicted_images.flatten(start_dim=1, end_dim=-2),
+                    prediction.flatten(start_dim=1, end_dim=-2),
                     m_axis=-1,
                     v_axis=-2,
                     backend="torch",
@@ -209,7 +218,7 @@ def evaluate(
             crps += (
                 crps_ensemble(
                     target.cpu(),
-                    predicted_images.cpu(),
+                    prediction.cpu(),
                     backend="torch",
                 )
                 .mean()
@@ -218,16 +227,16 @@ def evaluate(
                 / len(loader.dataset)
             )
             gaussian_nll += (
-                gaussian_nll_loss(predicted_images.cpu(), target.cpu()).item()
+                gaussian_nll_loss(prediction.cpu(), target.cpu()).item()
                 * batch_size
                 / len(loader.dataset)
             )
             coverage += (
-                coverage_loss(predicted_images, target, ensemble_dim=-1).item()
+                coverage_loss(prediction, target, ensemble_dim=-1).item()
                 * batch_size
                 / len(loader.dataset)
             )
-            qice_loss.aggregate(predicted_images.cpu(), target.cpu())
+            qice_loss.aggregate(prediction.cpu(), target.cpu())
 
         crps_over_time = [x / len(loader.dataset) for x in crps_over_time]
         rmse_over_time = [np.sqrt(x / len(loader.dataset)) for x in rmse_over_time]
@@ -288,7 +297,10 @@ def start_evaluation(
     if data_parameters["dataset_name"].startswith("1D") or data_parameters[
         "dataset_name"
     ].startswith("2D"):
-        data_loaders = {"Test": test_loader}
+        if training_parameters["val_only"]:
+            data_loaders = {"Validation": validation_loader}
+        else:
+            data_loaders = {"Validation": validation_loader, "Test": test_loader}
     elif data_parameters["dataset_name"] == "WeatherBench":
         data_loaders = {
             "Validation": validation_loader,
@@ -377,10 +389,16 @@ def start_evaluation(
             NUM_SAMPLES = 5
             for idx_sample in range(NUM_SAMPLES):
                 means_over_time = np.array(
-                    [distr_over_time[t][0][idx_sample] for t in range(len(crps_over_time))]
+                    [
+                        distr_over_time[t][0][idx_sample]
+                        for t in range(len(crps_over_time))
+                    ]
                 ).squeeze()
                 stds_over_time = np.array(
-                    [distr_over_time[t][1][idx_sample] for t in range(len(crps_over_time))]
+                    [
+                        distr_over_time[t][1][idx_sample]
+                        for t in range(len(crps_over_time))
+                    ]
                 ).squeeze()
 
                 plt.figure()
@@ -409,3 +427,6 @@ def start_evaluation(
                     )
 
                 plt.close()
+            
+        # Empty cache
+        torch.cuda.empty_cache()
