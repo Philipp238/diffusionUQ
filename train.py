@@ -273,14 +273,6 @@ def trainer(
         t_elapsed = time.time() - t_current_epoch
         t_training.append(t_elapsed)
 
-        if lr_schedule == "step" and early_stopper.counter > int(training_parameters["early_stopping"] // (report_every * 2)):
-            # stepwise scheduler only happens once per epoch and only if the validation has not been going down for at least 10 epochs
-            if scheduler.get_last_lr()[0] > 10e-9:
-                scheduler.step()
-                logging.info(f"Learning rate reduced to: {scheduler.get_last_lr()[0]}")
-                logging.info(f"Early stopping counter set to 0")
-                early_stopper.counter = 0
-
         if epoch % report_every == report_every - 1:
             logging.info(using(f"At the start of the epoch {epoch+1}"))
             epochs.append(epoch)
@@ -369,6 +361,12 @@ def trainer(
                     if early_stopper.early_stop(validation_loss):
                         logging.info(f"EP {epoch}: Early stopping")
                         break
+
+                if lr_schedule == "step" and early_stopper.counter > int(training_parameters["early_stopping"] // (report_every * 2)):
+                    # stepwise scheduler only happens once per epoch and only if the validation has not been going down for at least 10 epochs
+                    if scheduler.get_last_lr()[0] > 10e-9:
+                        scheduler.step()
+                        logging.info(f"Learning rate reduced to: {scheduler.get_last_lr()[0]}")
 
                 logging_str += (
                     ",Validation loss: "
