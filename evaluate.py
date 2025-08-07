@@ -1,3 +1,4 @@
+import time
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -333,6 +334,7 @@ def start_evaluation(
         if loader is None:
             continue
         logging.info(f"Evaluating the model on {name} data.")
+        t_eval_start = time.time()
 
         (
             mse,
@@ -354,6 +356,9 @@ def start_evaluation(
             metrics_plots=metrics_plots,
         )
         # mse, es, crps, gaussian_nll, coverage, int_width = evaluate(model, training_parameters, loader, device, domain_range)
+        t_elapsed = np.round(time.time() - t_eval_start,3)
+        logging.info(f"Evaluating the model on {name} data took {t_elapsed}s.")
+
 
         train_utils.log_and_save_evaluation(mse, "MSE" + name, results_dict, logging)
         train_utils.log_and_save_evaluation(
