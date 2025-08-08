@@ -1,2 +1,2 @@
 #!/bin/sh
-python main.py -c Burgers/hparams/sample.ini
+python main.py -c KS/hparams/sample.ini

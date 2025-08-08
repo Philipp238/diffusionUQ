@@ -52,7 +52,7 @@ def process_training_parameters(train_dict: dict)-> dict:
     processed_dict["n_timesteps"] = train_dict.get("n_timesteps", [50])
     processed_dict["distributional_method"] = train_dict.get("distributional_method", ["mvnormal"])
     processed_dict["loss"] = train_dict.get("loss", ["crps"])
-    processed_dict["closed_form"] = train_dict.get("closed_form", False)
+    processed_dict["closed_form"] = train_dict.get("closed_form", True)
     processed_dict["concat_condition_diffusion"] = train_dict.get("concat_condition_diffusion", True)
     processed_dict["evaluate"] = train_dict.get("evaluate", True)
     processed_dict["val_only"] = train_dict.get("val_only", False)

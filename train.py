@@ -359,10 +359,15 @@ def trainer(
 
                 if training_parameters["early_stopping"] and (epoch > min_n_epochs):
                     if early_stopper.early_stop(validation_loss):
+                        logging_str += (
+                                ",Validation loss: "
+                                f"{validation_loss_list[-1]:.8f}, Validation loss EMA: {validation_loss_list_ema[-1]:.8f}"
+                            )
+                        logging.info(logging_str)
                         logging.info(f"EP {epoch}: Early stopping")
                         break
 
-                if lr_schedule == "step" and early_stopper.counter > int(training_parameters["early_stopping"] // (report_every * 2)):
+                if lr_schedule == "step" and early_stopper.counter >= int(training_parameters["early_stopping"] // (report_every * 2)):
                     # stepwise scheduler only happens once per epoch and only if the validation has not been going down for at least 10 epochs
                     if scheduler.get_last_lr()[0] > 10e-9:
                         scheduler.step()
