@@ -264,7 +264,7 @@ class WeatherBench(Dataset):
     @staticmethod
     def get_split(var: str) -> slice:
         if var == "train":
-            return slice("2019", "2019")  # Change first argument to 2010
+            return slice("2010", "2019")  # Change first argument to 2010
         elif var == "val":
             return slice("2020", "2020")
         elif var == "test":

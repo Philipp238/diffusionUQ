@@ -468,15 +468,15 @@ class DistributionalDiffusion(Diffusion):
                 torch.sqrt(alpha_hat_t_minus_1) * x_0_hat + 
                 torch.sqrt(1 - alpha_hat_t_minus_1 - ddim_sigma**2) * predicted_noise_ddim
             )
+            A = torch.sqrt(1 - alpha_hat_t_minus_1 - ddim_sigma**2) - torch.sqrt((1 - alpha_hat) / alpha)
+            covariance_matrix = A**2 * predicted_noise_covariance + torch.diag_embed(reshape_to_x_sample(ddim_sigma**2,x))
         else:
-            alpha_hat_t_minus_1 = torch.ones_like(alpha_hat)
-            ddim_sigma = self.ddim_churn * torch.sqrt((1 - alpha_hat_t_minus_1) / (1 - alpha_hat)) * torch.sqrt(1 - alpha)
-
+            ddim_sigma = 0
             reverse_posterior_mean = x_0_hat
+            A = - torch.sqrt((1 - alpha_hat) / alpha_hat)
+            covariance_matrix = A**2 * predicted_noise_covariance
 
         # Sample from final closed form normal
-        A = torch.sqrt(1 - alpha_hat_t_minus_1 - ddim_sigma**2) - torch.sqrt((1 - alpha_hat) / alpha_hat) # alpha
-        covariance_matrix = A**2 * predicted_noise_covariance + torch.diag_embed(reshape_to_x_sample(ddim_sigma**2,x))
         mvnormal = MultivariateNormal(loc = reverse_posterior_mean, covariance_matrix=covariance_matrix)
         new_x = mvnormal.sample()
         return new_x
@@ -496,7 +496,7 @@ class DistributionalDiffusion(Diffusion):
             x = self.sample_x_T((n, *self.img_size), pred, inference=True)
             for i in reversed(range(1, self.noise_steps)):
                 t = (torch.ones(n) * i).long().to(self.device)
-                if self.closed_form:
+                if self.closed_form and self.distributional_method in ["normal", "mixednormal", "mvnormal"]:
                     predicted_noise_distribution_params = model(
                         x, t, conditioning, pred = pred
                     )
