@@ -36,6 +36,9 @@ def train(
     input,
     criterion,
     gradient_clipping,
+    batch_accumulation,
+    length,
+    idx,
     uncertainty_quantification,
     ema,
     ema_model,
@@ -57,8 +60,6 @@ def train(
     Returns:
         _type_: Loss and gradient norm.
     """
-    optimizer.zero_grad(set_to_none=True)
-
     if uncertainty_quantification == "diffusion":
         assert not (diffusion is None)
         t = diffusion.sample_timesteps(target.shape[0]).to(device)
@@ -76,10 +77,14 @@ def train(
         predicted_images = net(input)
         loss = criterion(target, predicted_images)
 
+    loss = loss / batch_accumulation
     loss.backward()
 
-    optimizer.step()
-    ema.step_ema(ema_model, net)
+    if ((idx + 1) % batch_accumulation == 0) or (idx == length - 1):
+        # Update opimizer
+        optimizer.step()
+        ema.step_ema(ema_model, net)
+        optimizer.zero_grad(set_to_none=True)
 
     loss = loss.item()
 
@@ -168,6 +173,9 @@ def trainer(
             model.parameters(), lr=lr
         )
 
+    # Gradiend accumulation
+    batch_accumulation = training_parameters["batch_accumulation"]
+
     report_every = training_parameters["report_every"]
     early_stopper = train_utils.EarlyStopper(
         patience=int(training_parameters["early_stopping"] / report_every),
@@ -247,7 +255,8 @@ def trainer(
         t_current_epoch = time.time()
 
         model.train()
-        for target, input in train_loader:
+        for idx, sample in enumerate(train_loader):
+            target, input = sample
             target = target.to(device)
             input = input.to(device)
 
@@ -258,6 +267,9 @@ def trainer(
                 input,
                 criterion,
                 training_parameters["gradient_clipping"],
+                batch_accumulation = batch_accumulation,
+                length = len(train_loader),
+                idx = idx,
                 uncertainty_quantification=uncertainty_quantification,
                 ema=ema,
                 ema_model=ema_model,

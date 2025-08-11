@@ -28,6 +28,7 @@ def process_training_parameters(train_dict: dict)-> dict:
     processed_dict["seed"] = train_dict.get("seed", [1234])
     processed_dict["backbone"] = train_dict.get("backbone", ["default"])
     processed_dict["batch_size"] = train_dict.get("batch_size", [128])
+    processed_dict["batch_accumulation"] = train_dict.get("batch_accumulation", [1])
     processed_dict["eval_batch_size"] = train_dict.get("eval_batch_size", 512)
     processed_dict["n_epochs"] = train_dict.get("n_epochs", 1000)
     processed_dict["early_stopping"] = train_dict.get("early_stopping", 100)
