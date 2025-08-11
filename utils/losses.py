@@ -11,6 +11,10 @@ from torch.distributions.lowrank_multivariate_normal import (
     _batch_lowrank_logdet,
     _batch_lowrank_mahalanobis,
 )
+from torch.distributions.multivariate_normal import (
+    MultivariateNormal,
+    _batch_mahalanobis,
+)
 
 EPS = 1e-9
 
@@ -19,12 +23,13 @@ class GaussianKernelScore(nn.Module):
     """Computes the Gaussian kernel score for a predictive normal distribution and corresponding observations."""
 
     def __init__(
-        self, reduction="mean", dimension="univariate", gamma: float = 1.0
+        self, reduction="mean", dimension="univariate", gamma: float = 1.0, method:str = "lora",
     ) -> None:
         super().__init__()
         self.reduction = reduction
         self.gamma = gamma
         self.dimension = dimension
+        self.method = method
 
     def univariate(self, observation: Tensor, prediction: Tensor) -> Tensor:
         # Sizes are [B x c x d0 x ... x dn] for mu and sigma and observation
@@ -49,7 +54,7 @@ class GaussianKernelScore(nn.Module):
         score = 0.5 - fac1 + fac2
         return score
 
-    def multivariate(self, observation: Tensor, prediction: Tensor) -> Tensor:
+    def multivariate_lora(self, observation: Tensor, prediction: Tensor) -> Tensor:
         mu = prediction[..., 0]
         diag = prediction[..., 1]
         lowrank = prediction[..., 2:]
@@ -88,12 +93,42 @@ class GaussianKernelScore(nn.Module):
         fac2 = 1 / (torch.sqrt(det2))
         score = 0.5*(1+fac2)-fac1
         return score 
+    
+
+    def multivariate_cholesky(self, observation: Tensor, prediction: Tensor) -> Tensor:
+        mu = prediction[...,0]
+        L = prediction[...,1:]
+        cov = MultivariateNormal(loc=mu, scale_tril=L).covariance_matrix
+        gamma = torch.tensor(self.gamma, device=mu.device)
+        gamma2 = torch.pow(gamma, 2)
+        diff = observation - mu
+        id = torch.eye(cov.shape[-1]).unsqueeze(0).repeat(*cov.shape[:-2],1,1).to(mu.device)
+
+        # Create both distributions distributions
+        cov1 = (2.0/gamma2)*cov + id
+        cov2 = (4.0/gamma2)*cov + id
+
+        mvnorm1 = MultivariateNormal(loc=mu, covariance_matrix=cov1)
+        mvnorm2 = MultivariateNormal(loc=mu, covariance_matrix = cov2)
+
+        # Calculate score
+        M = _batch_mahalanobis(mvnorm1._unbroadcasted_scale_tril, diff)
+        det1 = 2*mvnorm1._unbroadcasted_scale_tril.diagonal(dim1=-2, dim2=-1).prod(-1)
+        det2 = 2*mvnorm2._unbroadcasted_scale_tril.diagonal(dim1=-2, dim2=-1).prod(-1)
+
+        fac1 = 1 / torch.sqrt(det1) * torch.exp(-1 / gamma2 * M)
+        fac2 = 1 / (torch.sqrt(det2))
+        score = 0.5 * (1 + fac2) - fac1
+        return score
 
     def forward(self, observation: Tensor, prediction: Tensor) -> Tensor:
         if self.dimension == "univariate":
             score = self.univariate(observation, prediction)
         elif self.dimension == "multivariate":
-            score = self.multivariate(observation, prediction)
+            if self.method == "lora":
+                score = self.multivariate_lora(observation, prediction)
+            elif self.method == "cholesky":
+                score = self.multivariate_cholesky(observation, prediction)
 
         if self.reduction == "sum":
             return torch.sum(score)

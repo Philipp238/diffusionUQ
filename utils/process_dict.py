@@ -64,7 +64,7 @@ def process_training_parameters(train_dict: dict)-> dict:
 
     # Specific model parameters
     processed_dict["n_components"] = train_dict.get("n_components", 10)
-    processed_dict["gamma"] = train_dict.get("gamma", 1.0)
+    processed_dict["gamma"] = train_dict.get("gamma", 5.0)
     processed_dict["rank"] = train_dict.get("rank",10)
     processed_dict["mvnormal_method"] = train_dict.get("mvnormal_method", ["lora"])
     processed_dict["n_train_samples"] = train_dict.get("n_train_samples",10)
