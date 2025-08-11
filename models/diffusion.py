@@ -539,10 +539,13 @@ class DistributionalDiffusion(Diffusion):
             covariance_matrix = A**2 * predicted_noise_covariance
 
         # Sample from final closed form normal
-        mvnormal = MultivariateNormal(
-            loc=reverse_posterior_mean, covariance_matrix=covariance_matrix
-        )
-        new_x = mvnormal.sample()
+        if reverse_posterior_mean.shape[-1] == 1: # We are in the 1D case
+            noise = torch.randn_like(reverse_posterior_mean)
+            new_x = reverse_posterior_mean + torch.sqrt(covariance_matrix.squeeze(-1)) * noise
+        else:
+            mvnormal = MultivariateNormal(loc = reverse_posterior_mean, covariance_matrix=covariance_matrix)
+            new_x = mvnormal.sample()
+
         return new_x
 
     def sample_low_dimensional(
