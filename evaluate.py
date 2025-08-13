@@ -17,8 +17,8 @@ def generate_samples(
     uncertainty_quantification: str,
     model,
     n_timesteps,
-    a: torch.Tensor,
-    u: torch.Tensor,
+    x: torch.Tensor,
+    target: torch.Tensor,
     n_samples: int,
     x_T_sampling_method: str,
     distributional_method: str = "deterministic",
@@ -46,35 +46,35 @@ def generate_samples(
     else:
         model.eval()
     if uncertainty_quantification == "dropout":
-        out = generate_mcd_samples(model, a, u.shape, n_samples=n_samples)
+        out = generate_mcd_samples(model, x, target.shape, n_samples=n_samples)
     elif uncertainty_quantification == "laplace":
-        out = model.predictive_samples(a, n_samples=n_samples)
+        out = model.predictive_samples(x, n_samples=n_samples)
     elif uncertainty_quantification.startswith("scoring-rule"):
-        out = model(a, n_samples=n_samples)
+        out = model(x, n_samples=n_samples)
     elif uncertainty_quantification == "deterministic":
         out = generate_deterministic_samples(
-            model, a, n_timesteps=n_timesteps, n_samples=n_samples
+            model, x, n_timesteps=n_timesteps, n_samples=n_samples
         )
     elif uncertainty_quantification == "diffusion":
         if (
             metrics_plots
-            and u is not None
+            and target is not None
             and regressor is not None
             and distributional_method != "deterministic"
         ):
             out, crps_over_time, rmse_over_time, distr_over_time = (
                 generate_diffusion_samples_low_dimensional(
                     model,
-                    input=a,
+                    input=x,
                     n_timesteps=n_timesteps,
-                    target_shape=u.shape,
+                    target_shape=target.shape,
                     n_samples=n_samples,
                     distributional_method=distributional_method,
                     closed_form = closed_form,
                     regressor=regressor,
                     x_T_sampling_method=x_T_sampling_method,
                     cfg_scale=cfg_scale,
-                    gt_images=u,
+                    gt_images=target,
                     ddim_churn=ddim_churn,
                     noise_schedule=noise_schedule,
                     metrics_plots=metrics_plots,
@@ -84,16 +84,16 @@ def generate_samples(
         else:
             out = generate_diffusion_samples_low_dimensional(
                 model,
-                input=a,
+                input=x,
                 n_timesteps=n_timesteps,
-                target_shape=u.shape,
+                target_shape=target.shape,
                 n_samples=n_samples,
                 distributional_method=distributional_method,
                 closed_form = closed_form,
                 regressor=regressor,
                 x_T_sampling_method=x_T_sampling_method,
                 cfg_scale=cfg_scale,
-                gt_images=u,
+                gt_images=target,
                 ddim_churn=ddim_churn,
                 noise_schedule=noise_schedule,
                 metrics_plots=metrics_plots,

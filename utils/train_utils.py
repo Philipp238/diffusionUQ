@@ -269,7 +269,7 @@ def setup_model(
                     target_dim=target_dim,
                     concat=training_parameters["concat_condition_diffusion"],
                     hidden_dim=training_parameters["hidden_dim"],
-                    n_components=10,
+                    n_components=training_parameters["n_components"],
                 )
 
         else:
