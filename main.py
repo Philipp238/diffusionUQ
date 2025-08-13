@@ -208,76 +208,8 @@ if __name__ == "__main__":
                 seed,
             )
 
-
-            # # Load data based on seed
-            # if dataset_name in UCI_DATASET_NAMES:
-            #     split = data_parameters["yarin_gal_uci_split_indices"]
-            #     validation_ratio_on_train_set = data_parameters["validation_ratio"] / (
-            #         1 - data_parameters["validation_ratio"]
-            #     )
-            #     uci_data = get_uci_data(
-            #         dataset_name,
-            #         splits=split,
-            #         standardize=data_parameters["standardize"],
-            #         validation_ratio=validation_ratio_on_train_set,
-            #     )
-            #     dataset, target_dim, input_dim = uci_data
-            # else:
-            #     dataset, target_dim, input_dim = get_data(
-            #         dataset_name,
-            #         data_dir,
-            #         data_parameters,
-            #         seed=seed,
-            #     )
-
-            # if dataset_name in UCI_DATASET_NAMES:
-            #     splitstring = f"{split}"
-            # else:
-            #     splitstring = ""
-            # filename_ending = (
-            #     f"{data_parameters['dataset_name']}{splitstring}_"
-            #     f"{training_parameters['model']}_"
-            #     f"{training_parameters['uncertainty_quantification']}_"
-            #     f"{training_parameters['distributional_method']}_"
-            #     f"T{training_parameters['n_timesteps']}_"
-            #     f"DDIM{round(training_parameters['ddim_churn'])}"
-            # )
-
-
-            # if dataset_name in UCI_DATASET_NAMES:
-            #     logging.info(f"Using split-{split} for UCI dataset {dataset_name}")  # type: ignore
-            #     if data_parameters["validation_ratio"] > 0:
-            #         training_dataset, validation_dataset, test_dataset = dataset
-            #     else:
-            #         training_dataset, test_dataset = dataset
-            #         validation_dataset = None
-            # else:
-            #     logging.info(f"Use pre-defined val split for dataset {dataset_name}")
-            #     training_dataset, validation_dataset, test_dataset = dataset
-
-
-
             batch_size = training_parameters["batch_size"]
             eval_batch_size = training_parameters["eval_batch_size"]
-
-            # training_dataset, validation_dataset, test_dataset = get_datasets(
-            #     data_dir,
-            #     data_parameters,
-            #     training_parameters,
-            #     seed,
-            #     logger=logging
-            # )
-
-            # train_loader = DataLoader(
-            #     training_dataset, batch_size=batch_size, shuffle=True
-            # )
-            # if validation_dataset is not None:
-            #     val_loader = DataLoader(
-            #         validation_dataset, batch_size=eval_batch_size, shuffle=True
-            #     )
-            # else:
-            #     val_loader = None
-            # logging.info(using("After creating the dataloaders"))
 
             if training_parameters["regressor"] == "orig_CARD_pretrain":
                 split = data_parameters["yarin_gal_uci_split_indices"]
@@ -414,11 +346,10 @@ if __name__ == "__main__":
                         directory=directory,
                         training_parameters=training_parameters,
                         data_parameters=data_parameters,
-                        logging=logging,
                         filename_ending=filename_ending,
-                        d_time=d_time_train,
                         target_dim=target_dim,
                         input_dim=input_dim,
+                        d_time=d_time_train,
                         results_dict=results_dict,
                         regressor=regressor,
                     )
@@ -433,11 +364,10 @@ if __name__ == "__main__":
                             directory,
                             training_parameters,
                             data_parameters,
-                            logging,
                             filename_ending,
-                            d_time_train,
                             target_dim,
                             input_dim,
+                            d_time_train,
                             results_dict,
                             regressor,
                             world_size,

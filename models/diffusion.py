@@ -243,27 +243,59 @@ class Diffusion:
     def sample_timesteps(self, n):
         return torch.randint(low=1, high=self.noise_steps, size=(n,))
 
-    def sample_low_dimensional(
-        self, model, n, conditioning=None, cfg_scale=3, pred=None
-    ):
+    # def sample_low_dimensional(
+    #     self, model, n, conditioning=None, cfg_scale=3, pred=None
+    # ):
+    #     assert (self.x_T_sampling_method == "standard") or not (pred is None)
+
+    #     model.eval()
+    #     with torch.no_grad():
+    #         x = self.sample_x_T((n, *self.img_size), pred, inference=True)
+    #         for i in reversed(range(1, self.noise_steps)):
+    #             t = (torch.ones(n) * i).long().to(self.device)
+    #             predicted_noise = model(x, t, conditioning, pred=pred)
+    #             if cfg_scale > 0:
+    #                 uncond_predicted_noise = model(x, t, None, pred=pred)
+    #                 predicted_noise = torch.lerp(
+    #                     uncond_predicted_noise, predicted_noise, cfg_scale
+    #                 )
+
+    #             x = self.sample_x_t_inference_DDIM(x, t, predicted_noise, pred, i)
+
+    #     model.train()
+    #     return x
+
+    def sample_low_dimensional(self, model, n, conditioning=None, cfg_scale=3, pred=None):
         assert (self.x_T_sampling_method == "standard") or not (pred is None)
 
         model.eval()
+        device = next(model.parameters()).device  # DDP-safe device
         with torch.no_grad():
-            x = self.sample_x_T((n, *self.img_size), pred, inference=True)
+            # Make sure x starts on the correct device
+            x = self.sample_x_T((n, *self.img_size), pred, inference=True).to(device)
+
+            # Move conditioning and pred if provided
+            if conditioning is not None:
+                conditioning = conditioning.to(device)
+            if pred is not None:
+                pred = pred.to(device)
+
             for i in reversed(range(1, self.noise_steps)):
-                t = (torch.ones(n) * i).long().to(self.device)
+                t = torch.full((n,), i, dtype=torch.long, device=device)
+
+                # Predict noise
                 predicted_noise = model(x, t, conditioning, pred=pred)
+
                 if cfg_scale > 0:
                     uncond_predicted_noise = model(x, t, None, pred=pred)
-                    predicted_noise = torch.lerp(
-                        uncond_predicted_noise, predicted_noise, cfg_scale
-                    )
+                    predicted_noise = torch.lerp(uncond_predicted_noise, predicted_noise, cfg_scale)
 
+                # Sample next step
                 x = self.sample_x_t_inference_DDIM(x, t, predicted_noise, pred, i)
 
         model.train()
         return x
+
 
     def sample_images(self, model, n, labels=None, cfg_scale=3):
         model.eval()

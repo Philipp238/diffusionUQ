@@ -6,6 +6,7 @@ import gc
 import os
 import resource
 import time
+import logging
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -40,16 +41,17 @@ def using(point=""):
     return f"{point}: mem (CPU python)={usage[2] / 1024.0}MB; mem (CPU total)={dict(psutil.virtual_memory()._asdict())['used'] / 1024**2}MB"
 
 
-if torch.cuda.is_available():
-    device = "cuda"
-else:
-    device = "cpu"
-print(f"Using {device}.")
+# if torch.cuda.is_available():
+#     device = "cuda"
+# else:
+#     device = "cpu"
+# print(f"Using {device}.")
 
 
 def train(
     net,
     optimizer,
+    device,
     target,
     input,
     criterion,
@@ -95,6 +97,7 @@ def train(
         predicted_images = net(input)
         loss = criterion(target, predicted_images)
 
+
     loss = loss / batch_accumulation
     loss.backward()
 
@@ -115,7 +118,6 @@ def trainer(
     directory,
     training_parameters,
     data_parameters,
-    logging,
     filename_ending,
     target_dim,
     input_dim,
@@ -150,18 +152,24 @@ def trainer(
         seed,
         logger=logging,
         test = False
-    )
+    )    
 
     if training_parameters['distributed_training']:
         ddp_setup(rank=gpu_id, world_size=world_size)
         print(f'GPU ID: {gpu_id}')
         # if gpu_id==0:
         if gpu_id>-1:
-            logging.basicConfig(filename=os.path.join(directory, f'experiment_{gpu_id}.log'), level=logging.INFO)
+            #logging.basicConfig(filename=os.path.join(directory, f'experiment_{gpu_id}.log'), level=logging.INFO)
             logging.info('Starting the logger in the training process.')
             print('Starting the logger in the training process.')    
         # flag tensor for (early) stopping     
-        flag_tensor = torch.zeros(1).to(f'cuda:{gpu_id}')
+        #flag_tensor = torch.zeros(1).to(f'cuda:{gpu_id}')
+
+    # Set device correctly
+    if training_parameters['distributed_training']:
+        device = f'cuda:{gpu_id}'
+    else:
+        device = "cpu" if not torch.cuda.is_available() else "cuda"
 
     if device == "cpu":
         assert not training_parameters["data_loader_pin_memory"]
@@ -178,13 +186,16 @@ def trainer(
         train_loader = DataLoader(
             training_dataset,
             batch_size=training_parameters["batch_size"],
-            sampler=DistributedSampler(training_dataset),
+            sampler=DistributedSampler(training_dataset,drop_last=True),
+            drop_last = True,
+            pin_memory = True
         )
         if validation_dataset is not None:
             val_loader = DataLoader(
                 validation_dataset,
                 batch_size=training_parameters["eval_batch_size"],
-                sampler=DistributedSampler(validation_dataset),
+                sampler=DistributedSampler(validation_dataset, drop_last=True),
+                pin_memory = True
             )
         else:
             val_loader = None
@@ -201,11 +212,10 @@ def trainer(
             )
         else:
             val_loader = None
-
     model = train_utils.setup_model(data_parameters,training_parameters, device, target_dim, input_dim)
     # Setup distributed model
     if training_parameters["distributed_training"]:
-        model = DDP(model, device_ids=[gpu_id])
+        model = DDP(model, device_ids=[gpu_id], find_unused_parameters=True, broadcast_buffers=False)
 
     if training_parameters["init"] != "default":
         train_utils.initialize_weights(model, training_parameters["init"])
@@ -316,10 +326,11 @@ def trainer(
     for epoch in range(training_parameters["n_epochs"]):
         # Distributed training: set epoch for sampler
         if training_parameters["distributed_training"]:
-            dist.all_reduce(flag_tensor,op=dist.ReduceOp.SUM)
-            if flag_tensor == 1:
-                logging.info("Training stopped")
-                break
+        #     dist.all_reduce(flag_tensor,op=dist.ReduceOp.SUM)
+        #     if flag_tensor.sum() > 0:  # or use dist.all_reduce with SUM and check > 0
+        #         if gpu_id == 0:
+        #             logging.info("Training stopped")
+        #         break
             train_loader.sampler.set_epoch(epoch)
         # Set learning rate warm up
         if epoch < warmup_lr:
@@ -343,6 +354,7 @@ def trainer(
             batch_loss = train(
                 model,
                 optimizer,
+                device,
                 target,
                 input,
                 criterion,
@@ -440,14 +452,18 @@ def trainer(
                             backend = "torch",
                         ).mean().item()
 
+                if len(val_loader) > 0:
+                    validation_loss_list.append(validation_loss / len(val_loader))
+                    validation_loss_list_ema.append(validation_loss_ema / len(val_loader))
+                else:
+                    logging.warning(f"[Rank {gpu_id}] Validation loader is empty — skipping validation for this epoch.")
 
-                validation_loss_list.append(validation_loss / len(val_loader))
-                validation_loss_list_ema.append(validation_loss_ema / len(val_loader))
 
                 if validation_loss < best_loss:
                     best_loss = validation_loss
                     if training_parameters['distributed_training']:
-                        train_utils.checkpoint(model.module, filename)
+                        if gpu_id == 0:
+                            train_utils.checkpoint(model.module, filename)
                     else:
                         train_utils.checkpoint(model, filename)
 
@@ -466,7 +482,7 @@ def trainer(
                         logging.info(logging_str)
                         logging.info(f"EP {epoch}: Early stopping")
                         if training_parameters['distributed_training']:
-                            flag_tensor += 1
+                            pass #flag_tensor += 1
                         else:
                             break
 
