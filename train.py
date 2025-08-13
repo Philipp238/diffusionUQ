@@ -1,20 +1,38 @@
 # Implements the training functions and scripts.
 
-import os
-import torch
-from torch import optim
-import matplotlib.pyplot as plt
-from utils import train_utils
-import resource
-import psutil
-import gc
-from models import EMA, Diffusion, DistributionalDiffusion
-import copy
-import numpy as np
 import configparser
-from scoringrules import energy_score
-import time 
+import copy
+import gc
+import os
+import resource
+import time
 
+import matplotlib.pyplot as plt
+import numpy as np
+import psutil
+import torch
+import torch.distributed as dist
+from scoringrules import energy_score
+from torch import optim
+from torch.distributed import destroy_process_group
+from torch.nn.parallel import DistributedDataParallel as DDP
+from torch.utils.data.distributed import DistributedSampler
+from torch.utils.data import DataLoader
+from models import EMA, Diffusion, DistributionalDiffusion
+from utils import train_utils
+from data import get_datasets
+
+
+def ddp_setup(rank: int, world_size: int):
+    """
+    Args:
+        rank: Unique identifier of each process
+        world_size: Total number of processes
+    """
+    os.environ["MASTER_ADDR"] = "localhost"
+    os.environ["MASTER_PORT"] = "12355"
+    torch.cuda.set_device(rank)
+    dist.init_process_group(backend="nccl", rank=rank, world_size=world_size)
 
 def using(point=""):
     usage = resource.getrusage(resource.RUSAGE_SELF)
@@ -92,8 +110,8 @@ def train(
 
 
 def trainer(
-    train_loader,
-    val_loader,
+    gpu_id,
+    data_dir,
     directory,
     training_parameters,
     data_parameters,
@@ -104,6 +122,7 @@ def trainer(
     d_time,
     results_dict,
     regressor,
+    world_size = None,
 ):
     """Trainer function that takes a parameter dictionaray and dataloaders, trains the models and logs the results.
 
@@ -122,6 +141,27 @@ def trainer(
     Returns:
         _type_: Trained model and corresponding filename.
     """
+    # Get datasets and loaders
+    seed = training_parameters["seed"]
+    training_dataset, validation_dataset = get_datasets(
+        data_dir,
+        data_parameters,
+        training_parameters,
+        seed,
+        logger=logging,
+        test = False
+    )
+
+    if training_parameters['distributed_training']:
+        ddp_setup(rank=gpu_id, world_size=world_size)
+        print(f'GPU ID: {gpu_id}')
+        # if gpu_id==0:
+        if gpu_id>-1:
+            logging.basicConfig(filename=os.path.join(directory, f'experiment_{gpu_id}.log'), level=logging.INFO)
+            logging.info('Starting the logger in the training process.')
+            print('Starting the logger in the training process.')    
+        # flag tensor for (early) stopping     
+        flag_tensor = torch.zeros(1).to(f'cuda:{gpu_id}')
 
     if device == "cpu":
         assert not training_parameters["data_loader_pin_memory"]
@@ -133,7 +173,39 @@ def trainer(
         energy_score  # torch.nn.MSELoss() # MSE loss for evaluating generated samples
     )
 
+    # Setup up parallel dataloaders
+    if training_parameters["distributed_training"]:
+        train_loader = DataLoader(
+            training_dataset,
+            batch_size=training_parameters["batch_size"],
+            sampler=DistributedSampler(training_dataset),
+        )
+        if validation_dataset is not None:
+            val_loader = DataLoader(
+                validation_dataset,
+                batch_size=training_parameters["eval_batch_size"],
+                sampler=DistributedSampler(validation_dataset),
+            )
+        else:
+            val_loader = None
+    else:
+        train_loader = DataLoader(
+            training_dataset,
+            batch_size=training_parameters["batch_size"],
+            shuffle=True
+        )
+        if validation_dataset is not None:
+            val_loader = DataLoader(
+                validation_dataset,
+                batch_size=training_parameters["eval_batch_size"],
+            )
+        else:
+            val_loader = None
+
     model = train_utils.setup_model(data_parameters,training_parameters, device, target_dim, input_dim)
+    # Setup distributed model
+    if training_parameters["distributed_training"]:
+        model = DDP(model, device_ids=[gpu_id])
 
     if training_parameters["init"] != "default":
         train_utils.initialize_weights(model, training_parameters["init"])
@@ -242,6 +314,13 @@ def trainer(
     t_training = []
 
     for epoch in range(training_parameters["n_epochs"]):
+        # Distributed training: set epoch for sampler
+        if training_parameters["distributed_training"]:
+            dist.all_reduce(flag_tensor,op=dist.ReduceOp.SUM)
+            if flag_tensor == 1:
+                logging.info("Training stopped")
+                break
+            train_loader.sampler.set_epoch(epoch)
         # Set learning rate warm up
         if epoch < warmup_lr:
             for param_group in optimizer.param_groups:
@@ -250,6 +329,7 @@ def trainer(
             for param_group in optimizer.param_groups:
                 param_group['lr'] = lr
             logging.info(f"Warmup finished.")
+            early_stopper.counter = 0
 
         gc.collect()
         t_current_epoch = time.time()
@@ -284,6 +364,10 @@ def trainer(
         # Get time
         t_elapsed = time.time() - t_current_epoch
         t_training.append(t_elapsed)
+
+        # The none-main processes do not have to report anything
+        if training_parameters['distributed_training'] and gpu_id != 0:
+            continue
 
         if epoch % report_every == report_every - 1:
             logging.info(using(f"At the start of the epoch {epoch+1}"))
@@ -356,12 +440,16 @@ def trainer(
                             backend = "torch",
                         ).mean().item()
 
+
                 validation_loss_list.append(validation_loss / len(val_loader))
                 validation_loss_list_ema.append(validation_loss_ema / len(val_loader))
 
                 if validation_loss < best_loss:
                     best_loss = validation_loss
-                    train_utils.checkpoint(model, filename)
+                    if training_parameters['distributed_training']:
+                        train_utils.checkpoint(model.module, filename)
+                    else:
+                        train_utils.checkpoint(model, filename)
 
                 # Early stopping (If the model is only getting finetuned, run at least 5 epochs. Otherwise at least 50.)
                 if training_parameters.get("finetuning", None):
@@ -377,7 +465,10 @@ def trainer(
                             )
                         logging.info(logging_str)
                         logging.info(f"EP {epoch}: Early stopping")
-                        break
+                        if training_parameters['distributed_training']:
+                            flag_tensor += 1
+                        else:
+                            break
 
                 if lr_schedule == "step" and early_stopper.counter >= int(training_parameters["early_stopping"] // (report_every * 2)):
                     # stepwise scheduler only happens once per epoch and only if the validation has not been going down for at least 10 epochs
@@ -390,6 +481,9 @@ def trainer(
                     f"{validation_loss_list[-1]:.8f}, Validation loss EMA: {validation_loss_list_ema[-1]:.8f}"
                 )
             logging.info(logging_str)
+
+    if training_parameters['distributed_training'] and gpu_id != 0:
+        return model
 
     # Save training time
     t_training = np.array(t_training)
@@ -407,12 +501,18 @@ def trainer(
 
     optimizer.zero_grad(set_to_none=True)
     try:
-        train_utils.resume(model, filename)
+        if training_parameters['distributed_training']:
+            train_utils.resume(model.module, filename)
+        else:
+            train_utils.resume(model, filename)
     except:
         logging.info(
             f"Proceeding with diffusion model after {training_parameters['n_epochs']} epochs of training"
         )
-        train_utils.checkpoint(model, filename)
+        if training_parameters['distributed_training']:
+            train_utils.checkpoint(model.module, filename)
+        else:
+            train_utils.checkpoint(model, filename)
 
     # Plot training and validation loss
     plt.plot(epochs, training_loss_list, label="training loss")
@@ -457,6 +557,13 @@ def trainer(
             plt.savefig(os.path.join(directory, f"Datetime_{d_time}_visualisation.png"))
             plt.close()
 
-    train_utils.checkpoint(model, filename)
+    if training_parameters['distributed_training']:
+        net = model.module
+    else:
+        net = model
+        train_utils.checkpoint(net, filename)
 
-    return model, filename
+    if training_parameters['distributed_training']:
+        dist.destroy_process_group()
+
+    return net

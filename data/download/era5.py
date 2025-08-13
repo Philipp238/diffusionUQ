@@ -44,30 +44,3 @@ if __name__ == "__main__":
 
     data_reduced.close()
     data.close()
-
-
-    # HRES
-    ifs_ens_path = 'gs://weatherbench2/datasets/ifs_ens/2018-2022-1440x721_mean.zarr'
-    variables = ["2m_temperature"]
-    filename = "ifs_ens"
-
-    # Open file from weatherbench and filter (6h prediction horizon)
-    data = xr.open_zarr(ifs_ens_path)
-    data_reduced = data[variables].sel(latitude = lat_range, longitude = lon_range, method = "nearest").isel(prediction_timedelta = 1)
-    # Rechunk and save
-    data_reduced.chunk("auto").to_zarr(path + filename+".zarr", zarr_format = 2, consolidated = False)
-
-    # Save statistics
-    statistics = np.zeros((len(variables), 2))
-    for i,var in enumerate(variables):
-        if var == "land_sea_mask":
-            statistics[i,0] = 0
-            statistics[i,1] = 1
-        else:
-            statistics[i,0] = data_reduced[var].mean().compute()
-            statistics[i,1] = data_reduced[var].std().compute()
-
-    np.save(path + "ifs_ens_statistics.npy", statistics)
-
-    data_reduced.close()
-    data.close()

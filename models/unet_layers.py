@@ -572,9 +572,6 @@ class SongUNet(torch.nn.Module):
             self.pad = False
             adjusted_img_resolution = img_resolution[-1]
 
-
-
-
         # Define convolution based on dimension
         dconv = Conv1d if d == 1 else Conv2d
         resample_filter = [1] if d == 1 else resample_filter

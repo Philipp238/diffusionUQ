@@ -3,6 +3,7 @@
 from itertools import product
 import torch
 import torch.nn as nn
+import torch.distributed as dist
 import numpy as np
 from models.mlp_diffusion import MLP_diffusion_CARD
 import utils.losses as losses
