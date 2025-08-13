@@ -330,14 +330,14 @@ if __name__ == "__main__":
 
     backbone = UNetDiffusion(
         d=1,
-        conditioning_dim=1,
+        conditioning_dim=3,
         hidden_channels=32,
         in_channels=1,
         out_channels=1,
         init_features=32,
         device="cpu",
-        domain_dim=128,
+        domain_dim=(1,128),
     )
-    unet = UNet_diffusion_mvnormal(backbone, d=1, target_dim=1, method = "lora", rank = 5)
+    unet = UNet_diffusion_mvnormal(backbone, d=1, target_dim=1, domain_dim = (1,128), method = "cholesky", rank = 5)
     test = unet.forward(input, t, condition)
     print(test.shape)

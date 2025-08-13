@@ -3,8 +3,12 @@ from scoringrules import crps_ensemble
 from torch.distributions.lowrank_multivariate_normal import LowRankMultivariateNormal
 from torch.distributions.multivariate_normal import MultivariateNormal
 
+
 def reshape_to_x_sample(parameter, x):
-    return parameter.view(*parameter.shape, *(1,) * (x.ndim - parameter.ndim)).expand(x.shape)
+    return parameter.view(*parameter.shape, *(1,) * (x.ndim - parameter.ndim)).expand(
+        x.shape
+    )
+
 
 class Diffusion:
     def __init__(
@@ -14,7 +18,7 @@ class Diffusion:
         device="cuda",
         x_T_sampling_method="standard",
         ddim_churn=1.0,
-        noise_schedule="linear"
+        noise_schedule="linear",
     ):
         self.device = device
 
@@ -27,12 +31,12 @@ class Diffusion:
         self.x_T_sampling_method = x_T_sampling_method
         self.ddim_churn = ddim_churn
 
-    def sample_x_T(self, shape, pred, inference = True):
+    def sample_x_T(self, shape, pred, inference=True):
         if self.x_T_sampling_method in ["standard"]:
             x = torch.randn(shape).to(self.device)
         elif self.x_T_sampling_method == "naive-regressor-mean":
             x = torch.randn(shape).to(self.device) + pred
-        elif self.x_T_sampling_method == 'CARD':
+        elif self.x_T_sampling_method == "CARD":
             if inference:
                 x = torch.randn(shape).to(self.device) + pred
             else:
@@ -46,35 +50,48 @@ class Diffusion:
 
     def sample_x_t_inference_DDIM(self, x, t, predicted_noise, pred, i):
         alpha = reshape_to_x_sample(self.alpha[t], x)
-        alpha_hat = reshape_to_x_sample(self.alpha_hat[t], x) 
+        alpha_hat = reshape_to_x_sample(self.alpha_hat[t], x)
         if pred is None:
             pred = 0
 
-        x_0_hat = (x 
-                   - torch.sqrt(1 - alpha_hat) * predicted_noise
-                   - (1 - torch.sqrt(alpha_hat)) * pred # CARD only
-                   ) / torch.sqrt(alpha_hat) # DDIM eq. 9
+        x_0_hat = (
+            x
+            - torch.sqrt(1 - alpha_hat) * predicted_noise
+            - (1 - torch.sqrt(alpha_hat)) * pred  # CARD only
+        ) / torch.sqrt(alpha_hat)  # DDIM eq. 9
 
         if i > 1:
             alpha_hat_t_minus_1 = reshape_to_x_sample(self.alpha_hat[t - 1], x)
-            ddim_sigma = self.ddim_churn * torch.sqrt((1 - alpha_hat_t_minus_1) / (1 - alpha_hat)) * torch.sqrt(1 - alpha)
+            ddim_sigma = (
+                self.ddim_churn
+                * torch.sqrt((1 - alpha_hat_t_minus_1) / (1 - alpha_hat))
+                * torch.sqrt(1 - alpha)
+            )
 
             if self.x_T_sampling_method == "standard":
                 predicted_noise_ddim = predicted_noise
             elif self.x_T_sampling_method == "CARD":
-                predicted_noise_ddim = predicted_noise + (1 - torch.sqrt(alpha_hat))/(torch.sqrt(1 - alpha_hat)) * pred
+                predicted_noise_ddim = (
+                    predicted_noise
+                    + (1 - torch.sqrt(alpha_hat)) / (torch.sqrt(1 - alpha_hat)) * pred
+                )
             else:
                 raise NotImplementedError(
                     f'Please choose as the x_T_sampling_method "standard" or "CARD". You chose'
                     f"{self.x_T_sampling_method}"
                 )
             reverse_posterior_mean = (
-                torch.sqrt(alpha_hat_t_minus_1) * x_0_hat + 
-                torch.sqrt(1 - alpha_hat_t_minus_1 - ddim_sigma**2) * predicted_noise_ddim
+                torch.sqrt(alpha_hat_t_minus_1) * x_0_hat
+                + torch.sqrt(1 - alpha_hat_t_minus_1 - ddim_sigma**2)
+                * predicted_noise_ddim
             )
         else:
             alpha_hat_t_minus_1 = torch.ones_like(alpha_hat)
-            ddim_sigma = self.ddim_churn * torch.sqrt((1 - alpha_hat_t_minus_1) / (1 - alpha_hat)) * torch.sqrt(1 - alpha)
+            ddim_sigma = (
+                self.ddim_churn
+                * torch.sqrt((1 - alpha_hat_t_minus_1) / (1 - alpha_hat))
+                * torch.sqrt(1 - alpha)
+            )
 
             reverse_posterior_mean = x_0_hat
 
@@ -184,23 +201,29 @@ class Diffusion:
         return target_training
 
     def prepare_noise_schedule(self):
-        if self.noise_schedule == 'linear':
+        if self.noise_schedule == "linear":
             beta_start = 1e-4
             beta_end = 0.02
-            self.beta = torch.linspace(beta_start, beta_end, self.noise_steps).to(self.device)
-        elif self.noise_schedule == 'cosine':
-            t = torch.arange(0, self.noise_steps+1, device=self.device)
+            self.beta = torch.linspace(beta_start, beta_end, self.noise_steps).to(
+                self.device
+            )
+        elif self.noise_schedule == "cosine":
+            t = torch.arange(0, self.noise_steps + 1, device=self.device)
+
             def f(t, T, s):
-                return torch.cos((t/T+s)/(1+s) * torch.pi / 2)**2
-            T=self.noise_steps
-            s=0.008  # from improved DDPM paper, might try to adjust it, as the value is motivated by the pixel bin size
+                return torch.cos((t / T + s) / (1 + s) * torch.pi / 2) ** 2
+
+            T = self.noise_steps
+            s = 0.008  # from improved DDPM paper, might try to adjust it, as the value is motivated by the pixel bin size
             alpha_bar = f(t, T, s) / f(torch.tensor([0], device=self.device), T, s)
-            self.beta = (1 - alpha_bar[1:] / alpha_bar[:-1]).clamp(max=0.999) 
+            self.beta = (1 - alpha_bar[1:] / alpha_bar[:-1]).clamp(max=0.999)
         else:
-            raise ValueError(f'Noise schedule must be "linear" or "cosine". You chose "{self.noise_schedule}".')
+            raise ValueError(
+                f'Noise schedule must be "linear" or "cosine". You chose "{self.noise_schedule}".'
+            )
         self.alpha = 1.0 - self.beta
-        self.alpha_hat = torch.cumprod(self.alpha, dim=0)            
-            
+        self.alpha_hat = torch.cumprod(self.alpha, dim=0)
+
     def noise_low_dimensional(self, x, t, pred=None):
         assert (self.x_T_sampling_method == "standard") or not (pred is None)
 
@@ -230,9 +253,9 @@ class Diffusion:
             x = self.sample_x_T((n, *self.img_size), pred, inference=True)
             for i in reversed(range(1, self.noise_steps)):
                 t = (torch.ones(n) * i).long().to(self.device)
-                predicted_noise = model(x, t, conditioning, pred = pred)
+                predicted_noise = model(x, t, conditioning, pred=pred)
                 if cfg_scale > 0:
-                    uncond_predicted_noise = model(x, t, None, pred = pred)
+                    uncond_predicted_noise = model(x, t, None, pred=pred)
                     predicted_noise = torch.lerp(
                         uncond_predicted_noise, predicted_noise, cfg_scale
                     )
@@ -284,14 +307,13 @@ def generate_diffusion_samples_low_dimensional(
     n_samples,
     x_T_sampling_method,
     distributional_method="deterministic",
-    closed_form = False,
+    closed_form=False,
     regressor=None,
     cfg_scale=3,
     gt_images=None,
     ddim_churn=1.0,
     noise_schedule=None,
     metrics_plots=False,
-
 ):
     if distributional_method == "deterministic":
         diffusion = Diffusion(
@@ -300,7 +322,7 @@ def generate_diffusion_samples_low_dimensional(
             device=input.device,
             x_T_sampling_method=x_T_sampling_method,
             ddim_churn=ddim_churn,
-            noise_schedule=noise_schedule
+            noise_schedule=noise_schedule,
         )
     else:
         diffusion = DistributionalDiffusion(
@@ -308,10 +330,10 @@ def generate_diffusion_samples_low_dimensional(
             img_size=target_shape[1:],
             device=input.device,
             distributional_method=distributional_method,
-            closed_form = closed_form,
+            closed_form=closed_form,
             x_T_sampling_method=x_T_sampling_method,
             ddim_churn=ddim_churn,
-            noise_schedule=noise_schedule
+            noise_schedule=noise_schedule,
         )
 
     sampled_images = torch.zeros(*target_shape, n_samples).to(input.device)
@@ -320,7 +342,12 @@ def generate_diffusion_samples_low_dimensional(
     else:
         pred = regressor(input)
 
-    if metrics_plots and gt_images is not None and pred is not None and distributional_method != "deterministic":
+    if (
+        metrics_plots
+        and gt_images is not None
+        and pred is not None
+        and distributional_method != "deterministic"
+    ):
         repeated_pred = pred.repeat_interleave(n_samples, dim=0)
         repeated_labels = input.repeat_interleave(n_samples, dim=0)
         sampled_images, crps_over_time, rmse_over_time, distr_over_time = (
@@ -358,9 +385,10 @@ class DistributionalDiffusion(Diffusion):
         img_size=256,
         device="cuda",
         distributional_method="normal",
-        closed_form = False,
+        closed_form=False,
         x_T_sampling_method="standard",
         ddim_churn=1.0,
+        **kwargs,
     ):
         super().__init__(
             noise_steps=noise_steps,
@@ -375,28 +403,30 @@ class DistributionalDiffusion(Diffusion):
 
     def sample_noise(self, model, x, t, conditioning=None, pred=None):
         if self.distributional_method == "normal":
-            predicted_noise = model(x, t, conditioning, pred = pred)
+            predicted_noise = model(x, t, conditioning, pred=pred)
             predicted_noise = predicted_noise[..., 0] + predicted_noise[
                 ..., 1
             ] * torch.randn_like(predicted_noise[..., 0], device=self.device)
         elif self.distributional_method == "mvnormal":
-            predicted_noise = model(x, t, conditioning, pred = pred)
-            if predicted_noise.shape[-1] == predicted_noise.shape[-2]+1:
+            predicted_noise = model(x, t, conditioning, pred=pred)
+            if predicted_noise.shape[-1] == predicted_noise.shape[-2] + 1:
                 # Cholesky
                 mu = predicted_noise[..., 0]
                 L_full = predicted_noise[..., 1:]
-                mvnorm = MultivariateNormal(loc = mu, scale_tril = L_full)
-            else: # Lora
-                mu = predicted_noise[...,0]
-                diag = predicted_noise[...,1]
-                lora = predicted_noise[...,2:]
+                mvnorm = MultivariateNormal(loc=mu, scale_tril=L_full)
+            else:  # Lora
+                mu = predicted_noise[..., 0]
+                diag = predicted_noise[..., 1]
+                lora = predicted_noise[..., 2:]
                 mvnorm = LowRankMultivariateNormal(mu, lora, diag)
             predicted_noise = mvnorm.sample()
 
         elif self.distributional_method == "sample":
-            predicted_noise = model(x, t, conditioning, pred = pred, n_samples=1).squeeze(-1)
+            predicted_noise = model(x, t, conditioning, pred=pred, n_samples=1).squeeze(
+                -1
+            )
         elif self.distributional_method == "mixednormal":
-            predicted_mixture = model(x, t, conditioning, pred= pred)
+            predicted_mixture = model(x, t, conditioning, pred=pred)
             mu = predicted_mixture[..., 0]
             sigma = predicted_mixture[..., 1]
             weights = predicted_mixture[..., 2]
@@ -413,7 +443,13 @@ class DistributionalDiffusion(Diffusion):
         return predicted_noise
 
     def sample_x_t_closed_form(
-        self, x, t, predicted_noise_distribution_params, pred, i, method,
+        self,
+        x,
+        t,
+        predicted_noise_distribution_params,
+        pred,
+        i,
+        method,
     ):
         if method == "normal":
             predicted_noise_mu = predicted_noise_distribution_params[..., 0]
@@ -424,56 +460,82 @@ class DistributionalDiffusion(Diffusion):
             sigma = predicted_noise_distribution_params[..., 1]
             weights = predicted_noise_distribution_params[..., 2]
             sampled_weights = torch.distributions.Categorical(weights).sample()
-            predicted_noise_mu = torch.gather(mu, dim=-1, index=sampled_weights.unsqueeze(-1)).squeeze(-1)
+            predicted_noise_mu = torch.gather(
+                mu, dim=-1, index=sampled_weights.unsqueeze(-1)
+            ).squeeze(-1)
             predicted_noise_sigma = torch.gather(
                 sigma, dim=-1, index=sampled_weights.unsqueeze(-1)
             ).squeeze(-1)
             predicted_noise_covariance = torch.diag_embed(predicted_noise_sigma**2)
         elif method == "mvnormal":
-            if predicted_noise_distribution_params.shape[-1] == predicted_noise_distribution_params.shape[-2]+1: # Cholesky
-                pass
-            else: # LORA
-                predicted_noise_mu = predicted_noise_distribution_params[...,0]
-                diag = predicted_noise_distribution_params[...,1]
-                lora = predicted_noise_distribution_params[...,2:]
-                predicted_noise_covariance = LowRankMultivariateNormal(predicted_noise_mu, lora, diag).covariance_matrix
+            if (
+                predicted_noise_distribution_params.shape[-1]
+                == predicted_noise_distribution_params.shape[-2] + 1
+            ):  # Cholesky
+                predicted_noise_mu = predicted_noise_distribution_params[..., 0]
+                predicted_L = predicted_noise_distribution_params[..., 1:]
+                predicted_noise_covariance = MultivariateNormal(
+                    predicted_noise_mu, scale_tril=predicted_L
+                ).covariance_matrix
+            else:  # LORA
+                predicted_noise_mu = predicted_noise_distribution_params[..., 0]
+                diag = predicted_noise_distribution_params[..., 1]
+                lora = predicted_noise_distribution_params[..., 2:]
+                predicted_noise_covariance = LowRankMultivariateNormal(
+                    predicted_noise_mu, lora, diag
+                ).covariance_matrix
         else:
             raise Exception(f"Invalid method {method}")
 
-        alpha = self.alpha[t[0]] #reshape_to_x_sample(self.alpha[t], x)
-        alpha_hat = self.alpha_hat[t[0]] #reshape_to_x_sample(self.alpha_hat[t], x)
+        alpha = self.alpha[t[0]]  # reshape_to_x_sample(self.alpha[t], x)
+        alpha_hat = self.alpha_hat[t[0]]  # reshape_to_x_sample(self.alpha_hat[t], x)
 
         if pred is None:
             pred = 0
 
-        x_0_hat = (x 
-                - torch.sqrt(1 - alpha_hat) * predicted_noise_mu
-                - (1 - torch.sqrt(alpha_hat)) * pred
-                ) / torch.sqrt(alpha_hat) # DDIM eq. 9
+        x_0_hat = (
+            x
+            - torch.sqrt(1 - alpha_hat) * predicted_noise_mu
+            - (1 - torch.sqrt(alpha_hat)) * pred
+        ) / torch.sqrt(alpha_hat)  # DDIM eq. 9
 
         if i > 1:
-            alpha_hat_t_minus_1 = self.alpha_hat[t[0]-1]# reshape_to_x_sample(self.alpha_hat[t - 1], x)
-            ddim_sigma = self.ddim_churn * torch.sqrt((1 - alpha_hat_t_minus_1) / (1 - alpha_hat)) * torch.sqrt(1 - alpha)
+            alpha_hat_t_minus_1 = self.alpha_hat[
+                t[0] - 1
+            ]  # reshape_to_x_sample(self.alpha_hat[t - 1], x)
+            ddim_sigma = (
+                self.ddim_churn
+                * torch.sqrt((1 - alpha_hat_t_minus_1) / (1 - alpha_hat))
+                * torch.sqrt(1 - alpha)
+            )
 
             if self.x_T_sampling_method == "standard":
                 predicted_noise_ddim = predicted_noise_mu
             elif self.x_T_sampling_method == "CARD":
-                predicted_noise_ddim = predicted_noise_mu + (1 - torch.sqrt(alpha_hat))/(torch.sqrt(1 - alpha_hat)) * pred
+                predicted_noise_ddim = (
+                    predicted_noise_mu
+                    + (1 - torch.sqrt(alpha_hat)) / (torch.sqrt(1 - alpha_hat)) * pred
+                )
             else:
                 raise NotImplementedError(
                     f'Please choose as the x_T_sampling_method "standard" or "CARD". You chose'
                     f"{self.x_T_sampling_method}"
                 )
             reverse_posterior_mean = (
-                torch.sqrt(alpha_hat_t_minus_1) * x_0_hat + 
-                torch.sqrt(1 - alpha_hat_t_minus_1 - ddim_sigma**2) * predicted_noise_ddim
+                torch.sqrt(alpha_hat_t_minus_1) * x_0_hat
+                + torch.sqrt(1 - alpha_hat_t_minus_1 - ddim_sigma**2)
+                * predicted_noise_ddim
             )
-            A = torch.sqrt(1 - alpha_hat_t_minus_1 - ddim_sigma**2) - torch.sqrt((1 - alpha_hat) / alpha)
-            covariance_matrix = A**2 * predicted_noise_covariance + torch.diag_embed(reshape_to_x_sample(ddim_sigma**2,x))
+            A = torch.sqrt(1 - alpha_hat_t_minus_1 - ddim_sigma**2) - torch.sqrt(
+                (1 - alpha_hat) / alpha
+            )
+            covariance_matrix = A**2 * predicted_noise_covariance + torch.diag_embed(
+                reshape_to_x_sample(ddim_sigma**2, x)
+            )
         else:
             ddim_sigma = 0
             reverse_posterior_mean = x_0_hat
-            A = - torch.sqrt((1 - alpha_hat) / alpha_hat)
+            A = -torch.sqrt((1 - alpha_hat) / alpha_hat)
             covariance_matrix = A**2 * predicted_noise_covariance
 
         # Sample from final closed form normal
@@ -501,17 +563,28 @@ class DistributionalDiffusion(Diffusion):
             x = self.sample_x_T((n, *self.img_size), pred, inference=True)
             for i in reversed(range(1, self.noise_steps)):
                 t = (torch.ones(n) * i).long().to(self.device)
-                if self.closed_form and self.distributional_method in ["normal", "mixednormal", "mvnormal"]:
+                if self.closed_form and self.distributional_method in [
+                    "normal",
+                    "mixednormal",
+                    "mvnormal",
+                ]:
                     predicted_noise_distribution_params = model(
-                        x, t, conditioning, pred = pred
+                        x, t, conditioning, pred=pred
                     )
                     x = self.sample_x_t_closed_form(
-                        x, t, predicted_noise_distribution_params, pred, i, method=self.distributional_method,
+                        x,
+                        t,
+                        predicted_noise_distribution_params,
+                        pred,
+                        i,
+                        method=self.distributional_method,
                     )
                 else:
                     predicted_noise = self.sample_noise(model, x, t, conditioning, pred)
                     if cfg_scale > 0:
-                        uncond_predicted_noise = self.sample_noise(model, x, t, None, pred)
+                        uncond_predicted_noise = self.sample_noise(
+                            model, x, t, None, pred
+                        )
                         predicted_noise = torch.lerp(
                             uncond_predicted_noise, predicted_noise, cfg_scale
                         )
@@ -524,7 +597,7 @@ class DistributionalDiffusion(Diffusion):
                     gt_images_t = self.noise_low_dimensional(
                         gt_images,
                         (torch.ones(gt_images.shape[0]) * i).long().to(self.device),
-                        pred=single_pred
+                        pred=single_pred,
                     )[0]
                     x_t = x.reshape(
                         gt_images.shape[0], n_samples, *self.img_size

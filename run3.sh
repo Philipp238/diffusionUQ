@@ -1,2 +1,2 @@
 #!/bin/sh
-python main.py -c Burgers/hparams/mvnormal.ini
+python main.py -c batch_test.ini
