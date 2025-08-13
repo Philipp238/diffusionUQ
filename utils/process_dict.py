@@ -51,6 +51,7 @@ def process_training_parameters(train_dict: dict)-> dict:
 
     # Diffusion Parameters
     processed_dict["n_timesteps"] = train_dict.get("n_timesteps", [50])
+    processed_dict["beta_endpoints"] = train_dict.get("beta_endpoints", [(0.0001, 0.02)])
     processed_dict["distributional_method"] = train_dict.get("distributional_method", ["mvnormal"])
     processed_dict["loss"] = train_dict.get("loss", ["crps"])
     processed_dict["closed_form"] = train_dict.get("closed_form", True)

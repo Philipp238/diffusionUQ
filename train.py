@@ -212,7 +212,8 @@ def trainer(
                 ddim_churn=training_parameters['ddim_churn'],
                 device=device,
                 x_T_sampling_method=training_parameters['x_T_sampling_method'],
-                noise_schedule=noise_schedule
+                noise_schedule=noise_schedule,
+                beta_endpoints=training_parameters["beta_endpoints"]
             )
         else:
             diffusion = DistributionalDiffusion(
@@ -223,7 +224,8 @@ def trainer(
                 distributional_method=distributional_method,
                 closed_form=closed_form,
                 x_T_sampling_method=training_parameters['x_T_sampling_method'],
-                noise_schedule=noise_schedule
+                noise_schedule=noise_schedule,
+                beta_endpoints=training_parameters["beta_endpoints"]
             )
     else:
         diffusion = None

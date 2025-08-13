@@ -28,6 +28,7 @@ def generate_samples(
     ddim_churn=1.0,
     noise_schedule=None,
     metrics_plots=False,
+    beta_endpoints=(1e-4, 0.02),
 ) -> torch.Tensor:
     """Mehtod to generate samples from the underlying model with the specified uncertainty quantification method.
 
@@ -78,6 +79,7 @@ def generate_samples(
                     ddim_churn=ddim_churn,
                     noise_schedule=noise_schedule,
                     metrics_plots=metrics_plots,
+                    beta_endpoints=beta_endpoints,
                 )
             )
             return out, crps_over_time, rmse_over_time, distr_over_time
@@ -97,6 +99,7 @@ def generate_samples(
                 ddim_churn=ddim_churn,
                 noise_schedule=noise_schedule,
                 metrics_plots=metrics_plots,
+                beta_endpoints=beta_endpoints,
             )
     return out
 
@@ -162,6 +165,7 @@ def evaluate(
                 ddim_churn=training_parameters["ddim_churn"],
                 noise_schedule=training_parameters["noise_schedule"],
                 metrics_plots=metrics_plots,
+                beta_endpoints=training_parameters["beta_endpoints"],
             )
 
             if (
