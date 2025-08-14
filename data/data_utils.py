@@ -71,7 +71,6 @@ def get_datasets(
     data_parameters,
     training_parameters,
     seed,
-    logger=None,
     test = True,
 ):
     """
@@ -94,8 +93,6 @@ def get_datasets(
         )
         dataset, _, _ = uci_data
 
-        if logger is not None:
-            logger.info(f"Using split-{split} for UCI dataset {dataset_name}")  # type: ignore
         if data_parameters["validation_ratio"] > 0:
             training_dataset, validation_dataset, test_dataset = dataset
         else:
@@ -108,8 +105,6 @@ def get_datasets(
             data_parameters,
             seed=seed,
         )
-        if logger is not None:
-            logger.info(f"Use pre-defined val split for dataset {dataset_name}")
         training_dataset, validation_dataset, test_dataset = dataset
     
     if test:

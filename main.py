@@ -12,6 +12,7 @@ import re
 import shutil
 import sys
 from time import time
+import json
 
 import numpy as np
 import pandas as pd
@@ -250,7 +251,6 @@ if __name__ == "__main__":
                 data_parameters,
                 training_parameters,
                 seed,
-                logger=logging
                 )
 
                 logging.info(using("After creating the dataloaders"))
@@ -376,7 +376,10 @@ if __name__ == "__main__":
                     model = train_utils.setup_model(data_parameters,training_parameters, device, target_dim, input_dim)
                     filename = os.path.join(directory, f"Datetime_{d_time_train}_Loss_{filename_ending}.pt")
                     train_utils.resume(model, filename)
-
+                # Load dumped dictionary
+                with open(os.path.join(directory, "results.json"), "r") as f:
+                    results_dict = json.load(f)
+                os.remove(os.path.join(directory, "results.json"))
 
                 t_1 = time()
                 t_training = np.round(t_1 - t_0, 3)
@@ -393,7 +396,6 @@ if __name__ == "__main__":
                 data_parameters,
                 training_parameters,
                 seed,
-                logger=logging
             )
             train_loader = DataLoader(
                 training_dataset, batch_size=eval_batch_size, shuffle=True

@@ -7,6 +7,7 @@ import os
 import resource
 import time
 import logging
+import json
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -35,6 +36,30 @@ def ddp_setup(rank: int, world_size: int):
     torch.cuda.set_device(rank)
     dist.init_process_group(backend="nccl", rank=rank, world_size=world_size)
 
+def is_dist():
+    return dist.is_available() and dist.is_initialized()
+
+def is_main_process():
+    return (not is_dist()) or dist.get_rank() == 0
+
+def ddp_avg(value: float, device: str):
+    """Average a scalar across ranks (useful if you want to average train loss across GPUs)."""
+    if not is_dist():
+        return value
+    t = torch.tensor([value], device=device, dtype=torch.float32)
+    dist.all_reduce(t, op=dist.ReduceOp.AVG)
+    return t.item()
+
+def sync_scalar_from_rank0(value: float | int, device: str, dtype=torch.float32):
+    """Broadcast a python scalar from rank0 to all ranks; returns the scalar on every rank."""
+    t = torch.tensor([value], device=device, dtype=dtype)
+    if is_dist():
+        dist.broadcast(t, src=0)
+    return t.item()
+
+def sync_bool_from_rank0(flag: bool, device: str):
+    return bool(sync_scalar_from_rank0(1 if flag else 0, device, dtype=torch.int32))
+
 def using(point=""):
     usage = resource.getrusage(resource.RUSAGE_SELF)
     # you can convert that object to a dictionary
@@ -52,6 +77,7 @@ def train(
     net,
     optimizer,
     device,
+    distributed,
     target,
     input,
     criterion,
@@ -104,7 +130,7 @@ def train(
     if ((idx + 1) % batch_accumulation == 0) or (idx == length - 1):
         # Update opimizer
         optimizer.step()
-        ema.step_ema(ema_model, net)
+        ema.step_ema(ema_model, net.module if distributed else net)
         optimizer.zero_grad(set_to_none=True)
 
     loss = loss.item()
@@ -134,7 +160,7 @@ def trainer(
         directory (_type_): The directory to save the results.
         training_parameters (_type_): The training parameter dictionary.
         data_parameters (_type_): The data parameter dictionary.
-        logging (_type_): The logger.
+        logger (_type_): The logger.
         filename_ending (_type_): The filename.
         domain_range (_type_): The domain range of the dataset.
         d_time (_type_): The datetime.
@@ -143,6 +169,7 @@ def trainer(
     Returns:
         _type_: Trained model and corresponding filename.
     """
+
     # Get datasets and loaders
     seed = training_parameters["seed"]
     training_dataset, validation_dataset = get_datasets(
@@ -150,18 +177,22 @@ def trainer(
         data_parameters,
         training_parameters,
         seed,
-        logger=logging,
         test = False
     )    
 
     if training_parameters['distributed_training']:
         ddp_setup(rank=gpu_id, world_size=world_size)
-        print(f'GPU ID: {gpu_id}')
+        logging.basicConfig(filename=os.path.join(directory, f'experiment_{gpu_id}.log'), level=logging.INFO, force = True)
+        logging.info('Starting the logger in the training process.')
+
+
+    logger = logging.getLogger(__name__)
+
         # if gpu_id==0:
-        if gpu_id>-1:
-            #logging.basicConfig(filename=os.path.join(directory, f'experiment_{gpu_id}.log'), level=logging.INFO)
-            logging.info('Starting the logger in the training process.')
-            print('Starting the logger in the training process.')    
+        # if gpu_id>-1:
+        #     logger.basicConfig(filename=os.path.join(directory, f'experiment_{gpu_id}.log'), level=logger.INFO)
+        #     logger.info('Starting the logger in the training process.')
+        #     print('Starting the logger in the training process.')    
         # flag tensor for (early) stopping     
         #flag_tensor = torch.zeros(1).to(f'cuda:{gpu_id}')
 
@@ -228,11 +259,11 @@ def trainer(
         n_parameters += parameter.nelement()
 
     train_utils.log_and_save_evaluation(
-        n_parameters, "NumberParameters", results_dict, logging
+        n_parameters, "NumberParameters", results_dict, logger
     )
-
-    logging.info(f"GPU memory allocated: {torch.cuda.memory_reserved(device=device)}")
-    logging.info(using("After setting up the model"))
+    if is_main_process():
+        logger.info(f"GPU memory allocated: {torch.cuda.memory_reserved(device=device)}")
+        logger.info(using("After setting up the model"))
 
     # create your optimizer
     lr = training_parameters["learning_rate"]
@@ -311,12 +342,15 @@ def trainer(
         diffusion = None
 
     ema = EMA(0.995)
-    ema_model = copy.deepcopy(model).eval().requires_grad_(False)
+    ema_model = copy.deepcopy(model.module if training_parameters["distributed_training"] else model)
+    ema_model.eval().requires_grad_(False)
+    ema_model.to(device)
 
     cfg_scale = 3 if training_parameters["conditional_free_guidance_training"] else 0
 
     # Iterate over autoregressive steps, if necessary
-    logging.info(f"Training starts now.")
+    if is_main_process():
+        logger.info(f"Training starts now.")
 
     filename = os.path.join(directory, f"Datetime_{d_time}_Loss_{filename_ending}.pt")
 
@@ -329,32 +363,37 @@ def trainer(
         #     dist.all_reduce(flag_tensor,op=dist.ReduceOp.SUM)
         #     if flag_tensor.sum() > 0:  # or use dist.all_reduce with SUM and check > 0
         #         if gpu_id == 0:
-        #             logging.info("Training stopped")
+        #             logger.info("Training stopped")
         #         break
             train_loader.sampler.set_epoch(epoch)
         # Set learning rate warm up
         if epoch < warmup_lr:
             for param_group in optimizer.param_groups:
                 param_group['lr'] = warmup_schedule[epoch]
-        elif epoch == warmup_lr & warmup_lr != 0:
+        elif epoch == warmup_lr and warmup_lr != 0:
             for param_group in optimizer.param_groups:
                 param_group['lr'] = lr
-            logging.info(f"Warmup finished.")
+            if is_main_process():
+                logger.info(f"Warmup finished.")
             early_stopper.counter = 0
 
         gc.collect()
+        if training_parameters['distributed_training']:
+            dist.barrier()
+
         t_current_epoch = time.time()
 
         model.train()
         for idx, sample in enumerate(train_loader):
             target, input = sample
-            target = target.to(device)
-            input = input.to(device)
+            target = target.to(device, non_blocking=True)
+            input = input.to(device, non_blocking=True)
 
             batch_loss = train(
                 model,
                 optimizer,
                 device,
+                training_parameters["distributed_training"],
                 target,
                 input,
                 criterion,
@@ -374,146 +413,184 @@ def trainer(
             running_loss += batch_loss
 
         # Get time
+        if training_parameters['distributed_training']:
+            dist.barrier()
+
         t_elapsed = time.time() - t_current_epoch
-        t_training.append(t_elapsed)
+        if training_parameters['distributed_training']:
+            elapsed_tensor = torch.tensor(t_elapsed, device=device)
+            dist.all_reduce(elapsed_tensor, op=dist.ReduceOp.MAX)
+            t_elapsed = elapsed_tensor.item()
 
-        # The none-main processes do not have to report anything
-        if training_parameters['distributed_training'] and gpu_id != 0:
-            continue
+        if is_main_process():
+            t_training.append(t_elapsed)
 
-        if epoch % report_every == report_every - 1:
-            logging.info(using(f"At the start of the epoch {epoch+1}"))
-            epochs.append(epoch)
-            training_loss_list.append(running_loss / report_every / (len(train_loader)))
+        do_report = (epoch % report_every == report_every - 1)
+
+        if do_report:
+            epoch_train_loss = running_loss / report_every / len(train_loader)
             running_loss = 0.0
+            avg_epoch_train_loss = ddp_avg(epoch_train_loss, device) if training_parameters['distributed_training'] else epoch_train_loss
+            if is_main_process():
+                epochs.append(epoch+1)
+                training_loss_list.append(avg_epoch_train_loss)            
+                logging_str = f"[{epoch + 1:5d}] Training loss: {avg_epoch_train_loss:.8f}"
+            else:
+                logging_str = ""
 
-            logging_str = (
-                f"[{epoch + 1:5d}] Training loss: {training_loss_list[-1]:.8f}"
-            )
 
-            if val_loader is not None:
-                if not uncertainty_quantification.endswith("dropout"):
-                    model.eval()
+        validation_loss = None
+        validation_loss_ema = None
 
-                validation_loss = 0
-                validation_loss_ema = 0
+        if do_report and (val_loader is not None):
+            model.eval()
+            ema_model.eval()
+            local_val_loss = 0.0
+            local_val_loss_ema = 0.0
+            local_batches = 0
 
-                with torch.no_grad():
-                    for target, input in val_loader:
-                        target = target.to(device)
-                        input = input.to(device)
+            with torch.no_grad():
+                for target, input in val_loader:
+                    target = target.to(device, non_blocking=True)
+                    input = input.to(device, non_blocking=True)
 
-                        if uncertainty_quantification == "diffusion":
-                            n_samples = training_parameters["n_val_samples"]
+                    if uncertainty_quantification == "diffusion":
+                        n_samples = training_parameters["n_val_samples"]
+                        repeated_pred = regressor(input).repeat_interleave(n_samples, dim=0) if regressor else None
+                        repeated_labels = input.repeat_interleave(n_samples, dim=0)
+                        sampled_targets = diffusion.sample_low_dimensional(model, n=repeated_labels.shape[0],
+                                                                        conditioning=repeated_labels, pred=repeated_pred, cfg_scale=cfg_scale)
+                        sampled_targets_ema = diffusion.sample_low_dimensional(ema_model, n=repeated_labels.shape[0],
+                                                                            conditioning=repeated_labels, pred=repeated_pred, cfg_scale=cfg_scale)
+                        sampled_targets = sampled_targets.reshape(input.shape[0], n_samples, *target.shape[1:]).moveaxis(1, -1)
+                        sampled_targets_ema = sampled_targets_ema.reshape(input.shape[0], n_samples, *target.shape[1:]).moveaxis(1, -1)
+                    else:
+                        sampled_targets = model(input)
+                        sampled_targets_ema = ema_model(input)
 
-                            if regressor is None:
-                                repeated_pred = None
-                            else:
-                                pred = regressor(input)
-                                repeated_pred = pred.repeat_interleave(n_samples, dim=0)
+                    # Evaluation
+                    v  = eval_criterion(target.flatten(start_dim=1),
+                                        sampled_targets.flatten(start_dim=1, end_dim=-2),
+                                        m_axis=-1, v_axis=-2, backend="torch").mean()
+                    ve = eval_criterion(target.flatten(start_dim=1),
+                                        sampled_targets_ema.flatten(start_dim=1, end_dim=-2),
+                                        m_axis=-1, v_axis=-2, backend="torch").mean()
+                    local_val_loss += v
+                    local_val_loss_ema += ve
+                    local_batches += 1
 
-                            repeated_labels = input.repeat_interleave(n_samples, dim=0)
-                            sampled_targets = diffusion.sample_low_dimensional(
-                                model,
-                                n=repeated_labels.shape[0],
-                                conditioning=repeated_labels,
-                                pred=repeated_pred,
-                                cfg_scale=cfg_scale,
-                            )
-                            sampled_targets_ema = diffusion.sample_low_dimensional(
-                                ema_model,
-                                n=repeated_labels.shape[0],
-                                conditioning=repeated_labels,
-                                pred=repeated_pred,
-                                cfg_scale=cfg_scale,
-                            )
-                            sampled_targets = sampled_targets.reshape(
-                                input.shape[0], n_samples, *target.shape[1:]
-                            ).moveaxis(1,-1)
-                            sampled_targets_ema = sampled_targets_ema.reshape(
-                                input.shape[0], n_samples, *target.shape[1:]
-                            ).moveaxis(1,-1)
-                        else:
-                            sampled_targets = model(input)
-                            sampled_targets_ema = ema_model(input)
 
-                        validation_loss += eval_criterion(
-                            target.flatten(start_dim=1, end_dim=-1),
-                            sampled_targets.flatten(start_dim=1, end_dim=-2),
-                            m_axis=-1,
-                            v_axis=-2,
-                            backend = "torch",
-                        ).mean().item()
-                        validation_loss_ema += eval_criterion(
-                            target.flatten(start_dim=1, end_dim=-1),
-                            sampled_targets_ema.flatten(start_dim=1, end_dim=-2),
-                            m_axis=-1,
-                            v_axis=-2,
-                            backend = "torch",
-                        ).mean().item()
-
-                if len(val_loader) > 0:
-                    validation_loss_list.append(validation_loss / len(val_loader))
-                    validation_loss_list_ema.append(validation_loss_ema / len(val_loader))
+            # Aggregate across ranks
+            if training_parameters['distributed_training']:
+                if local_batches == 0:  # rank has no validation data
+                    val_loss_tensor = torch.tensor([0.0, 0.0, 0.0], device=device)
                 else:
-                    logging.warning(f"[Rank {gpu_id}] Validation loader is empty — skipping validation for this epoch.")
+                    val_loss_tensor = torch.tensor([local_val_loss, local_val_loss_ema, local_batches], device=device)
+                torch.distributed.all_reduce(val_loss_tensor, op=torch.distributed.ReduceOp.SUM)
+                validation_loss     = (val_loss_tensor[0] / val_loss_tensor[2]).item()
+                validation_loss_ema = (val_loss_tensor[1] / val_loss_tensor[2]).item()
+            else:
+                validation_loss     = (local_val_loss / local_batches).item()
+                validation_loss_ema = (local_val_loss_ema / local_batches).item()
+
+            if is_main_process():
+                    validation_loss_list.append(validation_loss)
+                    validation_loss_list_ema.append(validation_loss_ema)
+                    logging_str += f", Validation loss: {validation_loss:.8f}, Validation loss EMA: {validation_loss_ema:.8f}"
 
 
-                if validation_loss < best_loss:
+            # Early stopping and checkpointing
+            stop_now = False
+            if is_main_process():
+                improved = validation_loss < best_loss
+                if improved:
                     best_loss = validation_loss
                     if training_parameters['distributed_training']:
-                        if gpu_id == 0:
-                            train_utils.checkpoint(model.module, filename)
+                        train_utils.checkpoint(model.module, filename)
                     else:
                         train_utils.checkpoint(model, filename)
 
-                # Early stopping (If the model is only getting finetuned, run at least 5 epochs. Otherwise at least 50.)
-                if training_parameters.get("finetuning", None):
-                    min_n_epochs = 5
-                else:
-                    min_n_epochs = 50
-
-                if training_parameters["early_stopping"] and (epoch > min_n_epochs):
-                    if early_stopper.early_stop(validation_loss):
-                        logging_str += (
-                                ",Validation loss: "
-                                f"{validation_loss_list[-1]:.8f}, Validation loss EMA: {validation_loss_list_ema[-1]:.8f}"
-                            )
-                        logging.info(logging_str)
-                        logging.info(f"EP {epoch}: Early stopping")
-                        if training_parameters['distributed_training']:
-                            pass #flag_tensor += 1
-                        else:
-                            break
-
                 if lr_schedule == "step" and early_stopper.counter >= int(training_parameters["early_stopping"] // (report_every * 2)):
-                    # stepwise scheduler only happens once per epoch and only if the validation has not been going down for at least 10 epochs
-                    if scheduler.get_last_lr()[0] > 10e-9:
+                    if scheduler.get_last_lr()[0] > 1e-8:  # avoid going too low
                         scheduler.step()
-                        logging.info(f"Learning rate reduced to: {scheduler.get_last_lr()[0]}")
+                        logger.info(f"Learning rate reduced to: {scheduler.get_last_lr()[0]:.8e}")
 
-                logging_str += (
-                    ",Validation loss: "
-                    f"{validation_loss_list[-1]:.8f}, Validation loss EMA: {validation_loss_list_ema[-1]:.8f}"
-                )
-            logging.info(logging_str)
+
+                if training_parameters["early_stopping"]:
+                    stop_now = early_stopper.early_stop(validation_loss)
+
+            if training_parameters['distributed_training']:
+                stop_now  = sync_bool_from_rank0(stop_now, device)
+                best_loss = sync_scalar_from_rank0(best_loss, device)
+
+            model.train()
+            ema_model.eval()
+
+            if is_main_process():
+                logger.info(logging_str)
+
+            if stop_now:
+                logger.info(f"Early stopping activated!")
+                break
+
+            # if validation_loss < best_loss:
+            #     best_loss = validation_loss
+            #     if training_parameters['distributed_training']:
+            #         if gpu_id == 0:
+            #             train_utils.checkpoint(model.module, filename)
+            #     else:
+            #         train_utils.checkpoint(model, filename)
+
+            # Early stopping (If the model is only getting finetuned, run at least 5 epochs. Otherwise at least 50.)
+            # if training_parameters.get("finetuning", None):
+            #     min_n_epochs = 5
+            # else:
+            #     min_n_epochs = 50
+
+            # if training_parameters["early_stopping"] and (epoch > min_n_epochs):
+            #     if early_stopper.early_stop(validation_loss):
+            #         logger_str += (
+            #                 ",Validation loss: "
+            #                 f"{validation_loss_list[-1]:.8f}, Validation loss EMA: {validation_loss_list_ema[-1]:.8f}"
+            #             )
+            #         if is_main_process():
+            #             logger.info(logger_str)
+            #             logger.info(f"EP {epoch}: Early stopping")
+            #         if training_parameters['distributed_training']:
+            #             pass #flag_tensor += 1
+            #         else:
+            #             break
+
+            # if lr_schedule == "step" and early_stopper.counter >= int(training_parameters["early_stopping"] // (report_every * 2)):
+            #     # stepwise scheduler only happens once per epoch and only if the validation has not been going down for at least 10 epochs
+            #     if scheduler.get_last_lr()[0] > 10e-9:
+            #         scheduler.step()
+            #         if is_main_process():
+            #             logger.info(f"Learning rate reduced to: {scheduler.get_last_lr()[0]}")
+
+            # logger_str += (
+            #     ",Validation loss: "
+            #     f"{validation_loss_list[-1]:.8f}, Validation loss EMA: {validation_loss_list_ema[-1]:.8f}"
+            # )
+
 
     if training_parameters['distributed_training'] and gpu_id != 0:
         return model
 
-    # Save training time
-    t_training = np.array(t_training)
-    train_utils.log_and_save_evaluation(
-        t_training.mean(), "t_training_avg", results_dict, logging
-    )
-    train_utils.log_and_save_evaluation(
-        np.median(t_training), "t_training_med", results_dict, logging
-    )
-    train_utils.log_and_save_evaluation(
-        t_training.std(), "t_training_std", results_dict, logging
-    )
-
-    logging.info(using("After finishing all epochs"))
+    if is_main_process():
+        # Save training time
+        t_training = np.array(t_training)
+        train_utils.log_and_save_evaluation(
+            t_training.mean(), "t_training_avg", results_dict, logger
+        )
+        train_utils.log_and_save_evaluation(
+            np.median(t_training), "t_training_med", results_dict, logger
+        )
+        train_utils.log_and_save_evaluation(
+            t_training.std(), "t_training_std", results_dict, logger
+        )
+    if is_main_process():
+        logger.info(using("After finishing all epochs"))
 
     optimizer.zero_grad(set_to_none=True)
     try:
@@ -522,56 +599,40 @@ def trainer(
         else:
             train_utils.resume(model, filename)
     except:
-        logging.info(
-            f"Proceeding with diffusion model after {training_parameters['n_epochs']} epochs of training"
-        )
-        if training_parameters['distributed_training']:
-            train_utils.checkpoint(model.module, filename)
-        else:
-            train_utils.checkpoint(model, filename)
-
-    # Plot training and validation loss
-    plt.plot(epochs, training_loss_list, label="training loss")
-    if val_loader is not None:
-        plt.plot(epochs, validation_loss_list, label="validation loss")
-        plt.plot(epochs, validation_loss_list_ema, label="validation loss EMA")
-    plt.legend()
-    plt.yscale("log")
-    plt.tight_layout()
-    plt.savefig(
-        os.path.join(directory, f"Datetime_{d_time}_Loss_{filename_ending}.png")
-    )
-    # plt.plot(epochs, grad_norm_list, label="gradient norm")
-    # plt.legend()
-    # plt.yscale("log")
-    # plt.tight_layout()
-    # plt.savefig(
-    #     os.path.join(directory, f"Datetime_{d_time}_analytics_{filename_ending}.png")
-    # )
-    plt.close()
-
-    if data_parameters["dataset_name"] in ["x-squared", "uniform-regression"]:
-        input = (
-            (torch.rand(1024, dtype=torch.float32, device=device) * 3)
-            .sort()
-            .values.unsqueeze(-1)
-        )
-        with torch.no_grad():
-            if uncertainty_quantification == "diffusion":
-                sampled_targets = (
-                    diffusion.sample_low_dimensional(
-                        model, n=input.shape[0], conditioning=input
-                    )
-                    .squeeze(1)
-                    .to("cpu")
-                )
+        if is_main_process():
+            logger.info(
+                f"Proceeding with diffusion model after {training_parameters['n_epochs']} epochs of training"
+            )
+            if training_parameters['distributed_training']:
+                train_utils.checkpoint(model.module, filename)
             else:
-                sampled_targets = model(input).squeeze(1).to("cpu")
+                train_utils.checkpoint(model, filename)
 
-            plt.plot(input.cpu(), sampled_targets, "x")
+    if is_main_process():
+        # Plot training and validation loss
+        plt.plot(epochs, training_loss_list, label="training loss")
+        if val_loader is not None:
+            plt.plot(epochs, validation_loss_list, label="validation loss")
+            plt.plot(epochs, validation_loss_list_ema, label="validation loss EMA")
+        plt.legend()
+        plt.yscale("log")
+        plt.tight_layout()
+        plt.savefig(
+            os.path.join(directory, f"Datetime_{d_time}_Loss_{filename_ending}.png")
+        )
+        # plt.plot(epochs, grad_norm_list, label="gradient norm")
+        # plt.legend()
+        # plt.yscale("log")
+        # plt.tight_layout()
+        # plt.savefig(
+        #     os.path.join(directory, f"Datetime_{d_time}_analytics_{filename_ending}.png")
+        # )
+        plt.close()
 
-            plt.savefig(os.path.join(directory, f"Datetime_{d_time}_visualisation.png"))
-            plt.close()
+    # Dump intermediary files
+    if is_main_process():
+        with open(os.path.join(directory, "results.json"), "w") as f:
+            json.dump(results_dict, f)
 
     if training_parameters['distributed_training']:
         net = model.module
