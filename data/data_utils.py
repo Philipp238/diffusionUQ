@@ -20,6 +20,105 @@ UCI_DATASET_NAMES = [
     "yacht",
 ]
 
+# Turn into function
+def get_dataset_metadata(
+    data_dir,
+    data_parameters,
+    training_parameters,
+    seed,
+):
+    """
+    Returns metadata for the dataset: target_dim, input_dim, filename_ending.
+    """
+    dataset_name = data_parameters["dataset_name"]
+    if dataset_name in UCI_DATASET_NAMES:
+        split = data_parameters["yarin_gal_uci_split_indices"]
+        validation_ratio_on_train_set = data_parameters["validation_ratio"] / (
+            1 - data_parameters["validation_ratio"]
+        )
+        uci_data = get_uci_data(
+            dataset_name,
+            splits=split,
+            standardize=data_parameters["standardize"],
+            validation_ratio=validation_ratio_on_train_set,
+        )
+        _, target_dim, input_dim = uci_data
+    else:
+        _, target_dim, input_dim = get_data(
+            dataset_name,
+            data_dir,
+            data_parameters,
+            seed=seed,
+        )
+
+    if dataset_name in UCI_DATASET_NAMES:
+        splitstring = f"{split}"
+    else:
+        splitstring = ""
+    filename_ending = (
+        f"{data_parameters['dataset_name']}{splitstring}_"
+        f"{training_parameters['model']}_"
+        f"{training_parameters['uncertainty_quantification']}_"
+        f"{training_parameters['distributional_method']}_"
+        f"T{training_parameters['n_timesteps']}_"
+        f"DDIM{round(training_parameters['ddim_churn'])}"
+    )
+
+    return target_dim, input_dim, filename_ending, splitstring
+
+def get_datasets(
+    data_dir,
+    data_parameters,
+    training_parameters,
+    seed,
+    test = True,
+):
+    """
+    Loads and prepares datasets, splits, and filenames for training/validation/testing.
+
+    Returns:
+        training_dataset, validation_dataset, test_dataset, target_dim, input_dim, filename_ending
+    """
+    dataset_name = data_parameters["dataset_name"]
+    if dataset_name in UCI_DATASET_NAMES:
+        split = data_parameters["yarin_gal_uci_split_indices"]
+        validation_ratio_on_train_set = data_parameters["validation_ratio"] / (
+            1 - data_parameters["validation_ratio"]
+        )
+        uci_data = get_uci_data(
+            dataset_name,
+            splits=split,
+            standardize=data_parameters["standardize"],
+            validation_ratio=validation_ratio_on_train_set,
+        )
+        dataset, _, _ = uci_data
+
+        if data_parameters["validation_ratio"] > 0:
+            training_dataset, validation_dataset, test_dataset = dataset
+        else:
+            training_dataset, test_dataset = dataset
+            validation_dataset = None
+    else:
+        dataset, _, _ = get_data(
+            dataset_name,
+            data_dir,
+            data_parameters,
+            seed=seed,
+        )
+        training_dataset, validation_dataset, test_dataset = dataset
+    
+    if test:
+        return (
+            training_dataset,
+            validation_dataset,
+            test_dataset
+        )
+    else:
+        return (
+            training_dataset,
+            validation_dataset
+        )
+
 
 def get_data(
     dataset_name,

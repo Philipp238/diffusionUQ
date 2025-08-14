@@ -3,6 +3,7 @@
 from itertools import product
 import torch
 import torch.nn as nn
+import torch.distributed as dist
 import numpy as np
 from models.mlp_diffusion import MLP_diffusion_CARD
 import utils.losses as losses
@@ -35,11 +36,9 @@ def log_and_save_evaluation(value: float, key: str, results_dict: dict, logging)
         results_dict (dict): Results dictionary
         logging (_type_): Logging object
     """
-    value = np.round(value, decimals=5)
+    value = float(np.round(value, decimals=5))
     logging.info(f"{key}: {value}")
-    if not key in results_dict.keys():
-        results_dict[key] = []
-    results_dict[key].append(value)
+    results_dict.setdefault(key, []).append(value)
 
 
 def checkpoint(model, filename):

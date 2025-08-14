@@ -26,6 +26,7 @@ def process_training_parameters(train_dict: dict)-> dict:
     processed_dict["uncertainty_quantification"] = train_dict["uncertainty_quantification"]
     processed_dict["report_every"] = train_dict.get("report_every", 50)
     processed_dict["seed"] = train_dict.get("seed", [1234])
+    processed_dict["distributed_training"] = train_dict.get("distributed_training", False)
     processed_dict["backbone"] = train_dict.get("backbone", ["default"])
     processed_dict["batch_size"] = train_dict.get("batch_size", [128])
     processed_dict["batch_accumulation"] = train_dict.get("batch_accumulation", [1])
