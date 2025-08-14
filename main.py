@@ -8,22 +8,23 @@ import gc
 import logging
 import os
 import pathlib
+import re
 import shutil
 import sys
-import re
 from time import time
+import json
 
 import numpy as np
 import pandas as pd
 import torch
+import torch.multiprocessing as mp
 import yaml
 from torch.utils.data import DataLoader, random_split
 
-from data.data_utils import UCI_DATASET_NAMES, get_data, get_uci_data
+from data import get_datasets, get_dataset_metadata
 from evaluate import start_evaluation
 from train import trainer, using
-from utils import train_utils
-from utils import process_dict
+from utils import process_dict, train_utils
 
 torch.autograd.set_detect_anomaly(False)
 
@@ -142,7 +143,9 @@ if __name__ == "__main__":
     }
     # Process dictionaries
     data_parameters_dict = process_dict.process_data_parameters(data_parameters_dict)
-    training_parameters_dict = process_dict.process_training_parameters(training_parameters_dict)
+    training_parameters_dict = process_dict.process_training_parameters(
+        training_parameters_dict
+    )
 
     # In case you ONLY want to validate all models in a certain directory:
     # This prepares the filename_to_validate field in training_parameters_dict to contain the names of all weight files in the directory you want to validate
@@ -198,62 +201,19 @@ if __name__ == "__main__":
             np.random.seed(seed)
             torch.manual_seed(seed)
 
-            # Load data based on seed
-            if dataset_name in UCI_DATASET_NAMES:
-                split = data_parameters["yarin_gal_uci_split_indices"]
-                validation_ratio_on_train_set = data_parameters["validation_ratio"] / (
-                    1 - data_parameters["validation_ratio"]
-                )
-                uci_data = get_uci_data(
-                    dataset_name,
-                    splits=split,
-                    standardize=data_parameters["standardize"],
-                    validation_ratio=validation_ratio_on_train_set,
-                )
-                dataset, target_dim, input_dim = uci_data
-            else:
-                dataset, target_dim, input_dim = get_data(
-                    dataset_name, data_dir, data_parameters, seed = seed,
-                )
-
-            if dataset_name in UCI_DATASET_NAMES:
-                splitstring = f"{split}"
-            else:
-                splitstring = ""
-            filename_ending = (
-                f"{data_parameters['dataset_name']}{splitstring}_"
-                f"{training_parameters['model']}_"
-                f"{training_parameters['uncertainty_quantification']}_"
-                f"{training_parameters['distributional_method']}_"
-                f"T{training_parameters['n_timesteps']}_"
-                f"DDIM{round(training_parameters['ddim_churn'])}"
+            # Function for data loading
+            target_dim,input_dim, filename_ending, splitstring = get_dataset_metadata(
+                data_dir,
+                data_parameters,
+                training_parameters,
+                seed,
             )
+
             batch_size = training_parameters["batch_size"]
             eval_batch_size = training_parameters["eval_batch_size"]
 
-            if dataset_name in UCI_DATASET_NAMES:
-                logging.info(f"Using split-{split} for UCI dataset {dataset_name}")  # type: ignore
-                if data_parameters["validation_ratio"] > 0:
-                    training_dataset, validation_dataset, test_dataset = dataset
-                else:
-                    training_dataset, test_dataset = dataset
-                    validation_dataset = None
-            else:
-                logging.info(f"Use pre-defined val split for dataset {dataset_name}")
-                training_dataset, validation_dataset, test_dataset = dataset
-
-            train_loader = DataLoader(
-                training_dataset, batch_size=batch_size, shuffle=True
-            )
-            if validation_dataset is not None:
-                val_loader = DataLoader(
-                    validation_dataset, batch_size=eval_batch_size, shuffle=True
-                )
-            else:
-                val_loader = None
-            logging.info(using("After creating the dataloaders"))
-
             if training_parameters["regressor"] == "orig_CARD_pretrain":
+                split = data_parameters["yarin_gal_uci_split_indices"]
                 logging.info(f"Using pre-trained regressor from the CARD repo")
                 model_path = os.path.join(
                     "models",
@@ -285,6 +245,15 @@ if __name__ == "__main__":
 
                 regressor.load_state_dict(aux_states[0])
                 regressor.eval()
+
+                training_dataset, validation_dataset, test_dataset = get_datasets(
+                data_dir,
+                data_parameters,
+                training_parameters,
+                seed,
+                )
+
+                logging.info(using("After creating the dataloaders"))
 
                 # Eval regressor on test set
                 test_loader = DataLoader(
@@ -330,10 +299,12 @@ if __name__ == "__main__":
             if training_parameters.get("match_model_in_dir", None):
                 match_model_in_dir = training_parameters["match_model_in_dir"]
 
-                if training_parameters['distributional_method'].startswith("closed_form"):
-                    distr_method = training_parameters['distributional_method'][12:]
+                if training_parameters["distributional_method"].startswith(
+                    "closed_form"
+                ):
+                    distr_method = training_parameters["distributional_method"][12:]
                 else:
-                    distr_method = training_parameters['distributional_method']
+                    distr_method = training_parameters["distributional_method"]
 
                 search_string = (
                     f"{data_parameters['dataset_name']}{splitstring}_"
@@ -349,7 +320,9 @@ if __name__ == "__main__":
                 files = [f for f in os.listdir(match_model_in_dir) if pattern.search(f)]
                 assert len(files) == 1
 
-                training_parameters["filename_to_validate"] = os.path.join(match_model_in_dir, files[0])
+                training_parameters["filename_to_validate"] = os.path.join(
+                    match_model_in_dir, files[0]
+                )
 
             if training_parameters.get("filename_to_validate", None):
                 # In case you ONLY want to validate all models in a certain directory; loads the model (instead of training it)
@@ -359,36 +332,54 @@ if __name__ == "__main__":
                 model = train_utils.setup_model(
                     data_parameters, training_parameters, device, target_dim, input_dim
                 )
-                filename = training_parameters["filename_to_validate"]
-                if training_parameters["uncertainty_quantification"] == "laplace":
-                    raise NotImplementedError("Laplace not implemented yet.")
-                    model = LA_Wrapper(
-                        model,
-                        n_samples=training_parameters["n_samples_uq"],
-                        method="last_layer",
-                        hessian_structure="full",
-                        optimize=True,
-                    )
+                filename = training_parameters["filename_to_validate"] 
                 train_utils.resume(model, filename)
                 t_training = -1
             else:
                 # In case you want to train the models
                 t_0 = time()
                 d_time_train = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-                model, filename = trainer(
-                    train_loader,
-                    val_loader,
-                    directory=directory,
-                    training_parameters=training_parameters,
-                    data_parameters=data_parameters,
-                    logging=logging,
-                    filename_ending=filename_ending,
-                    d_time=d_time_train,
-                    target_dim=target_dim,
-                    input_dim=input_dim,
-                    results_dict=results_dict,
-                    regressor=regressor,
-                )
+                if not training_parameters["distributed_training"]:
+                    model = trainer(
+                        0,  # GPU ID for single GPU training
+                        data_dir,
+                        directory=directory,
+                        training_parameters=training_parameters,
+                        data_parameters=data_parameters,
+                        filename_ending=filename_ending,
+                        target_dim=target_dim,
+                        input_dim=input_dim,
+                        d_time=d_time_train,
+                        results_dict=results_dict,
+                        regressor=regressor,
+                    )
+                    filename = os.path.join(directory, f"Datetime_{d_time_train}_Loss_{filename_ending}.pt")
+                else:
+                    # Distributed training setup
+                    world_size = torch.cuda.device_count()
+                    mp.spawn(
+                        trainer,
+                        args=(
+                            data_dir,
+                            directory,
+                            training_parameters,
+                            data_parameters,
+                            filename_ending,
+                            target_dim,
+                            input_dim,
+                            d_time_train,
+                            results_dict,
+                            regressor,
+                            world_size,
+                        ),
+                        nprocs=world_size)
+                    model = train_utils.setup_model(data_parameters,training_parameters, device, target_dim, input_dim)
+                    filename = os.path.join(directory, f"Datetime_{d_time_train}_Loss_{filename_ending}.pt")
+                    train_utils.resume(model, filename)
+                # Load dumped dictionary
+                with open(os.path.join(directory, "results.json"), "r") as f:
+                    results_dict = json.load(f)
+                os.remove(os.path.join(directory, "results.json"))
 
                 t_1 = time()
                 t_training = np.round(t_1 - t_0, 3)
@@ -398,6 +389,14 @@ if __name__ == "__main__":
                 t_1 = time()
                 logging.info(f"Emptying the cuda cache took {np.round(t_1 - t_0, 3)}s.")
 
+
+            # Get datasets
+            training_dataset, validation_dataset, test_dataset = get_datasets(
+                data_dir,
+                data_parameters,
+                training_parameters,
+                seed,
+            )
             train_loader = DataLoader(
                 training_dataset, batch_size=eval_batch_size, shuffle=True
             )
@@ -451,4 +450,3 @@ if __name__ == "__main__":
                 )
                 results_pd = pd.DataFrame(results_dict)
                 results_pd.T.to_csv(os.path.join(directory, "train.csv"))
-
