@@ -19,13 +19,14 @@ class Diffusion:
         x_T_sampling_method="standard",
         ddim_churn=1.0,
         noise_schedule="linear",
+        beta_endpoints=(1e-4, 0.02)
     ):
         self.device = device
 
         self.noise_steps = noise_steps
         self.noise_schedule = noise_schedule
 
-        self.prepare_noise_schedule()
+        self.prepare_noise_schedule(beta_start=beta_endpoints[0], beta_end=beta_endpoints[1])
 
         self.img_size = img_size
         self.x_T_sampling_method = x_T_sampling_method
@@ -200,10 +201,8 @@ class Diffusion:
             )
         return target_training
 
-    def prepare_noise_schedule(self):
-        if self.noise_schedule == "linear":
-            beta_start = 1e-4
-            beta_end = 0.02
+    def prepare_noise_schedule(self, beta_start = 1e-4, beta_end = 0.02):
+        if self.noise_schedule == "linear":            
             self.beta = torch.linspace(beta_start, beta_end, self.noise_steps).to(
                 self.device
             )
@@ -314,6 +313,7 @@ def generate_diffusion_samples_low_dimensional(
     ddim_churn=1.0,
     noise_schedule=None,
     metrics_plots=False,
+    beta_endpoints=(1e-4, 0.02),
 ):
     if distributional_method == "deterministic":
         diffusion = Diffusion(
@@ -323,6 +323,7 @@ def generate_diffusion_samples_low_dimensional(
             x_T_sampling_method=x_T_sampling_method,
             ddim_churn=ddim_churn,
             noise_schedule=noise_schedule,
+            beta_endpoints=beta_endpoints,
         )
     else:
         diffusion = DistributionalDiffusion(
@@ -334,6 +335,7 @@ def generate_diffusion_samples_low_dimensional(
             x_T_sampling_method=x_T_sampling_method,
             ddim_churn=ddim_churn,
             noise_schedule=noise_schedule,
+            beta_endpoints=beta_endpoints,
         )
 
     sampled_images = torch.zeros(*target_shape, n_samples).to(input.device)
@@ -388,6 +390,7 @@ class DistributionalDiffusion(Diffusion):
         closed_form=False,
         x_T_sampling_method="standard",
         ddim_churn=1.0,
+        beta_endpoints=(1e-4, 0.02),
         **kwargs,
     ):
         super().__init__(
@@ -397,6 +400,7 @@ class DistributionalDiffusion(Diffusion):
             device=device,
             x_T_sampling_method=x_T_sampling_method,
             ddim_churn=ddim_churn,
+            beta_endpoints=beta_endpoints,
         )
         self.distributional_method = distributional_method
         self.closed_form = closed_form
