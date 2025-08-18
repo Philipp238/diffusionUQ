@@ -1,6 +1,7 @@
 import os
 from typing import Tuple
 
+import pandas as pd
 import torch
 import xarray as xr
 from torch.utils.data import Dataset
@@ -258,8 +259,9 @@ class WeatherBench(Dataset):
         else:
             self.data_array = None
            
-        self.time_len = self.dataset.sizes["time"] - last_t_steps
+        self.time_len = self.dataset.time[4:- last_t_steps][::4].size # Adjust for UTC00
         self.n_vars = len(WB_INPUT)
+
 
     @staticmethod
     def get_split(var: str) -> slice:
@@ -295,11 +297,13 @@ class WeatherBench(Dataset):
         Returns:
             tuple: Tuple containing the input and output tensors
         """
+        # Create index for UTC00 and 6h forecast
+        utc_idx = ((idx+1) * 4) - self.last_t_steps + 1
         if self.data_array is not None:
-            sample = self.data_array[:, idx : idx + self.last_t_steps + 1].values.copy()
+            sample = self.data_array[:, utc_idx : utc_idx + self.last_t_steps + 1].values.copy()
         else:
             sample = (
-                self.dataset.isel(time=slice(idx, idx + self.last_t_steps + 1))
+                self.dataset.isel(time=slice(utc_idx , utc_idx + self.last_t_steps + 1))
                 .to_array()
                 .values.copy()
             )
@@ -342,7 +346,7 @@ class WeatherBench(Dataset):
     def get_grid(self) -> Tuple:
         lat = self.dataset.latitude.values
         lon = self.dataset.longitude.values
-        t = self.dataset.time.values
+        t = self.dataset.time[4:][::4] + pd.Timedelta("6h") # Returns prediction time
         return ((lat, lon), t)
 
     def get_dimensions(self) -> Tuple:
@@ -353,10 +357,10 @@ class WeatherBench(Dataset):
 
 if __name__ == "__main__":
     # # Example usage
-    dataset = WeatherBench(var="test", normalize=True, downscaling_factor=2, preload = True)
+    dataset = WeatherBench(var="train", normalize=True, downscaling_factor=2, preload = False)
     print(f"Dataset length: {len(dataset)}")
     print(f"Temporal: {dataset.time_len}")
-    target_tensor, input_tensor = dataset.__getitem__(2)
+    target_tensor, input_tensor = dataset.__getitem__(728)
     print(f"Input tensor shape: {input_tensor.shape}")
     print(f"Target tensor shape: {target_tensor.shape}")
 

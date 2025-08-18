@@ -1,6 +1,6 @@
 ,0,1,2,3,4,5
-dataset_name,1D_Burgers,1D_Burgers,1D_Burgers,1D_Burgers,1D_Burgers,1D_Burgers
-downscaling_factor,4,4,4,4,4,4
+dataset_name,1D_KS,1D_KS,1D_KS,1D_KS,1D_KS,1D_KS
+downscaling_factor,1,1,1,1,1,1
 yarin_gal_uci_split_indices,0,0,0,0,0,0
 max_dataset_size,1000,1000,1000,1000,1000,1000
 standardize,True,True,True,True,True,True
@@ -20,7 +20,7 @@ n_epochs,2000,2000,2000,2000,2000,2000
 early_stopping,100,100,100,100,100,100
 init,default,default,default,default,default,default
 learning_rate,0.0005,0.0005,0.0005,0.0005,0.0005,0.0005
-warmup_lr,0,0,0,0,0,0
+warmup_lr,100,100,100,100,100,100
 lr_schedule,step,step,step,step,step,step
 optimizer,adam,adam,adam,adam,adam,adam
 gradient_clipping,1,1,1,1,1,1
@@ -32,9 +32,9 @@ dropout,0.1,0.1,0.1,0.1,0.1,0.1
 hidden_dim,64,64,64,64,64,64
 n_layers,2,2,2,2,2,2
 n_timesteps,50,50,50,50,50,50
-distributional_method,mvnormal,mvnormal,mvnormal,mvnormal,mvnormal,mvnormal
-loss,kernel,kernel,kernel,kernel,kernel,kernel
-closed_form,False,False,False,False,False,False
+distributional_method,mixednormal,mixednormal,mixednormal,mixednormal,mixednormal,mixednormal
+loss,crps,crps,crps,crps,crps,crps
+closed_form,True,True,True,True,True,True
 concat_condition_diffusion,True,True,True,True,True,True
 evaluate,True,True,True,True,True,True
 val_only,True,True,True,True,True,True
@@ -43,21 +43,21 @@ conditional_free_guidance_training,False,False,False,False,False,False
 ddim_churn,1.0,1.0,1.0,1.0,1.0,1.0
 noise_schedule,linear,linear,linear,linear,linear,linear
 regressor,,,,,,
-n_components,10,10,10,10,10,10
-gamma,5,5,5,5,5,10
-rank,50,25,10,5,1,50
+n_components,50,25,10,5,3,2
+gamma,5.0,5.0,5.0,5.0,5.0,5.0
+rank,10,10,10,10,10,10
 mvnormal_method,lora,lora,lora,lora,lora,lora
 n_train_samples,10,10,10,10,10,10
 metrics_plots,False,False,False,False,False,False
-t_training,11188.492,5320.123,5470.889,6651.546,5444.615,10080.434
-NumberParameters,6463029.0,6461404.0,6460429.0,6460104.0,6459844.0,6463029.0
-t_training_avg,8.1555,7.2737,6.98201,7.03583,6.9444,6.95937
-t_training_med,8.16907,7.07714,6.94936,7.07487,6.94117,7.01319
-t_training_std,0.24507,0.4961,0.10767,0.08693,0.09847,0.09419
-MSEValidation,1e-05,4e-05,2e-05,2e-05,4e-05,2e-05
-RMSEValidation,0.00289,0.00598,0.00489,0.0048,0.00661,0.00462
-EnergyScoreValidation,0.00693,0.01381,0.01106,0.01137,0.0157,0.00891
-CRPSValidation,0.00021,0.0004,0.00031,0.00033,0.00045,0.00024
-Gaussian NLLValidation,-6.75389,-6.48526,-6.58317,-6.48938,-6.35094,-6.76269
-CoverageValidation,0.99688,0.99324,0.99481,0.98886,0.98782,0.99586
-QICEValidation,0.10105,0.07584,0.08694,0.08057,0.07757,0.10427
+t_training,15676.951,12972.819,11545.771,6845.323,12259.817,10795.328
+NumberParameters,6469399.0,6464524.0,6461599.0,6460624.0,6460234.0,6460039.0
+t_training_avg,10.41543,6.50503,5.47442,5.44342,5.6443,5.57523
+t_training_med,10.38104,6.43787,5.3389,5.27435,5.29834,5.29695
+t_training_std,0.20473,0.27494,0.34865,0.43325,0.50196,0.43943
+MSEValidation,1e-05,1e-05,1e-05,7e-05,1e-05,1e-05
+RMSEValidation,0.00384,0.00378,0.00308,0.00862,0.0037,0.00373
+EnergyScoreValidation,0.05216,0.05411,0.04295,0.09966,0.04946,0.04973
+CRPSValidation,0.00205,0.0021,0.00168,0.0042,0.002,0.00193
+Gaussian NLLValidation,-4.076,-4.03304,-4.27646,-3.48437,-4.12454,-4.16501
+CoverageValidation,0.99976,0.9998,0.99974,0.99717,0.99982,0.99981
+QICEValidation,0.0895,0.09256,0.0916,0.04688,0.08343,0.08845
