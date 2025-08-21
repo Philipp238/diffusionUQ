@@ -45,12 +45,7 @@ class UNetDiffusion(nn.Module):
         self.device = device
         self.hidden_dim = hidden_channels
         self.features = init_features
-        self.input_projection = nn.Linear(
-            in_channels, hidden_channels
-        )  # the dimension of the target, is the dimension of the input of this MLP
-        self.time_projection = nn.Linear(hidden_channels, hidden_channels)
         if d == 1:
-            # self.unet = UNet1d(3 * hidden_channels, init_features)
             self.unet = SongUNet(
                 img_resolution=domain_dim,
                 in_channels=(in_channels + conditioning_dim),
@@ -66,7 +61,6 @@ class UNetDiffusion(nn.Module):
                 padding="same",
             )
         elif d == 2:
-            # self.unet = UNet2d(3 * hidden_channels, init_features)
             self.unet = SongUNet(
                 img_resolution=domain_dim,
                 in_channels=(in_channels + conditioning_dim),
@@ -83,9 +77,6 @@ class UNetDiffusion(nn.Module):
             )
         else:
             raise NotImplementedError("Only 1D U-Net is implemented in this example.")
-
-        if conditioning_dim:
-            self.conditioning_projection = nn.Linear(conditioning_dim, hidden_channels)
 
 
     def forward_body(self, x_t, t, condition_input, **kwargs):
@@ -110,22 +101,22 @@ class UNet_diffusion_normal(nn.Module):
         hidden_dim = backbone.features
         if d == 1:
             self.mu_projection = Conv1d(
-                in_channels=hidden_dim, out_channels=target_dim, kernel=1
+                in_channels=hidden_dim, out_channels=target_dim, kernel=3
             )
             self.sigma_projection = Conv1d(
                 in_channels=hidden_dim,
                 out_channels=target_dim,
-                kernel=1,
+                kernel=3,
                 init_bias=1,
             )
         elif d == 2:
             self.mu_projection = Conv2d(
-                in_channels=hidden_dim, out_channels=target_dim, kernel=1
+                in_channels=hidden_dim, out_channels=target_dim, kernel=3
             )
             self.sigma_projection = Conv2d(
                 in_channels=hidden_dim,
                 out_channels=target_dim,
-                kernel=1,
+                kernel=3,
                 init_bias=1,
             )
         self.sofplus = nn.Softplus()
@@ -166,22 +157,22 @@ class UNet_diffusion_mvnormal(nn.Module):
             sigma_out_channels = (self.domain_dim)//2 +1
         if d == 1:
             self.mu_projection = Conv1d(
-                in_channels=hidden_dim, out_channels=self.target_dim, kernel=1
+                in_channels=hidden_dim, out_channels=self.target_dim, kernel = 3
             )
             self.sigma_projection = Conv1d(
                 in_channels=hidden_dim,
                 out_channels=sigma_out_channels,
-                kernel=1,
+                kernel = 3,
                 init_bias=1,
             )
         elif d == 2:
             self.mu_projection = Conv2d(
-                in_channels=hidden_dim, out_channels=self.target_dim, kernel=1
+                in_channels=hidden_dim, out_channels=self.target_dim, kernel = 3
             )
             self.sigma_projection = Conv2d(
                 in_channels=hidden_dim,
                 out_channels=sigma_out_channels,
-                kernel=1,
+                kernel = 3,
                 init_bias=1,
             )
         self.sofplus = nn.Softplus()
@@ -219,10 +210,6 @@ class UNet_diffusion_sample(nn.Module):
     def __init__(self, backbone, d=1, target_dim=1, hidden_dim=32, n_samples=50):
         super(UNet_diffusion_sample, self).__init__()
         self.backbone = backbone
-
-        # Concatenate noise with channel
-        self.backbone.input_projection = nn.Linear(target_dim + 1, hidden_dim)
-
         self.n_samples = n_samples
 
     def forward(self, x_t, t, condition_input, n_samples=None, **kwargs):
@@ -264,35 +251,35 @@ class UNet_diffusion_mixednormal(nn.Module):
             self.mu_projection = Conv1d(
                 in_channels=hidden_dim,
                 out_channels=target_dim * n_components,
-                kernel=1,
+                kernel = 3,
             )
             self.sigma_projection = Conv1d(
                 in_channels=hidden_dim,
                 out_channels=target_dim * n_components,
-                kernel=1,
+                kernel = 3,
                 init_bias=1,
             )
             self.weights_projection = Conv1d(
                 in_channels=hidden_dim,
                 out_channels=target_dim * n_components,
-                kernel=1,
+                kernel = 3,
             )
         elif d == 2:
             self.mu_projection = Conv2d(
                 in_channels=hidden_dim,
                 out_channels=target_dim * n_components,
-                kernel=1,
+                kernel = 3,
             )
             self.sigma_projection = Conv2d(
                 in_channels=hidden_dim,
                 out_channels=target_dim * n_components,
-                kernel=1,
+                kernel = 3,
                 init_bias=1,
             )
             self.weights_projection = Conv2d(
                 in_channels=hidden_dim,
                 out_channels=target_dim * n_components,
-                kernel=1,
+                kernel = 3,
             )
 
         self.sofplus = nn.Softplus()

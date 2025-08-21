@@ -278,7 +278,7 @@ def trainer(
         optimizer = optim.AdamW(
             model.parameters(),
             lr=lr,
-            betas=(0.9, 0.999),
+            betas=(0.9, 0.95),
             weight_decay=training_parameters["weight_decay"],
         )
     elif training_parameters["optimizer"] == "sgd":
@@ -362,11 +362,6 @@ def trainer(
     for epoch in range(training_parameters["n_epochs"]):
         # Distributed training: set epoch for sampler
         if training_parameters["distributed_training"]:
-        #     dist.all_reduce(flag_tensor,op=dist.ReduceOp.SUM)
-        #     if flag_tensor.sum() > 0:  # or use dist.all_reduce with SUM and check > 0
-        #         if gpu_id == 0:
-        #             logger.info("Training stopped")
-        #         break
             train_loader.sampler.set_epoch(epoch)
         # Set learning rate warm up
         if epoch < warmup_lr:

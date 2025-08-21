@@ -101,15 +101,15 @@ def get_criterion(training_parameters, device):
         elif training_parameters["distributional_method"] == "mixednormal":
             criterion = losses.NormalMixtureCRPS()
         elif training_parameters["distributional_method"] == "mvnormal":
-            if method == "lora":
-                if loss == "kernel":
-                    criterion = losses.GaussianKernelScore(dimension = "multivariate", gamma = training_parameters["gamma"], method = "lora")
-                elif loss == "log":
+            if method == "lora":               
+                if loss == "log":
                     criterion = lambda truth, prediction: (-1)* LowRankMultivariateNormal(prediction[...,0], prediction[...,2:], prediction[...,1]).log_prob(truth).mean()
+                else: # Kernel loss
+                    criterion = losses.GaussianKernelScore(dimension = "multivariate", gamma = training_parameters["gamma"], method = "lora")
             elif method == "cholesky":
                 if loss == "log":
                     criterion = lambda truth, prediction: (-1)* MultivariateNormal(loc = prediction[...,0], scale_tril=prediction[...,1:]).log_prob(truth).mean()
-                elif loss == "kernel":
+                else: # Kernel loss
                     criterion = losses.GaussianKernelScore(dimension = "multivariate", gamma = training_parameters["gamma"], method = "cholesky")
         else:
             raise ValueError(
