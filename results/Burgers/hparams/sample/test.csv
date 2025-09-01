@@ -11,8 +11,10 @@ model,UNet,UNet
 uncertainty_quantification,diffusion,diffusion
 report_every,25,25
 seed,1234,1234
+distributed_training,False,False
 backbone,default,default
 batch_size,128,128
+batch_accumulation,1,1
 eval_batch_size,1024,1024
 n_epochs,2000,2000
 early_stopping,100,100
@@ -22,7 +24,6 @@ warmup_lr,0,0
 lr_schedule,step,step
 optimizer,adam,adam
 gradient_clipping,1,1
-distributed_training,False,False
 alpha,0.05,0.05
 n_samples_uq,100,100
 weight_decay,0.0,0.0
@@ -31,6 +32,7 @@ dropout,0.1,0.1
 hidden_dim,64,64
 n_layers,2,2
 n_timesteps,50,50
+beta_endpoints,"[0.001, 0.35]","(0.001, 0.35)"
 distributional_method,sample,sample
 loss,crps,crps
 closed_form,False,False
@@ -43,20 +45,20 @@ ddim_churn,1.0,1.0
 noise_schedule,linear,linear
 regressor,,
 n_components,10,10
-gamma,1.0,1.0
+gamma,5.0,5.0
 rank,10,10
 mvnormal_method,lora,lora
-n_train_samples,5,3
+n_train_samples,3,5
 metrics_plots,False,False
-t_training,23058.857,9188.505
-NumberParameters,6459969,6459969
-t_training_avg,16.22211,10.57735
-t_training_med,16.20945,10.57129
-t_training_std,0.43084,0.25552
-MSEValidation,0.0,2e-05
-RMSEValidation,0.00166,0.00389
-EnergyScoreValidation,0.00323,0.00768
-CRPSValidation,0.0001,0.00021
-Gaussian NLLValidation,-7.9491,-7.32224
-CoverageValidation,0.96269,0.95771
-QICEValidation,0.03978,0.03755
+t_training,11233.655,7040.818
+NumberParameters,6455297.0,6455297.0
+t_training_avg,10.45656,15.65354
+t_training_med,10.45975,15.66902
+t_training_std,0.24909,0.28472
+MSEValidation,0.0,0.0
+RMSEValidation,0.00102,0.00184
+EnergyScoreValidation,0.00487,0.00844
+CRPSValidation,0.00019,0.0003
+Gaussian NLLValidation,-6.68026,-6.47344
+CoverageValidation,0.99122,0.98784
+QICEValidation,0.08633,0.05906

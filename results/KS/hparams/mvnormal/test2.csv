@@ -32,6 +32,7 @@ dropout,0.1,0.1,0.1
 hidden_dim,64,64,64
 n_layers,2,2,2
 n_timesteps,50,50,50
+beta_endpoints,"[0.001, 0.35]","[0.001, 0.35]","(0.001, 0.35)"
 distributional_method,mvnormal,mvnormal,mvnormal
 loss,kernel,kernel,kernel
 closed_form,False,False,False
@@ -49,15 +50,15 @@ rank,1,1,1
 mvnormal_method,cholesky,cholesky,cholesky
 n_train_samples,10,10,10
 metrics_plots,False,False,False
-t_training,5892.491,13010.979,12680.825
-NumberParameters,6468099.0,6468099.0,6468099.0
-t_training_avg,9.16507,9.06225,9.07426
-t_training_med,9.13597,9.01255,9.02414
-t_training_std,0.32125,0.10423,0.11226
-MSEValidation,1.81138,6e-05,5e-05
-RMSEValidation,1.34587,0.00763,0.0074
-EnergyScoreValidation,21.48883,0.19637,0.26712
-CRPSValidation,1.04731,0.00892,0.01194
-Gaussian NLLValidation,2.30413,-2.83229,-2.27082
-CoverageValidation,0.99956,0.99035,0.99911
-QICEValidation,0.09406,0.08397,0.12652
+t_training,1734.508,16413.304,14767.982
+NumberParameters,6480195.0,6480195.0,6480195.0
+t_training_avg,8.96787,9.00788,9.06694
+t_training_med,8.99776,8.99599,9.0252
+t_training_std,0.52474,0.09573,0.1121
+MSEValidation,4381.49219,0.00013,0.00031
+RMSEValidation,66.19284,0.01147,0.01773
+EnergyScoreValidation,3161.99194,0.43415,0.78864
+CRPSValidation,150.4819,0.01133,0.02815
+Gaussian NLLValidation,7.36727,-2.91181,-1.91582
+CoverageValidation,1.0,0.9797,0.99582
+QICEValidation,0.1507,0.07776,0.11415

@@ -32,9 +32,10 @@ dropout,0.1,0.1,0.1,0.1,0.1,0.1
 hidden_dim,64,64,64,64,64,64
 n_layers,2,2,2,2,2,2
 n_timesteps,50,50,50,50,50,50
+beta_endpoints,"[0.001, 0.35]","[0.001, 0.35]","[0.001, 0.35]","[0.001, 0.35]","[0.001, 0.35]","(0.001, 0.35)"
 distributional_method,mixednormal,mixednormal,mixednormal,mixednormal,mixednormal,mixednormal
 loss,crps,crps,crps,crps,crps,crps
-closed_form,True,True,True,True,True,True
+closed_form,False,False,False,False,False,False
 concat_condition_diffusion,True,True,True,True,True,True
 evaluate,True,True,True,True,True,True
 val_only,True,True,True,True,True,True
@@ -49,15 +50,15 @@ rank,10,10,10,10,10,10
 mvnormal_method,lora,lora,lora,lora,lora,lora
 n_train_samples,10,10,10,10,10,10
 metrics_plots,False,False,False,False,False,False
-t_training,12073.761,8713.611,8494.684,6243.908,10598.696,8791.855
-NumberParameters,6469399,6464524,6461599,6460624,6460234,6460039
-t_training_avg,10.451,6.45756,5.44558,5.35779,5.66233,5.49898
-t_training_med,10.38786,6.40818,5.33122,5.22997,5.29676,5.24197
-t_training_std,0.29459,0.2504,0.28695,0.32702,0.49611,0.46193
-MSEValidation,2e-05,2e-05,2e-05,4e-05,1e-05,2e-05
-RMSEValidation,0.00412,0.00412,0.00431,0.00628,0.00333,0.00428
-EnergyScoreValidation,0.00806,0.00885,0.00881,0.01217,0.00614,0.00794
-CRPSValidation,0.0002,0.00022,0.00023,0.00032,0.00017,0.00023
-Gaussian NLLValidation,-7.0075,-7.09182,-6.97679,-6.94066,-7.46466,-7.17834
-CoverageValidation,0.99614,0.9915,0.99527,0.99506,0.99574,0.99452
-QICEValidation,0.08799,0.061,0.09463,0.09548,0.09303,0.085
+t_training,15377.587,12738.648,11644.119,11021.038,7719.753,12770.393
+NumberParameters,6484055.0,6469580.0,6460895.0,6458000.0,6456842.0,6456263.0
+t_training_avg,10.70872,7.61054,7.45858,7.4418,7.40596,7.41502
+t_training_med,10.70469,7.61882,7.445,7.45039,7.39358,7.39745
+t_training_std,0.21576,0.14038,0.17109,0.16082,0.15689,0.18011
+MSEValidation,0.0,0.0,0.0,0.0,0.0,0.0
+RMSEValidation,0.0008,0.00073,0.00104,0.00071,0.00145,0.00068
+EnergyScoreValidation,0.00521,0.00523,0.00596,0.00503,0.0084,0.00479
+CRPSValidation,0.00018,0.00018,0.0002,0.00017,0.00028,0.00017
+Gaussian NLLValidation,-6.61831,-6.58666,-6.50176,-6.68469,-6.28053,-6.61135
+CoverageValidation,0.9996,0.99947,0.99932,0.99923,0.99927,0.99959
+QICEValidation,0.09582,0.11122,0.11105,0.1038,0.08732,0.10813

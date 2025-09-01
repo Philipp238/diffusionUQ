@@ -13,8 +13,8 @@ report_every,25
 seed,1234
 distributed_training,False
 backbone,default
-batch_size,64
-batch_accumulation,2
+batch_size,32
+batch_accumulation,4
 eval_batch_size,1024
 n_epochs,2000
 early_stopping,100
@@ -32,9 +32,10 @@ dropout,0.1
 hidden_dim,64
 n_layers,2
 n_timesteps,50
+beta_endpoints,"(0.001, 0.35)"
 distributional_method,sample
 loss,crps
-closed_form,True
+closed_form,False
 concat_condition_diffusion,True
 evaluate,True
 val_only,True
@@ -49,15 +50,15 @@ rank,10
 mvnormal_method,lora
 n_train_samples,25
 metrics_plots,False
-t_training,78790.537
-NumberParameters,6459969
-t_training_avg,74.02041
-t_training_med,73.91137
-t_training_std,0.44401
+t_training,58775.676
+NumberParameters,6455297.0
+t_training_avg,71.308
+t_training_med,71.32701
+t_training_std,0.31432
 MSEValidation,0.0
-RMSEValidation,0.00219
-EnergyScoreValidation,0.00405
-CRPSValidation,0.00013
-Gaussian NLLValidation,-7.39196
-CoverageValidation,0.98833
-QICEValidation,0.08354
+RMSEValidation,0.00086
+EnergyScoreValidation,0.00456
+CRPSValidation,0.00019
+Gaussian NLLValidation,-6.61504
+CoverageValidation,0.99567
+QICEValidation,0.08186

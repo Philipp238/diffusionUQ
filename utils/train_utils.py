@@ -36,7 +36,7 @@ def log_and_save_evaluation(value: float, key: str, results_dict: dict, logging)
         results_dict (dict): Results dictionary
         logging (_type_): Logging object
     """
-    value = float(np.round(value, decimals=5))
+    value = float(np.round(value, decimals=7))
     logging.info(f"{key}: {value}")
     results_dict.setdefault(key, []).append(value)
 

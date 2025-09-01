@@ -134,8 +134,6 @@ def evaluate(
     alpha = training_parameters["alpha"]
 
     mse_loss = torch.nn.MSELoss()
-    # energy_score = losses.EnergyScore(d=d, p=2, type="lp", L=domain_range)
-    # crps_loss = losses.CRPS()
     gaussian_nll_loss = losses.GaussianNLL()
     coverage_loss = losses.Coverage(alpha)
     qice_loss = losses.QICE()
@@ -308,7 +306,6 @@ def start_evaluation(
             data_loaders = {"Validation": validation_loader, "Test": test_loader}
     elif data_parameters["dataset_name"] == "WeatherBench":
         data_loaders = {
-            "Validation": validation_loader,
             "Test": test_loader,
         }
     else:
