@@ -1,2 +1,2 @@
 #!/bin/sh
-python main.py -c Burgers/mvnormal.ini
+python main.py -c Burgers/deterministic.ini

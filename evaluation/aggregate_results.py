@@ -74,10 +74,10 @@ def create_latex_table(results_df: pd.DataFrame, results_dir:str, experiment: st
 
 
 if __name__ == "__main__":
-    experiment = "Burgers"
+    experiment = "KS"
     models = ["deterministic", "normal", "mixednormal", "mvnormal", "sample"]
     results_dir = "results"
-    factor = 1000
+    factor = 100
 
     
     results = process_experiment(results_dir, experiment, models, factor = factor)

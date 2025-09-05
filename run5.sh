@@ -1,2 +1,2 @@
 #!/bin/sh
-python main.py -c KS/mixednormal.ini
+python main.py -c Burgers/normal.ini

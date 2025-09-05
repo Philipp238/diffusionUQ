@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 from scoringrules import crps_ensemble
 from torch.distributions.lowrank_multivariate_normal import LowRankMultivariateNormal
 from torch.distributions.multivariate_normal import MultivariateNormal
@@ -19,7 +20,8 @@ class Diffusion:
         x_T_sampling_method="standard",
         ddim_churn=1.0,
         noise_schedule="linear",
-        beta_endpoints=(1e-4, 0.02)
+        beta_endpoints=(1e-4, 0.02),
+        tau = 1, # Scaling factor for learned covariance
     ):
         self.device = device
 
@@ -31,6 +33,7 @@ class Diffusion:
         self.img_size = img_size
         self.x_T_sampling_method = x_T_sampling_method
         self.ddim_churn = ddim_churn
+        self.tau = tau
 
     def sample_x_T(self, shape, pred, inference=True):
         if self.x_T_sampling_method in ["standard"]:
@@ -67,7 +70,7 @@ class Diffusion:
                 self.ddim_churn
                 * torch.sqrt((1 - alpha_hat_t_minus_1) / (1 - alpha_hat))
                 * torch.sqrt(1 - alpha)
-            )
+            )# * np.sqrt(self.tau)
 
             if self.x_T_sampling_method == "standard":
                 predicted_noise_ddim = predicted_noise
@@ -97,7 +100,7 @@ class Diffusion:
             reverse_posterior_mean = x_0_hat
 
         noise = torch.randn_like(x)
-        new_x = reverse_posterior_mean + ddim_sigma * noise
+        new_x = reverse_posterior_mean + np.sqrt(self.tau) * ddim_sigma * noise
 
         return new_x
 
@@ -346,6 +349,7 @@ def generate_diffusion_samples_low_dimensional(
     noise_schedule=None,
     metrics_plots=False,
     beta_endpoints=(1e-4, 0.02),
+    tau = 1,
 ):
     if distributional_method == "deterministic":
         diffusion = Diffusion(
@@ -356,6 +360,7 @@ def generate_diffusion_samples_low_dimensional(
             ddim_churn=ddim_churn,
             noise_schedule=noise_schedule,
             beta_endpoints=beta_endpoints,
+            tau = tau,
         )
     else:
         diffusion = DistributionalDiffusion(
@@ -368,6 +373,7 @@ def generate_diffusion_samples_low_dimensional(
             ddim_churn=ddim_churn,
             noise_schedule=noise_schedule,
             beta_endpoints=beta_endpoints,
+            tau = tau,
         )
 
     sampled_images = torch.zeros(*target_shape, n_samples).to(input.device)
@@ -423,6 +429,7 @@ class DistributionalDiffusion(Diffusion):
         x_T_sampling_method="standard",
         ddim_churn=1.0,
         beta_endpoints=(1e-4, 0.02),
+        tau = 1,
         **kwargs,
     ):
         super().__init__(
@@ -433,14 +440,16 @@ class DistributionalDiffusion(Diffusion):
             x_T_sampling_method=x_T_sampling_method,
             ddim_churn=ddim_churn,
             beta_endpoints=beta_endpoints,
+            tau = tau,
         )
         self.distributional_method = distributional_method
         self.closed_form = closed_form
+        self.tau = tau
 
     def sample_noise(self, model, x, t, conditioning=None, pred=None):
         if self.distributional_method == "normal":
             predicted_noise = model(x, t, conditioning, pred=pred)
-            predicted_noise = predicted_noise[..., 0] + predicted_noise[
+            predicted_noise = predicted_noise[..., 0] + np.sqrt(self.tau) * predicted_noise[
                 ..., 1
             ] * torch.randn_like(predicted_noise[..., 0], device=self.device)
         elif self.distributional_method == "mvnormal":
@@ -448,12 +457,12 @@ class DistributionalDiffusion(Diffusion):
             if predicted_noise.shape[-1] == predicted_noise.shape[-2] + 1:
                 # Cholesky
                 mu = predicted_noise[..., 0]
-                L_full = predicted_noise[..., 1:]
+                L_full = np.sqrt(self.tau) * predicted_noise[..., 1:]
                 mvnorm = MultivariateNormal(loc=mu, scale_tril=L_full)
             else:  # Lora
                 mu = predicted_noise[..., 0]
-                diag = predicted_noise[..., 1]
-                lora = predicted_noise[..., 2:]
+                diag = self.tau * predicted_noise[..., 1]
+                lora = np.sqrt(self.tau) * predicted_noise[..., 2:]
                 mvnorm = LowRankMultivariateNormal(mu, lora, diag)
             predicted_noise = mvnorm.sample()
 
@@ -464,7 +473,7 @@ class DistributionalDiffusion(Diffusion):
         elif self.distributional_method == "mixednormal":
             predicted_mixture = model(x, t, conditioning, pred=pred)
             mu = predicted_mixture[..., 0]
-            sigma = predicted_mixture[..., 1]
+            sigma = np.sqrt(self.tau) * predicted_mixture[..., 1]
             weights = predicted_mixture[..., 2]
             sampled_weights = torch.distributions.Categorical(weights).sample()
             sampled_mu = torch.gather(mu, dim=-1, index=sampled_weights.unsqueeze(-1))
@@ -490,7 +499,7 @@ class DistributionalDiffusion(Diffusion):
         if method == "normal":
             predicted_noise_mu = predicted_noise_distribution_params[..., 0]
             predicted_noise_sigma = predicted_noise_distribution_params[..., 1]
-            predicted_noise_covariance = torch.diag_embed(predicted_noise_sigma**2)
+            predicted_noise_covariance = torch.diag_embed(predicted_noise_sigma**2) * self.tau
         elif method == "mixednormal":
             mu = predicted_noise_distribution_params[..., 0]
             sigma = predicted_noise_distribution_params[..., 1]
@@ -502,7 +511,7 @@ class DistributionalDiffusion(Diffusion):
             predicted_noise_sigma = torch.gather(
                 sigma, dim=-1, index=sampled_weights.unsqueeze(-1)
             ).squeeze(-1)
-            predicted_noise_covariance = torch.diag_embed(predicted_noise_sigma**2)
+            predicted_noise_covariance = torch.diag_embed(predicted_noise_sigma**2) *self.tau
         elif method == "mvnormal":
             if (
                 predicted_noise_distribution_params.shape[-1]
@@ -512,14 +521,14 @@ class DistributionalDiffusion(Diffusion):
                 predicted_L = predicted_noise_distribution_params[..., 1:]
                 predicted_noise_covariance = MultivariateNormal(
                     predicted_noise_mu, scale_tril=predicted_L
-                ).covariance_matrix
+                ).covariance_matrix * self.tau
             else:  # LORA
                 predicted_noise_mu = predicted_noise_distribution_params[..., 0]
                 diag = predicted_noise_distribution_params[..., 1]
                 lora = predicted_noise_distribution_params[..., 2:]
                 predicted_noise_covariance = LowRankMultivariateNormal(
                     predicted_noise_mu, lora, diag
-                ).covariance_matrix
+                ).covariance_matrix * self.tau
         else:
             raise Exception(f"Invalid method {method}")
 

@@ -1,2 +1,2 @@
 #!/bin/sh
-python main.py -c KS/sample.ini
+python -m evaluation.generate_trajectories

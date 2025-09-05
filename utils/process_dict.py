@@ -64,6 +64,7 @@ def process_training_parameters(train_dict: dict)-> dict:
     processed_dict["ddim_churn"] = train_dict.get("ddim_churn", 1.0)
     processed_dict["noise_schedule"] = train_dict.get("noise_schedule", "linear")
     processed_dict["regressor"] = train_dict.get("regressor", None)
+    processed_dict["tau"] = train_dict.get("tau",1.0)
 
     # Specific model parameters
     processed_dict["n_components"] = train_dict.get("n_components", 10)

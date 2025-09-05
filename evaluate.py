@@ -29,6 +29,7 @@ def generate_samples(
     noise_schedule=None,
     metrics_plots=False,
     beta_endpoints=(1e-4, 0.02),
+    tau = 1,
 ) -> torch.Tensor:
     """Mehtod to generate samples from the underlying model with the specified uncertainty quantification method.
 
@@ -80,6 +81,7 @@ def generate_samples(
                     noise_schedule=noise_schedule,
                     metrics_plots=metrics_plots,
                     beta_endpoints=beta_endpoints,
+                    tau = tau,
                 )
             )
             return out, crps_over_time, rmse_over_time, distr_over_time
@@ -100,6 +102,7 @@ def generate_samples(
                 noise_schedule=noise_schedule,
                 metrics_plots=metrics_plots,
                 beta_endpoints=beta_endpoints,
+                tau = tau,
             )
     return out
 
@@ -164,6 +167,7 @@ def evaluate(
                 noise_schedule=training_parameters["noise_schedule"],
                 metrics_plots=metrics_plots,
                 beta_endpoints=training_parameters["beta_endpoints"],
+                tau = training_parameters["tau"],
             )
 
             if (

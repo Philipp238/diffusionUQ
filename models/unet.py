@@ -307,8 +307,8 @@ class UNet_diffusion_mixednormal(nn.Module):
         # Take global maxima to obtain global mixture weights
         if len(weights.shape) == 4:
             weights = torch.amax(weights, dim = (-2), keepdims = True).repeat(1,1,mu.shape[-2],1)
-        elif len(weights.shape) == 4:
-            weights = torch.amax(weights, dim = (-2,-3), keepdims = True).repeat(1,1,mu.shpae[-3],mu.shape[-2],1)
+        elif len(weights.shape) == 5:
+            weights = torch.amax(weights, dim = (-2,-3), keepdims = True).repeat(1,1,mu.shape[-3],mu.shape[-2],1)
         weights = torch.softmax(torch.clamp(weights, min=-15, max=15), dim=-1)
 
         output = torch.stack([mu, sigma, weights], dim=-1)
