@@ -74,8 +74,8 @@ def create_latex_table(results_df: pd.DataFrame, results_dir:str, experiment: st
 
 
 if __name__ == "__main__":
-    experiment = "KS"
-    models = ["deterministic", "normal", "mixednormal", "mvnormal", "sample"]
+    experiment = "T2M"
+    models = ["deterministic"]#, "normal", "mixednormal", "mvnormal", "sample"]
     results_dir = "results"
     factor = 100
 

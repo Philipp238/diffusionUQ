@@ -22,6 +22,43 @@ if __name__ == "__main__":
     variables = ["2m_temperature", "10m_u_component_of_wind", "10m_v_component_of_wind", "temperature", "geopotential", "land_sea_mask", "geopotential_at_surface"]
     filename = "era5"
 
+    # # Open file from weatherbench and filter
+    # data = xr.open_zarr(era5_path)
+    # data_reduced = data[variables].sel(latitude = lat_range, longitude = lon_range, method = "nearest").sel(time = date_range, method = "nearest")
+    # data_reduced["geopotential"] = data_reduced["geopotential"].sel(level = 500)
+    # data_reduced["temperature"] = data_reduced["temperature"].sel(level = 850)
+    # # Rechunk and save
+    # data_reduced.chunk("auto").to_zarr(path + filename+".zarr", zarr_format = 2, consolidated = False)
+
+    # # Save statistics
+    # statistics = np.zeros((len(variables), 2))
+    # for i,var in enumerate(variables):
+    #     if var == "land_sea_mask":
+    #         statistics[i,0] = 0
+    #         statistics[i,1] = 1
+    #     else:
+    #         statistics[i,0] = data_reduced[var].mean().compute()
+    #         statistics[i,1] = data_reduced[var].std().compute()
+
+    # np.save(path + "era5_statistics.npy", statistics)
+
+    # # Close stream
+    # data_reduced.close()
+    # data.close()
+
+    # OOD Era5 data
+    date_range = pd.date_range(f"2022-12-01", f"2022-12-31T18", freq = "6h")
+    dlat, dlon = 0.25, 0.25
+    nlat, nlon = 160, 220
+    lat_center, lon_center = -5, -60
+    lat_start = lat_center - (nlat/2)*dlat
+    lat_end   = lat_center + (nlat/2)*dlat
+    lat_range = np.arange(lat_start, lat_end, dlat)
+    lon_start = lon_center - (nlon/2)*dlon
+    lon_end   = lon_center + (nlon/2)*dlon
+    lon_range = np.arange(lon_start, lon_end, dlon) + 360
+
+    filename = "era5_ood"
     # Open file from weatherbench and filter
     data = xr.open_zarr(era5_path)
     data_reduced = data[variables].sel(latitude = lat_range, longitude = lon_range, method = "nearest").sel(time = date_range, method = "nearest")
@@ -30,17 +67,6 @@ if __name__ == "__main__":
     # Rechunk and save
     data_reduced.chunk("auto").to_zarr(path + filename+".zarr", zarr_format = 2, consolidated = False)
 
-    # Save statistics
-    statistics = np.zeros((len(variables), 2))
-    for i,var in enumerate(variables):
-        if var == "land_sea_mask":
-            statistics[i,0] = 0
-            statistics[i,1] = 1
-        else:
-            statistics[i,0] = data_reduced[var].mean().compute()
-            statistics[i,1] = data_reduced[var].std().compute()
-
-    np.save(path + "era5_statistics.npy", statistics)
-
+    # Close stream
     data_reduced.close()
     data.close()

@@ -21,7 +21,7 @@ device = "cuda"
 
 
 def get_trajectory(
-    model, input, target, distributional_method, t_steps, n_samples, device
+    model, input, target, distributional_method, beta_endpoints, t_steps, n_samples, device
 ):
     grid_input = input[:, 2:3, :]
     t0 = input[:, 1:2, :]
@@ -65,34 +65,26 @@ def get_trajectory(
     return full_array.cpu()
 
 
-if __name__ == "__main__":
-    torch.manual_seed(3)
-    np.random.seed(3)
-    save_path = "evaluation/trajectories/"
-
+def get_trajectories(experiment, checkpoint_dict, beta_endpoint_dict, save_path):
+    if experiment == "KS":
+        downscaling_factor = 1
+    elif experiment == "Burgers":
+        downscaling_factor = 4
     test_dataset = PDE1D(
         data_dir="data/",
-        pde="KS",
+        pde=experiment,
         var="test",
-        downscaling_factor=1,
+        downscaling_factor=downscaling_factor,
         normalize=True,
         last_t_steps=2,
         temporal_downscaling_factor=2,
         select_timesteps="zero",
     )
 
-    test_loader = torch.utils.data.DataLoader(
-        test_dataset,
-        batch_size=3,
-        shuffle=True,
-        num_workers=0,
-    )
-
-    target_dim, input_dim = (
+    target_dim, _ = (
         (1, *test_dataset.get_dimensions()),
         (3, *test_dataset.get_dimensions()),
     )
-    grid = test_dataset.get_coordinates()[0]
 
     # Parameters
     n_samples = 50
@@ -115,12 +107,12 @@ if __name__ == "__main__":
     input = torch.cat(input, dim=0)
     target = torch.cat(target, dim=0)
     trajectory = torch.cat(trajectory, dim=0).cpu()
-    np.save(save_path + "KS_truth.npy",trajectory)
+    np.save(save_path + f"{experiment}_truth.npy",trajectory)
 
     # Deterministic
-    ckpt_path = "results/KS/deterministic/Datetime_20250902_163740_Loss_1D_KS_UNet_diffusion_deterministic_T50_DDIM1.pt"
     distributional_method = "deterministic"
-    beta_endpoints = (0.001, 0.35)
+    ckpt_path = checkpoint_dict[distributional_method]
+    beta_endpoints = beta_endpoint_dict[distributional_method]
 
     model = UNetDiffusion(
         d=1,
@@ -134,14 +126,14 @@ if __name__ == "__main__":
     model.load_state_dict(torch.load(ckpt_path, map_location=device))
     model = model.to(device)
     trajectory = get_trajectory(
-        model, input, target, distributional_method, t_steps, n_samples, device
+        model, input, target, distributional_method, beta_endpoints, t_steps, n_samples, device
     )
-    np.save(save_path + f"KS_{distributional_method}.npy",trajectory)
+    np.save(save_path + f"{experiment}_{distributional_method}.npy",trajectory)
 
     # Normal
-    ckpt_path = "results/KS/normal/Datetime_20250831_213836_Loss_1D_KS_UNet_diffusion_normal_T50_DDIM1.pt"
     distributional_method = "normal"
-    beta_endpoints = (0.001, 0.2)
+    ckpt_path = checkpoint_dict[distributional_method]
+    beta_endpoints = beta_endpoint_dict[distributional_method]
 
     backbone = UNetDiffusion(
         d=1,
@@ -160,14 +152,18 @@ if __name__ == "__main__":
     model.load_state_dict(torch.load(ckpt_path, map_location=device))
     model = model.to(device)
     trajectory = get_trajectory(
-        model, input, target, distributional_method, t_steps, n_samples, device
+        model, input, target, distributional_method,beta_endpoints, t_steps, n_samples, device
     )
-    np.save(save_path + f"KS_{distributional_method}.npy",trajectory)
+    np.save(save_path + f"{experiment}_{distributional_method}.npy",trajectory)
 
     # Mixed normal
-    ckpt_path = "results/KS/mixednormal/Datetime_20250901_093001_Loss_1D_KS_UNet_diffusion_mixednormal_T50_DDIM1.pt"
     distributional_method = "mixednormal"
-    beta_endpoints = (0.001, 0.2)
+    ckpt_path = checkpoint_dict[distributional_method]
+    beta_endpoints = beta_endpoint_dict[distributional_method]
+    if experiment == "KS":
+        n_components = 50
+    else:
+        n_components = 2
     backbone = UNetDiffusion(
         d=1,
         conditioning_dim=3,
@@ -181,19 +177,19 @@ if __name__ == "__main__":
         backbone=backbone,
         d=1,
         target_dim=1,
-        n_components=50,
+        n_components=n_components,
     )
     model.load_state_dict(torch.load(ckpt_path, map_location=device))
     model = model.to(device)
     trajectory = get_trajectory(
-        model, input, target, distributional_method, t_steps, n_samples, device
+        model, input, target, distributional_method,beta_endpoints, t_steps, n_samples, device
     )
-    np.save(save_path + f"KS_{distributional_method}.npy",trajectory)
+    np.save(save_path + f"{experiment}_{distributional_method}.npy",trajectory)
 
     # Multivariate normal
-    ckpt_path = "results/KS/mvnormal/Datetime_20250901_160327_Loss_1D_KS_UNet_diffusion_mvnormal_T50_DDIM1.pt"
     distributional_method = "mvnormal"
-    beta_endpoints = (0.001, 0.35)
+    ckpt_path = checkpoint_dict[distributional_method]
+    beta_endpoints = beta_endpoint_dict[distributional_method]
     backbone = UNetDiffusion(
         d=1,
         conditioning_dim=3,
@@ -216,14 +212,14 @@ if __name__ == "__main__":
     model.load_state_dict(dict)
     model = model.to(device)
     trajectory = get_trajectory(
-        model, input, target, distributional_method, t_steps, n_samples, device
+        model, input, target, distributional_method,beta_endpoints, t_steps, n_samples, device
     )
-    np.save(save_path + f"KS_{distributional_method}.npy",trajectory)
+    np.save(save_path + f"{experiment}_{distributional_method}.npy",trajectory)
 
     # Sample
-    ckpt_path = "results/KS/sample/Datetime_20250901_212819_Loss_1D_KS_UNet_diffusion_sample_T50_DDIM1.pt"
     distributional_method = "sample"
-    beta_endpoints = (0.001, 0.35)
+    ckpt_path = checkpoint_dict[distributional_method]
+    beta_endpoints = beta_endpoint_dict[distributional_method]
 
     backbone = UNetDiffusion(
         d=1,
@@ -240,6 +236,48 @@ if __name__ == "__main__":
     model.load_state_dict(dict)
     model = model.to(device)
     trajectory = get_trajectory(
-        model, input, target, distributional_method, t_steps, n_samples, device
+        model, input, target, distributional_method, beta_endpoints,t_steps, n_samples, device
     )
-    np.save(save_path + f"KS_{distributional_method}.npy",trajectory)
+    np.save(save_path + f"{experiment}_{distributional_method}.npy",trajectory)
+
+if __name__ == "__main__":
+    torch.manual_seed(3)
+    np.random.seed(3)
+    save_path = "evaluation/trajectories/"
+
+    # Define dictionaries
+    ks_checkpoints = {
+        "deterministic": "results/KS/deterministic/Datetime_20250902_163740_Loss_1D_KS_UNet_diffusion_deterministic_T50_DDIM1.pt",
+        "normal": "results/KS/normal/Datetime_20250831_213836_Loss_1D_KS_UNet_diffusion_normal_T50_DDIM1.pt",
+        "mixednormal": "results/KS/mixednormal/Datetime_20250901_093001_Loss_1D_KS_UNet_diffusion_mixednormal_T50_DDIM1.pt",
+        "mvnormal": "results/KS/mvnormal/Datetime_20250901_160327_Loss_1D_KS_UNet_diffusion_mvnormal_T50_DDIM1.pt",
+        "sample": "results/KS/sample/Datetime_20250901_212819_Loss_1D_KS_UNet_diffusion_sample_T50_DDIM1.pt",
+    }
+    ks_beta_endpoints = {
+        "deterministic": (0.001, 0.35),
+        "normal": (0.001, 0.2),
+        "mixednormal": (0.001, 0.2),
+        "mvnormal": (0.001, 0.35),
+        "sample": (0.001, 0.35),
+    }
+
+
+    burgers_checkpoints = {"deterministic": "results/Burgers/deterministic/Datetime_20250902_003326_Loss_1D_Burgers_UNet_diffusion_deterministic_T50_DDIM1.pt",
+        "normal": "results/Burgers/normal/Datetime_20250829_094848_Loss_1D_Burgers_UNet_diffusion_normal_T50_DDIM1.pt",
+        "mixednormal": "results/Burgers/mixednormal/Datetime_20250829_104059_Loss_1D_Burgers_UNet_diffusion_mixednormal_T50_DDIM1.pt",
+        "mvnormal": "results/Burgers/mvnormal/Datetime_20250830_125843_Loss_1D_Burgers_UNet_diffusion_mvnormal_T50_DDIM1.pt",
+        "sample": "results/Burgers/sample/Datetime_20250831_163039_Loss_1D_Burgers_UNet_diffusion_sample_T50_DDIM1.pt",
+    }
+    burgers_beta_endpoints = {
+        "deterministic": (0.001, 0.35),
+        "normal": (0.001, 0.2),
+        "mixednormal": (0.001, 0.2),
+        "mvnormal": (0.001, 0.2),
+        "sample": (0.001, 0.2),
+    }
+
+    # Burgers
+    get_trajectories("Burgers", burgers_checkpoints, burgers_beta_endpoints, save_path)
+    # KS
+    get_trajectories("KS", ks_checkpoints, ks_beta_endpoints, save_path)
+

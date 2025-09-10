@@ -245,7 +245,10 @@ class WeatherBench(Dataset):
         self.downscaling_factor = downscaling_factor
 
         time_slice = self.get_split(self.var)
-        zarr_path = os.path.join(data_path, "era5.zarr")
+        if self.var == "ood":
+            zarr_path = os.path.join(data_path, "era5_ood.zarr")
+        else:
+            zarr_path = os.path.join(data_path, "era5.zarr")
         self.dataset = xr.open_zarr(zarr_path, consolidated=False)[WB_INPUT].sel(
             time=time_slice
         )
@@ -271,6 +274,8 @@ class WeatherBench(Dataset):
             return slice("2020", "2020")
         elif var == "test":
             return slice("2021", "2022")
+        elif var == "ood":
+            return slice("2022", "2022")
         else:
             raise AssertionError(f"{var} is not in [train, val, test]")
 

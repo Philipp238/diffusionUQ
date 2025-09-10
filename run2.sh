@@ -1,2 +1,2 @@
 #!/bin/sh
-python main.py -c WeatherBench/deterministic.ini
+python main.py -c T2M/mvnormal.ini
