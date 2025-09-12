@@ -1,2 +1,2 @@
 #!/bin/sh
-python -m evaluation.generate_trajectories
+python main.py -c T2M/mvnormal.ini

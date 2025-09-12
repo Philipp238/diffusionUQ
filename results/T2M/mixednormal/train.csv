@@ -13,8 +13,8 @@ report_every,50
 seed,1
 distributed_training,True
 backbone,default
-batch_size,32
-batch_accumulation,2
+batch_size,16
+batch_accumulation,4
 eval_batch_size,50
 n_epochs,2000
 early_stopping,300
@@ -32,9 +32,9 @@ dropout,0.1
 hidden_dim,64
 n_layers,2
 n_timesteps,50
-beta_endpoints,"(0.001, 0.35)"
-distributional_method,mvnormal
-loss,kernel
+beta_endpoints,"(0.001, 0.2)"
+distributional_method,mixednormal
+loss,crps
 closed_form,False
 concat_condition_diffusion,True
 evaluate,False
@@ -46,13 +46,13 @@ noise_schedule,linear
 regressor,
 tau,1.0
 n_components,10
-gamma,10
-rank,1
+gamma,5.0
+rank,10
 mvnormal_method,lora
 n_train_samples,10
 metrics_plots,False
-t_training,83701.608
-NumberParameters,15188420.0
-t_training_avg,76.375379
-t_training_med,76.214077
-t_training_std,1.3600483
+t_training,168567.939
+NumberParameters,15203999.0
+t_training_avg,86.3829587
+t_training_med,86.2452545
+t_training_std,1.1373419
