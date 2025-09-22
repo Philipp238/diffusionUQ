@@ -1,27 +1,30 @@
-import os
-import sys
+# Script to generate autoregressive trajectories for the one-dimensional PDEs.
+
+import numpy as np
+import torch
+
+from data import PDE1D
 from models import (
-    UNetDiffusion,
-    UNet_diffusion_normal,
-    UNet_diffusion_sample,
     UNet_diffusion_mixednormal,
     UNet_diffusion_mvnormal,
-)
-import torch
-from models import (
-    Diffusion,
+    UNet_diffusion_normal,
+    UNet_diffusion_sample,
+    UNetDiffusion,
     generate_diffusion_samples_low_dimensional,
-    DistributionalDiffusion,
 )
-import matplotlib.pyplot as plt
-import numpy as np
-from data import PDE1D
 
 device = "cuda"
 
 
 def get_trajectory(
-    model, input, target, distributional_method, beta_endpoints, t_steps, n_samples, device
+    model,
+    input,
+    target,
+    distributional_method,
+    beta_endpoints,
+    t_steps,
+    n_samples,
+    device,
 ):
     grid_input = input[:, 2:3, :]
     t0 = input[:, 1:2, :]
@@ -107,7 +110,7 @@ def get_trajectories(experiment, checkpoint_dict, beta_endpoint_dict, save_path)
     input = torch.cat(input, dim=0)
     target = torch.cat(target, dim=0)
     trajectory = torch.cat(trajectory, dim=0).cpu()
-    np.save(save_path + f"{experiment}_truth.npy",trajectory)
+    np.save(save_path + f"{experiment}_truth.npy", trajectory)
 
     # Deterministic
     distributional_method = "deterministic"
@@ -126,9 +129,16 @@ def get_trajectories(experiment, checkpoint_dict, beta_endpoint_dict, save_path)
     model.load_state_dict(torch.load(ckpt_path, map_location=device))
     model = model.to(device)
     trajectory = get_trajectory(
-        model, input, target, distributional_method, beta_endpoints, t_steps, n_samples, device
+        model,
+        input,
+        target,
+        distributional_method,
+        beta_endpoints,
+        t_steps,
+        n_samples,
+        device,
     )
-    np.save(save_path + f"{experiment}_{distributional_method}.npy",trajectory)
+    np.save(save_path + f"{experiment}_{distributional_method}.npy", trajectory)
 
     # Normal
     distributional_method = "normal"
@@ -152,9 +162,16 @@ def get_trajectories(experiment, checkpoint_dict, beta_endpoint_dict, save_path)
     model.load_state_dict(torch.load(ckpt_path, map_location=device))
     model = model.to(device)
     trajectory = get_trajectory(
-        model, input, target, distributional_method,beta_endpoints, t_steps, n_samples, device
+        model,
+        input,
+        target,
+        distributional_method,
+        beta_endpoints,
+        t_steps,
+        n_samples,
+        device,
     )
-    np.save(save_path + f"{experiment}_{distributional_method}.npy",trajectory)
+    np.save(save_path + f"{experiment}_{distributional_method}.npy", trajectory)
 
     # Mixed normal
     distributional_method = "mixednormal"
@@ -182,9 +199,16 @@ def get_trajectories(experiment, checkpoint_dict, beta_endpoint_dict, save_path)
     model.load_state_dict(torch.load(ckpt_path, map_location=device))
     model = model.to(device)
     trajectory = get_trajectory(
-        model, input, target, distributional_method,beta_endpoints, t_steps, n_samples, device
+        model,
+        input,
+        target,
+        distributional_method,
+        beta_endpoints,
+        t_steps,
+        n_samples,
+        device,
     )
-    np.save(save_path + f"{experiment}_{distributional_method}.npy",trajectory)
+    np.save(save_path + f"{experiment}_{distributional_method}.npy", trajectory)
 
     # Multivariate normal
     distributional_method = "mvnormal"
@@ -212,9 +236,16 @@ def get_trajectories(experiment, checkpoint_dict, beta_endpoint_dict, save_path)
     model.load_state_dict(dict)
     model = model.to(device)
     trajectory = get_trajectory(
-        model, input, target, distributional_method,beta_endpoints, t_steps, n_samples, device
+        model,
+        input,
+        target,
+        distributional_method,
+        beta_endpoints,
+        t_steps,
+        n_samples,
+        device,
     )
-    np.save(save_path + f"{experiment}_{distributional_method}.npy",trajectory)
+    np.save(save_path + f"{experiment}_{distributional_method}.npy", trajectory)
 
     # Sample
     distributional_method = "sample"
@@ -230,15 +261,23 @@ def get_trajectories(experiment, checkpoint_dict, beta_endpoint_dict, save_path)
         init_features=64,
         domain_dim=target_dim[1:],
     )
-    model = UNet_diffusion_sample(backbone=backbone, d=1, target_dim=1, hidden_dim=64)
+    model = UNet_diffusion_sample(backbone=backbone)
 
     dict = torch.load(ckpt_path, map_location=device)
     model.load_state_dict(dict)
     model = model.to(device)
     trajectory = get_trajectory(
-        model, input, target, distributional_method, beta_endpoints,t_steps, n_samples, device
+        model,
+        input,
+        target,
+        distributional_method,
+        beta_endpoints,
+        t_steps,
+        n_samples,
+        device,
     )
-    np.save(save_path + f"{experiment}_{distributional_method}.npy",trajectory)
+    np.save(save_path + f"{experiment}_{distributional_method}.npy", trajectory)
+
 
 if __name__ == "__main__":
     torch.manual_seed(3)
@@ -261,8 +300,8 @@ if __name__ == "__main__":
         "sample": (0.001, 0.35),
     }
 
-
-    burgers_checkpoints = {"deterministic": "results/Burgers/deterministic/Datetime_20250902_003326_Loss_1D_Burgers_UNet_diffusion_deterministic_T50_DDIM1.pt",
+    burgers_checkpoints = {
+        "deterministic": "results/Burgers/deterministic/Datetime_20250902_003326_Loss_1D_Burgers_UNet_diffusion_deterministic_T50_DDIM1.pt",
         "normal": "results/Burgers/normal/Datetime_20250829_094848_Loss_1D_Burgers_UNet_diffusion_normal_T50_DDIM1.pt",
         "mixednormal": "results/Burgers/mixednormal/Datetime_20250829_104059_Loss_1D_Burgers_UNet_diffusion_mixednormal_T50_DDIM1.pt",
         "mvnormal": "results/Burgers/mvnormal/Datetime_20250830_125843_Loss_1D_Burgers_UNet_diffusion_mvnormal_T50_DDIM1.pt",
@@ -280,4 +319,3 @@ if __name__ == "__main__":
     get_trajectories("Burgers", burgers_checkpoints, burgers_beta_endpoints, save_path)
     # KS
     get_trajectories("KS", ks_checkpoints, ks_beta_endpoints, save_path)
-

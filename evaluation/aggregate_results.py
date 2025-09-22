@@ -1,3 +1,5 @@
+# Process experiment results and aggregate into a single table.
+
 import os
 import glob
 import pandas as pd

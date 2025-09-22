@@ -1,3 +1,5 @@
+# Implements function that processes the input config files and assigns standard values.
+
 def process_data_parameters(data_dict: dict) -> dict:
     processed_dict = dict()
     # Assertions

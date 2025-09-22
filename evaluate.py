@@ -1,63 +1,58 @@
 import time
+
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+import torch.nn as nn
 from scoringrules import crps_ensemble, energy_score
 
-from models import (
-    LA_Wrapper,
-    generate_deterministic_samples,
-    generate_diffusion_samples_low_dimensional,
-    generate_mcd_samples,
-)
+from models import generate_diffusion_samples_low_dimensional
 from utils import losses, train_utils
 
 
 def generate_samples(
     uncertainty_quantification: str,
-    model,
-    n_timesteps,
+    model:nn.Module,
+    n_timesteps:int,
     x: torch.Tensor,
     target: torch.Tensor,
     n_samples: int,
     x_T_sampling_method: str,
     distributional_method: str = "deterministic",
-    closed_form:bool = False,
+    closed_form: bool = False,
     regressor=None,
-    cfg_scale=3,
-    ddim_churn=1.0,
-    noise_schedule=None,
-    metrics_plots=False,
-    beta_endpoints=(1e-4, 0.02),
-    tau = 1,
+    cfg_scale:float=3,
+    ddim_churn:float=1.0,
+    noise_schedule:str=None,
+    metrics_plots:bool=False,
+    beta_endpoints:tuple=(1e-4, 0.02),
+    tau:float=1,
 ) -> torch.Tensor:
-    """Mehtod to generate samples from the underlying model with the specified uncertainty quantification method.
+    """Method to generate samples from the specified diffusion model.
 
     Args:
-        uncertainty_quantification (str): Method for uncertainty quantification
-        model (_type_): Neural network model
-        a (torch.Tensor): Input data
-        u (torch.Tensor): Target data
-        n_samples (int): Number of samples to generate
+        uncertainty_quantification (str): Uncertainty quantification method.
+        model (nn.Module): Underlying neural network.
+        n_timesteps (int): Number of diffusion timesteps.
+        x (torch.Tensor): Input tensor.
+        target (torch.Tensor): Target tensor.
+        n_samples (int): Number of samples to generate.
+        x_T_sampling_method (str): Sampling method for diffusion process.
+        distributional_method (str, optional): Type of distributional diffusion. Defaults to "deterministic".
+        closed_form (bool, optional): Whether to use closed-form evaluation. Defaults to False.
+        regressor (_type_, optional): Regressor. Defaults to None.
+        cfg_scale (float, optional): CFG scale. Defaults to 3.
+        ddim_churn (float, optional): Chrun parameter of the DDIM model. Defaults to 1.0.
+        noise_schedule (str, optional): Noise schedule. Defaults to None.
+        metrics_plots (bool, optional): Whether to plot the metrics. Defaults to False.
+        beta_endpoints (tuple, optional): Beta endpoints of the noise schedule. Defaults to (1e-4, 0.02).
+        tau (float, optional): Interpolation parameter for the covariance matrix. Defaults to 1.
 
     Returns:
-        torch.Tensor: _description_
+        torch.Tensor: sampled predictions
     """
-    if uncertainty_quantification.endswith("dropout"):
-        model.train()
-    else:
-        model.eval()
-    if uncertainty_quantification == "dropout":
-        out = generate_mcd_samples(model, x, target.shape, n_samples=n_samples)
-    elif uncertainty_quantification == "laplace":
-        out = model.predictive_samples(x, n_samples=n_samples)
-    elif uncertainty_quantification.startswith("scoring-rule"):
-        out = model(x, n_samples=n_samples)
-    elif uncertainty_quantification == "deterministic":
-        out = generate_deterministic_samples(
-            model, x, n_timesteps=n_timesteps, n_samples=n_samples
-        )
-    elif uncertainty_quantification == "diffusion":
+    model.eval()
+    if uncertainty_quantification == "diffusion":
         if (
             metrics_plots
             and target is not None
@@ -72,16 +67,16 @@ def generate_samples(
                     target_shape=target.shape,
                     n_samples=n_samples,
                     distributional_method=distributional_method,
-                    closed_form = closed_form,
+                    closed_form=closed_form,
                     regressor=regressor,
                     x_T_sampling_method=x_T_sampling_method,
                     cfg_scale=cfg_scale,
-                    gt_images=target,
+                    gt_target=target,
                     ddim_churn=ddim_churn,
                     noise_schedule=noise_schedule,
                     metrics_plots=metrics_plots,
                     beta_endpoints=beta_endpoints,
-                    tau = tau,
+                    tau=tau,
                 )
             )
             return out, crps_over_time, rmse_over_time, distr_over_time
@@ -93,37 +88,39 @@ def generate_samples(
                 target_shape=target.shape,
                 n_samples=n_samples,
                 distributional_method=distributional_method,
-                closed_form = closed_form,
+                closed_form=closed_form,
                 regressor=regressor,
                 x_T_sampling_method=x_T_sampling_method,
                 cfg_scale=cfg_scale,
-                gt_images=target,
+                gt_target=target,
                 ddim_churn=ddim_churn,
                 noise_schedule=noise_schedule,
                 metrics_plots=metrics_plots,
                 beta_endpoints=beta_endpoints,
-                tau = tau,
+                tau=tau,
             )
     return out
 
 
 def evaluate(
-    model,
+    model:nn.Module,
     training_parameters: dict,
     loader,
     device,
     regressor,
     standardized: bool = False,
     metrics_plots: bool = False,
-):
-    """Method to evaluate the given model.
+)-> tuple:
+    """Function to evaluate the given model.
 
     Args:
-        model (_type_): Underlying model
-        training_parameters (dict): Dictionary containing training parameters
-        loader (_type_): Data loader
-        device (_type_): Device to run the model on
-        domain_range (_type_): Either list of domain range for LP based loss or nlon and weights for spherical loss
+        model (nn.Module): Underlying model.
+        training_parameters (dict): Dictionary containing training parameters.
+        loader (_type_): Data loader.
+        device (_type_): Device to run the model on.
+        regressor (_type_): Regressor for the CARD model.
+        standardized (bool): Whether data is standardized.
+        metrics_plots (bool): Whether to plot metrics.
 
     Returns:
         _type_: Tuple of evaluation metrics
@@ -167,7 +164,7 @@ def evaluate(
                 noise_schedule=training_parameters["noise_schedule"],
                 metrics_plots=metrics_plots,
                 beta_endpoints=training_parameters["beta_endpoints"],
-                tau = training_parameters["tau"],
+                tau=training_parameters["tau"],
             )
 
             if (
@@ -264,7 +261,7 @@ def evaluate(
 
 
 def start_evaluation(
-    model,
+    model:nn.Module,
     training_parameters: dict,
     data_parameters: dict,
     train_loader,
@@ -273,7 +270,6 @@ def start_evaluation(
     results_dict: dict,
     device,
     logging,
-    filename: str,
     regressor,
     filename_ending: str,
     metrics_plots: bool,
@@ -282,20 +278,19 @@ def start_evaluation(
     """Performs evaluation of the model on the given data sets.
 
     Args:
-        model (_type_): Underlying model
-        training_parameters (dict): Dictionary of training parameters
-        data_parameters (dict): Dictionary of data parameters
-        train_loader (_type_): Train loader
-        validation_loader (_type_): Validation loader
-        test_loader (_type_): Test loader
-        results_dict (dict): Dictionary to store results
-        device (_type_): Device to run the model on
-        domain_range (_type_): Either list of domain range for LP based loss or nlon and weights for spherical loss
-        logging (_type_): Logging object
-        filename (str): Filename to save the model
+        model (nn.Module): Underlying model.
+        training_parameters (dict): Dictionary of training parameters.
+        data_parameters (dict): Dictionary of data parameters.
+        train_loader (_type_): Train loader.
+        validation_loader (_type_): Validation loader.
+        test_loader (_type_): Test loader.
+        results_dict (dict): Dictionary to store results.
+        device (_type_): Device to run the model on.
+        logging (_type_): Logging object.
+        regressor (_type_): Regressor for the CARD model.
+        filename_endig (str): Ending for the filename.
+        metrics_plots (bool): Whether to plot metrics.
     """
-    # Need to add additional train loader for autoregressive Laplace
-    laplace_train_loader = kwargs.get("laplace_train_loader", None)
     directory = kwargs.get("directory", None)
     logging.info(
         f"Starting evaluation: model {training_parameters['model']} & uncertainty quantification {training_parameters['uncertainty_quantification']}"
@@ -318,22 +313,6 @@ def start_evaluation(
             "Validation": validation_loader,
             "Test": test_loader,
         }
-
-    if training_parameters["uncertainty_quantification"] == "laplace" and (
-        not isinstance(model, LA_Wrapper)
-    ):
-        model = LA_Wrapper(
-            model,
-            n_samples=training_parameters["n_samples_uq"],
-            method="last_layer",
-            hessian_structure="full",
-            optimize=True,
-        )
-        if laplace_train_loader is not None:
-            model.fit(laplace_train_loader)
-        else:
-            model.fit(train_loader)
-        train_utils.checkpoint(model, filename)
 
     for name, loader in data_loaders.items():
         if loader is None:
@@ -361,9 +340,8 @@ def start_evaluation(
             metrics_plots=metrics_plots,
         )
         # mse, es, crps, gaussian_nll, coverage, int_width = evaluate(model, training_parameters, loader, device, domain_range)
-        t_elapsed = np.round(time.time() - t_eval_start,3)
+        t_elapsed = np.round(time.time() - t_eval_start, 3)
         logging.info(f"Evaluating the model on {name} data took {t_elapsed}s.")
-
 
         train_utils.log_and_save_evaluation(mse, "MSE" + name, results_dict, logging)
         train_utils.log_and_save_evaluation(
@@ -437,6 +415,6 @@ def start_evaluation(
                     )
 
                 plt.close()
-            
+
         # Empty cache
         torch.cuda.empty_cache()

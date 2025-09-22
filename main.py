@@ -425,7 +425,6 @@ if __name__ == "__main__":
                     results_dict,
                     device,
                     logging,
-                    filename,
                     regressor,
                     filename_ending=filename_ending,
                     metrics_plots=training_parameters["metrics_plots"],

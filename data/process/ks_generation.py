@@ -1,14 +1,14 @@
 # Description: Script to generate data for the Kuramoto-Sivashinsky equation.
 
-import pde
+import multiprocessing as mp
+import os
 
 # from pde.grids import GridBase
 import numpy as np
-import yaml
-import multiprocessing as mp
-import os
-from tqdm import tqdm
+import pde
 import xarray as xr
+import yaml
+from tqdm import tqdm
 
 
 def get_sim(grid, n_steps: int, t_range: int = 150, dt: float = 0.001) -> np.ndarray:
@@ -90,7 +90,7 @@ def simulate(config: dict) -> None:
         np.save(f"data/1D_KS/raw/ks_data_{i + 1}.npy", result_array)
 
 
-def aggregate(config: dict, remove: bool, max_steps = 104, start_step = 6) -> None:
+def aggregate(config: dict, remove: bool, max_steps=104, start_step=6) -> None:
     """Aggregate the raw data into a train and test dataset and save to disk.
 
     Args:
@@ -115,14 +115,14 @@ def aggregate(config: dict, remove: bool, max_steps = 104, start_step = 6) -> No
         {"u": data_array, "x-coordinate": x_coordinate, "t-coordinate": t_coordinate}
     )
 
-    ds = ds.isel(t = slice(start_step,max_steps+start_step))
+    ds = ds.isel(t=slice(start_step, max_steps + start_step))
 
     # Train test split
     n_samples = config["sim"]["num_samples"]
     indices = np.random.permutation(n_samples)
     n_train = int(n_samples * train_split)
     train_indices = indices[:n_train]
-    test_indices = indices[n_train :]
+    test_indices = indices[n_train:]
 
     # Create data
     train_data = ds.isel(samples=train_indices)

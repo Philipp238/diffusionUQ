@@ -1,30 +1,30 @@
 # Description: Utility functions for training the models.
 
 from itertools import product
+
+import numpy as np
+import scoringrules as sr
 import torch
 import torch.nn as nn
-import torch.distributed as dist
-import numpy as np
-from models.mlp_diffusion import MLP_diffusion_CARD
+from torch.distributions.lowrank_multivariate_normal import LowRankMultivariateNormal
+from torch.distributions.multivariate_normal import MultivariateNormal
+from torch.distributions.normal import Normal
+
 import utils.losses as losses
-import scoringrules as sr
 from models import (
     MLP,
     MLP_CARD,
     MLP_diffusion,
+    MLP_diffusion_mixednormal,
     MLP_diffusion_normal,
     MLP_diffusion_sample,
-    MLP_diffusion_mixednormal,
-    LA_Wrapper,
-    UNetDiffusion,
-    UNet_diffusion_normal,
-    UNet_diffusion_mvnormal,
     UNet_diffusion_mixednormal,
+    UNet_diffusion_mvnormal,
+    UNet_diffusion_normal,
     UNet_diffusion_sample,
+    UNetDiffusion,
 )
-from torch.distributions.lowrank_multivariate_normal import LowRankMultivariateNormal
-from torch.distributions.multivariate_normal import MultivariateNormal
-from torch.distributions.normal import Normal
+from models.mlp_diffusion import MLP_diffusion_CARD
 
 
 def log_and_save_evaluation(value: float, key: str, results_dict: dict, logging):
@@ -48,10 +48,7 @@ def checkpoint(model, filename):
         model (_type_): The torch model.
         filename (_type_): The filename including the path to save the model.
     """
-    if isinstance(model, LA_Wrapper):
-        model.save_state_dict(filename)
-    else:
-        torch.save(model.state_dict(), filename)
+    torch.save(model.state_dict(), filename)
 
 
 def resume(model, filename):
@@ -61,11 +58,7 @@ def resume(model, filename):
         model (_type_): The torch model.
         filename (_type_): The filename including the path to load the model.
     """
-
-    if isinstance(model, LA_Wrapper):
-        model.load_state_dict(filename)
-    else:
-        model.load_state_dict(torch.load(filename))
+    model.load_state_dict(torch.load(filename))
 
 
 def get_criterion(training_parameters, device):
@@ -84,9 +77,16 @@ def get_criterion(training_parameters, device):
                 ).mean()
 
             elif loss == "kernel":
-                criterion = losses.GaussianKernelScore(dimension = "univariate", gamma = training_parameters["gamma"])
+                criterion = losses.GaussianKernelScore(
+                    dimension="univariate", gamma=training_parameters["gamma"]
+                )
             elif loss == "log":
-                criterion = lambda truth, prediction: (-1)* Normal(prediction[...,0], prediction[...,1]).log_prob(truth).mean()
+                criterion = (
+                    lambda truth, prediction: (-1)
+                    * Normal(prediction[..., 0], prediction[..., 1])
+                    .log_prob(truth)
+                    .mean()
+                )
             else:
                 raise AssertionError("Loss function not implemented")
 
@@ -101,16 +101,38 @@ def get_criterion(training_parameters, device):
         elif training_parameters["distributional_method"] == "mixednormal":
             criterion = losses.NormalMixtureCRPS()
         elif training_parameters["distributional_method"] == "mvnormal":
-            if method == "lora":               
+            if method == "lora":
                 if loss == "log":
-                    criterion = lambda truth, prediction: (-1)* LowRankMultivariateNormal(prediction[...,0], prediction[...,2:], prediction[...,1]).log_prob(truth).mean()
-                else: # Kernel loss
-                    criterion = losses.GaussianKernelScore(dimension = "multivariate", gamma = training_parameters["gamma"], method = "lora")
+                    criterion = (
+                        lambda truth, prediction: (-1)
+                        * LowRankMultivariateNormal(
+                            prediction[..., 0], prediction[..., 2:], prediction[..., 1]
+                        )
+                        .log_prob(truth)
+                        .mean()
+                    )
+                else:  # Kernel loss
+                    criterion = losses.GaussianKernelScore(
+                        dimension="multivariate",
+                        gamma=training_parameters["gamma"],
+                        method="lora",
+                    )
             elif method == "cholesky":
                 if loss == "log":
-                    criterion = lambda truth, prediction: (-1)* MultivariateNormal(loc = prediction[...,0], scale_tril=prediction[...,1:]).log_prob(truth).mean()
-                else: # Kernel loss
-                    criterion = losses.GaussianKernelScore(dimension = "multivariate", gamma = training_parameters["gamma"], method = "cholesky")
+                    criterion = (
+                        lambda truth, prediction: (-1)
+                        * MultivariateNormal(
+                            loc=prediction[..., 0], scale_tril=prediction[..., 1:]
+                        )
+                        .log_prob(truth)
+                        .mean()
+                    )
+                else:  # Kernel loss
+                    criterion = losses.GaussianKernelScore(
+                        dimension="multivariate",
+                        gamma=training_parameters["gamma"],
+                        method="cholesky",
+                    )
         else:
             raise ValueError(
                 f'"distributional_method" must be any of the following: "deterministic", "normal", "sample" or'
@@ -140,11 +162,12 @@ def setup_model(
     device,
     target_dim: int,
     input_dim: int,
-):
+) -> nn.Module:
     """Return the model specified by the training parameters.
 
     Args:
-        training_parameters (dict): Dictionary of training parameters
+        data_parameters (dict): Dictionary of data parameters.
+        training_parameters (dict): Dictionary of training parameters.
         device (_type_): Device to run the model on.
         in_channels (int): Number of input channels.
         out_channels (int): Number of output channels.
@@ -169,11 +192,14 @@ def setup_model(
             conditioning_dim=conditioning_dim,
             hidden_channels=training_parameters["hidden_dim"],
             init_features=training_parameters["hidden_dim"],
-            domain_dim = target_dim
+            domain_dim=target_dim,
         )
         if training_parameters["distributional_method"] == "deterministic":
             hidden_model = backbone
-        elif training_parameters["distributional_method"] == "normal" or training_parameters["distributional_method"] == "closed_form_normal":
+        elif (
+            training_parameters["distributional_method"] == "normal"
+            or training_parameters["distributional_method"] == "closed_form_normal"
+        ):
             hidden_model = UNet_diffusion_normal(
                 backbone=backbone,
                 d=d,
@@ -184,23 +210,20 @@ def setup_model(
                 backbone=backbone,
                 d=d,
                 target_dim=1,
-                domain_dim = target_dim[1:],
-                rank = training_parameters["rank"],
-                method = training_parameters["mvnormal_method"]
+                domain_dim=target_dim[1:],
+                rank=training_parameters["rank"],
+                method=training_parameters["mvnormal_method"],
             )
         elif training_parameters["distributional_method"] == "sample":
             backbone = UNetDiffusion(
                 d=d,
-                conditioning_dim=conditioning_dim+1,
+                conditioning_dim=conditioning_dim + 1,
                 hidden_channels=training_parameters["hidden_dim"],
                 init_features=training_parameters["hidden_dim"],
-                domain_dim = target_dim
+                domain_dim=target_dim,
             )
             hidden_model = UNet_diffusion_sample(
                 backbone=backbone,
-                d=d,
-                target_dim=1,
-                hidden_dim=training_parameters["hidden_dim"],
                 n_samples=training_parameters["n_train_samples"],
             )
         elif training_parameters["distributional_method"] == "mixednormal":
@@ -264,7 +287,8 @@ def setup_model(
                 )
             elif (
                 training_parameters["distributional_method"] == "mixednormal"
-                or training_parameters["distributional_method"] == "closed_form_mixednormal"
+                or training_parameters["distributional_method"]
+                == "closed_form_mixednormal"
             ):
                 hidden_model = MLP_diffusion_mixednormal(
                     backbone=backbone,

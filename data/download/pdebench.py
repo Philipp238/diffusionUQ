@@ -1,6 +1,7 @@
-"""Script to download, process and split Darcy Flow datasets from the PDEBench source."""
+# Script to download, process and split Darcy Flow datasets from the PDEBench source.
 
 import os
+
 import numpy as np
 import xarray as xr
 from torchvision.datasets.utils import download_url
@@ -11,7 +12,7 @@ DATASETS = {
 }
 
 
-def data_split(ds, train_test_split, filename, max_steps = 104):
+def data_split(ds, train_test_split, filename, max_steps=104):
     """Split darcy flow dataset into training and testing datasets
 
     Args:
@@ -24,10 +25,10 @@ def data_split(ds, train_test_split, filename, max_steps = 104):
     """
 
     if filename.startswith("1D"):
-        ds = ds.isel(phony_dim_2 = slice(0,max_steps), phony_dim_0 = slice(0,max_steps))
+        ds = ds.isel(phony_dim_2=slice(0, max_steps), phony_dim_0=slice(0, max_steps))
         # t_reduced = ds["t-coordinate"][:-1]
         # ds = ds.drop_vars("t-coordinate")
-        # ds["t-coordinate"] = t_reduced 
+        # ds["t-coordinate"] = t_reduced
         ds = ds.rename(
             {
                 "phony_dim_0": "t",
@@ -45,8 +46,8 @@ def data_split(ds, train_test_split, filename, max_steps = 104):
     test_indices = indices[n_train:]
 
     # Create data
-    train_data = ds.isel(samples = train_indices)
-    test_data = ds.isel(samples = test_indices)
+    train_data = ds.isel(samples=train_indices)
+    test_data = ds.isel(samples=test_indices)
 
     # Save standardization constants as attributes
     mean = train_data.u.mean().item()

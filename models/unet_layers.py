@@ -8,11 +8,13 @@
 """Model architectures and preconditioning schemes used in the paper
 "Elucidating the Design Space of Diffusion-Based Generative Models"."""
 
+import math
+
 import numpy as np
 import torch
-from torch.nn.functional import silu
-import math
 import torch.nn as nn
+from torch.nn.functional import silu
+
 
 # Padding function
 def get_padding(image_size: tuple, depth: int) -> tuple:
@@ -24,10 +26,10 @@ def get_padding(image_size: tuple, depth: int) -> tuple:
         depth (int): Depth of the network.
 
     Returns:
-        tuple: Tuple of padding and unpadding functaion.
+        tuple: Tuple of padding and unpadding function.
     """
     img_size_y, img_size_x = image_size
-    depth_factor = 2 ** depth
+    depth_factor = 2**depth
     pad_factor_x = depth_factor * math.ceil(img_size_x / depth_factor) - img_size_x
     pad_factor_y = depth_factor * math.ceil(img_size_y / depth_factor) - img_size_y
     padding = nn.ZeroPad2d(
@@ -47,6 +49,7 @@ def get_padding(image_size: tuple, depth: int) -> tuple:
         )
     )
     return padding, unpadding, pad_factor_y, pad_factor_x
+
 
 # ----------------------------------------------------------------------------
 # Unified routine for initializing weights and biases.
@@ -100,6 +103,7 @@ class Linear(torch.nn.Module):
 
 # ----------------------------------------------------------------------------
 # Convolutional layer with optional up/downsampling.
+
 
 class Conv1d(torch.nn.Module):
     def __init__(
@@ -196,7 +200,7 @@ class Conv1d(torch.nn.Module):
         if b is not None:
             x = x.add_(b.reshape(1, -1, 1))
         return x
-    
+
 
 class Conv2d(torch.nn.Module):
     def __init__(
@@ -530,7 +534,7 @@ class SongUNet(torch.nn.Module):
         img_resolution,  # Image resolution at input/output.
         in_channels,  # Number of color channels at input.
         out_channels,  # Number of color channels at output.
-        d = 2, # Image dimension
+        d=2,  # Image dimension
         label_dim=0,  # Number of class labels, 0 = unconditional.
         augment_dim=0,  # Augmentation label dimensionality, 0 = no augmentation.
         model_channels=128,  # Base multiplier for the number of channels.
@@ -566,7 +570,9 @@ class SongUNet(torch.nn.Module):
         # Padding if necessary
         if d == 2:
             self.pad = True
-            self.padding, self.unpadding, pad_factor_x, pad_factor_y = get_padding(img_resolution[-2:], 4)
+            self.padding, self.unpadding, pad_factor_x, pad_factor_y = get_padding(
+                img_resolution[-2:], 4
+            )
             adjusted_img_resolution = img_resolution[-1] + pad_factor_y
         else:
             self.pad = False
@@ -661,7 +667,11 @@ class SongUNet(torch.nn.Module):
                 cout = model_channels * mult
                 attn = res in attn_resolutions
                 self.enc[f"{res}x{res}_block{idx}"] = UNetBlock(
-                    in_channels=cin, out_channels=cout, attention=attn, d=d, **block_kwargs
+                    in_channels=cin,
+                    out_channels=cout,
+                    attention=attn,
+                    d=d,
+                    **block_kwargs,
                 )
         skips = [
             block.out_channels for name, block in self.enc.items() if "aux" not in name
@@ -673,7 +683,11 @@ class SongUNet(torch.nn.Module):
             res = adjusted_img_resolution >> level
             if level == len(channel_mult) - 1:
                 self.dec[f"{res}x{res}_in0"] = UNetBlock(
-                    in_channels=cout, out_channels=cout, attention=True, d=d, **block_kwargs
+                    in_channels=cout,
+                    out_channels=cout,
+                    attention=True,
+                    d=d,
+                    **block_kwargs,
                 )
                 self.dec[f"{res}x{res}_in1"] = UNetBlock(
                     in_channels=cout, out_channels=cout, d=d, **block_kwargs
@@ -687,7 +701,11 @@ class SongUNet(torch.nn.Module):
                 cout = model_channels * mult
                 attn = idx == num_blocks and res in attn_resolutions
                 self.dec[f"{res}x{res}_block{idx}"] = UNetBlock(
-                    in_channels=cin, out_channels=cout, attention=attn, d=d, **block_kwargs
+                    in_channels=cin,
+                    out_channels=cout,
+                    attention=attn,
+                    d=d,
+                    **block_kwargs,
                 )
             if decoder_type == "skip" or level == 0:
                 if decoder_type == "skip" and level < len(channel_mult) - 1:
@@ -765,78 +783,27 @@ class SongUNet(torch.nn.Module):
         if self.pad:
             aux = self.unpadding(aux)
         return aux
-    
 
 
-
-
-if __name__=='__main__':
+if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print('#### Test Model ###')
-    # input_grid = torch.rand(1, 50, 128, 128).to(device)
-    # model = EDMPrecond(img_resolution=128, img_channels=17, model_type='SongUNet_old').to(device)
-    # model = EDMPrecond(img_resolution=128, img_channels=17).to(device)
-
-
-    # input_grid = torch.rand(1, 2, 256, 256).to(device)
-    # model = SongUNet(img_resolution=256, in_channels=3, out_channels=1, attn_resolutions=[16], model_channels = 32).to(device)
-    # # print(model)
-
-    # true_states = torch.rand(input_grid.shape[0], 1, input_grid.shape[2], input_grid.shape[3]).to(device)
-
-    # # Sample from F inverse
-    # rnd_uniform = torch.rand([input_grid.shape[0], 1, 1, 1], device=input_grid.device)
-    # rho = 7
-    # sigma_min = 0.02
-    # sigma_max = 88
-    # rho_inv = 1 / rho
-    # sigma_max_rho = sigma_max ** rho_inv
-    # sigma_min_rho = sigma_min ** rho_inv
-    # sigma = (sigma_max_rho + rnd_uniform * (sigma_min_rho - sigma_max_rho)) ** rho
-    # y = true_states
-
-    # n = torch.randn_like(y) * sigma
-
-    # noisy_input = y+n
-
-    # y = model(noisy_input, sigma.flatten(), class_labels = input_grid)
-    # print(y.size())
-    # model_parameters = filter(lambda p: p.requires_grad, model.parameters())
-    # params = sum([np.prod(p.size()) for p in model_parameters])
-    # print(params)
-    
+    print("#### Test Model ###")
     # 2D
-
-    x_t = torch.rand(2,1, 40).to(device)
-    t = torch.rand(2,1).to(device)
+    x_t = torch.rand(2, 1, 40).to(device)
+    t = torch.rand(2, 1).to(device)
     t = t.unsqueeze(-1).type(torch.float32)
-    condition = torch.rand(2, 14, 40,).to(device)
+    condition = torch.rand(
+        2,
+        14,
+        40,
+    ).to(device)
     img_resolution = 55
-    model = SongUNet(img_resolution=[40], in_channels=15, out_channels=1, attn_resolutions=[16], model_channels = 16, d = 1).to(device)
+    model = SongUNet(
+        img_resolution=[40],
+        in_channels=15,
+        out_channels=1,
+        attn_resolutions=[16],
+        model_channels=16,
+        d=1,
+    ).to(device)
     test = model(x_t, t, condition)
-    # print(model)
-
-    # true_states = torch.rand(input_grid.shape[0], 1, input_grid.shape[2]).to(device)
-
-    # # Sample from F inverse
-    # rnd_uniform = torch.rand([input_grid.shape[0], 1, 1], device=input_grid.device)
-    # rho = 7
-    # sigma_min = 0.02
-    # sigma_max = 88
-    # rho_inv = 1 / rho
-    # sigma_max_rho = sigma_max ** rho_inv
-    # sigma_min_rho = sigma_min ** rho_inv
-    # sigma = (sigma_max_rho + rnd_uniform * (sigma_min_rho - sigma_max_rho)) ** rho
-    # y = true_states
-
-    # n = torch.randn_like(y) * sigma
-
-    # noisy_input = y+n
-
-    # y = model(noisy_input, sigma.flatten(), class_labels = input_grid)
-    # print(y.size())
-    # model_parameters = filter(lambda p: p.requires_grad, model.parameters())
-    # params = sum([np.prod(p.size()) for p in model_parameters])
-    # print(params)
-
-

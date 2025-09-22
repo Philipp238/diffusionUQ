@@ -344,7 +344,7 @@ def generate_diffusion_samples_low_dimensional(
     closed_form=False,
     regressor=None,
     cfg_scale=3,
-    gt_images=None,
+    gt_target=None,
     ddim_churn=1.0,
     noise_schedule=None,
     metrics_plots=False,
@@ -376,7 +376,7 @@ def generate_diffusion_samples_low_dimensional(
             tau = tau,
         )
 
-    sampled_images = torch.zeros(*target_shape, n_samples).to(input.device)
+    sampled_targets = torch.zeros(*target_shape, n_samples).to(input.device)
     if regressor is None:
         pred = None
     else:
@@ -384,37 +384,37 @@ def generate_diffusion_samples_low_dimensional(
 
     if (
         metrics_plots
-        and gt_images is not None
+        and gt_target is not None
         and pred is not None
         and distributional_method != "deterministic"
     ):
         repeated_pred = pred.repeat_interleave(n_samples, dim=0)
         repeated_labels = input.repeat_interleave(n_samples, dim=0)
-        sampled_images, crps_over_time, rmse_over_time, distr_over_time = (
+        sampled_targets, crps_over_time, rmse_over_time, distr_over_time = (
             diffusion.sample_low_dimensional(
                 model,
                 n=repeated_labels.shape[0],
                 conditioning=repeated_labels,
                 pred=repeated_pred,
                 cfg_scale=cfg_scale,
-                gt_images=gt_images,
+                gt_target=gt_target,
             )
         )
-        sampled_images = sampled_images.reshape(
+        sampled_targets = sampled_targets.reshape(
             target_shape[0], n_samples, *target_shape[1:]
         ).moveaxis(1, -1)
-        return sampled_images, crps_over_time, rmse_over_time, distr_over_time
+        return sampled_targets, crps_over_time, rmse_over_time, distr_over_time
     else:
         for i in range(n_samples):
             with torch.no_grad():
-                sampled_images[..., i] = diffusion.sample_low_dimensional(
+                sampled_targets[..., i] = diffusion.sample_low_dimensional(
                     model,
                     n=input.shape[0],
                     conditioning=input,
                     pred=pred,
                     cfg_scale=cfg_scale,
                 ).detach()
-        return sampled_images
+        return sampled_targets
 
 
 class DistributionalDiffusion(Diffusion):
@@ -594,11 +594,11 @@ class DistributionalDiffusion(Diffusion):
         return new_x
 
     def sample_low_dimensional(
-        self, model, n, conditioning=None, cfg_scale=3, pred=None, gt_images=None
+        self, model, n, conditioning=None, cfg_scale=3, pred=None, gt_target=None
     ):
         model.eval()
-        if gt_images is not None:
-            n_samples = n // gt_images.shape[0]
+        if gt_target is not None:
+            n_samples = n // gt_target.shape[0]
 
             crps_per_t = []
             rmse_per_t = []
@@ -635,17 +635,17 @@ class DistributionalDiffusion(Diffusion):
                         )
                     x = self.sample_x_t_inference_DDIM(x, t, predicted_noise, pred, i)
 
-                if gt_images is not None:
+                if gt_target is not None:
                     single_pred = pred.reshape(
-                        (gt_images.shape[0], n_samples, *self.img_size)
+                        (gt_target.shape[0], n_samples, *self.img_size)
                     ).mean(dim=1)
                     gt_images_t = self.noise_low_dimensional(
-                        gt_images,
-                        (torch.ones(gt_images.shape[0]) * i).long().to(self.device),
+                        gt_target,
+                        (torch.ones(gt_target.shape[0]) * i).long().to(self.device),
                         pred=single_pred,
                     )[0]
                     x_t = x.reshape(
-                        gt_images.shape[0], n_samples, *self.img_size
+                        gt_target.shape[0], n_samples, *self.img_size
                     ).moveaxis(1, -1)
                     crps_per_t.append(
                         crps_ensemble(
@@ -664,7 +664,7 @@ class DistributionalDiffusion(Diffusion):
                     )
         model.train()
 
-        if gt_images is not None:
+        if gt_target is not None:
             return x, crps_per_t, rmse_per_t, distr_per_t
         else:
             return x

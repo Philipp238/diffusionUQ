@@ -3,11 +3,9 @@ import os
 import numpy as np
 import pandas as pd
 import torch
-import torchvision
 
-from data.images import CustomImageDataset
-from data.low_dimensional import RegressionDataset
 from data.datasets import PDE1D, WeatherBench
+from data.low_dimensional import RegressionDataset
 
 UCI_DATASET_NAMES = [
     "concrete",

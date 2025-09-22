@@ -1,11 +1,13 @@
+# Includes the autoregressive datasets, i.e. one-dimensional PDEs and WeatherBench dataset.
+
 import os
 from typing import Tuple
 
+import numpy as np
 import pandas as pd
 import torch
 import xarray as xr
 from torch.utils.data import Dataset
-import numpy as np
 
 WB_INPUT = [
     "2m_temperature",
@@ -46,13 +48,24 @@ class PDE1D(Dataset):
         seed: int = 0,
         train_split: float = 0.9,
     ) -> None:
-        """Initialize PDE1D Dataset
+        """Initialize the PDE dataset.
 
         Args:
-            data_dir (str): Data directory.
-            test (bool, optional): Whether to load train or test data. Defaults to False.
-            downscaling_factor (int, optional): Downscaling for spatial resolution. Defaults to 1.
+            data_dir (str): Data directory
+            pde (str): PDE choice.
+            var (str, optional): Train/test/val variable. Defaults to "train".
+            downscaling_factor (int, optional): Grid downscaling factor. Defaults to 1.
+            temporal_downscaling_factor (int, optional): Temporal downscaling factor. Defaults to 2.
+            last_t_steps (int, optional): Last t timesteps to use as input. Defaults to 2.
+            normalize (bool, optional): Normalization. Defaults to True.
+            select_timesteps (str, optional): Timestep selection method. Defaults to "zero".
+            seed (int, optional): Seed. Defaults to 0.
+            train_split (float, optional): Train-test-val split. Defaults to 0.9.
+
+        Raises:
+            ValueError: Scaling factors must be integers.
         """
+
         if pde not in ["Advection", "Burgers", "ReacDiff", "KS"]:
             raise ValueError(
                 "PDE must be one of the following: 'Advection', 'Burgers', 'ReacDiff', 'KS'"
@@ -101,10 +114,9 @@ class PDE1D(Dataset):
             :: self.downscaling_factor
         ].values.copy()
 
-
     def train_val_split(self):
-        rng = np.random.default_rng(seed = self.seed)
-        indices = rng.choice(self.n, size = self.n, replace = False)
+        rng = np.random.default_rng(seed=self.seed)
+        indices = rng.choice(self.n, size=self.n, replace=False)
         n_train = int(self.n * self.train_split)
         if self.var == "train":
             return indices[:n_train]
@@ -112,7 +124,6 @@ class PDE1D(Dataset):
             return indices[n_train:]
         else:
             return None
-
 
     def __len__(self) -> int:
         """Returns the length of the dataset
@@ -179,7 +190,7 @@ class PDE1D(Dataset):
             length (int, optional): Length of the trajectory. Defaults to 10.
 
         Returns:
-            torch.Tensor: Trajectory tensor
+            tuple: Trajectory tensor, Input tensor
         """
         input = self.data[idx, 0 : self.last_t_steps].values.copy()
         target = self.data[idx, 0 : (self.last_t_steps + length)].values.copy()
@@ -210,15 +221,33 @@ class PDE1D(Dataset):
         return (x,)
 
     def get_grid(self) -> Tuple:
+        """Returns the grid of the dataset.
+
+        Returns:
+            Tuple: Tuple containing x and t coordinate values
+        """
         x = self.dataset["x-coordinate"][:: self.downscaling_factor].values
         t = self.dataset["t-coordinate"][:: self.temporal_downscaling_factor].values
         return (x, t)
 
     def get_dimensions(self) -> Tuple:
+        """Get dimensions of the coordinates.
+
+        Returns:
+            Tuple: Size of the data-dimensions.
+        """
         x = len(self.dataset["x-coordinate"][:: self.downscaling_factor].values)
         return (x,)
 
-    def destandardize_output(self, u):
+    def destandardize_output(self, u:torch.Tensor)->torch.Tensor:
+        """Destandardize a tensor.
+
+        Args:
+            u (torch.Tensor): Input Tensor.
+
+        Returns:
+            torch.Tensor: Destandardized output tensor
+        """
         if hasattr(self, "mean") and hasattr(self, "std"):
             return u * self.std + self.mean
         else:
@@ -239,32 +268,38 @@ class WeatherBench(Dataset):
         last_t_steps: int = 2,
         preload: bool = True,
     ):
+        """Initialize WeatherBench2 dataset.
+
+        Args:
+            data_path (str, optional): Data path. Defaults to "/home/groups/ai/datasets/weather_forecasting/".
+            var (str, optional): Train/test/val selection. Defaults to "train".
+            normalize (bool, optional): Normalization. Defaults to True.
+            downscaling_factor (int, optional): Grid downscaling factor. Defaults to 1.
+            last_t_steps (int, optional): Last t timesteps to use. Defaults to 2.
+            preload (bool, optional): Whether to preload the whole dataset into RAM. Defaults to True.
+        """
         self.var = var
         self.normalize = normalize
         self.last_t_steps = last_t_steps
         self.downscaling_factor = downscaling_factor
 
         time_slice = self.get_split(self.var)
-        if self.var == "ood":
-            zarr_path = os.path.join(data_path, "era5_ood.zarr")
-        else:
-            zarr_path = os.path.join(data_path, "era5.zarr")
+        zarr_path = os.path.join(data_path, "era5.zarr")
         self.dataset = xr.open_zarr(zarr_path, consolidated=False)[WB_INPUT].sel(
             time=time_slice
         )
         self.mean, self.std = self.get_statistics(data_path)
         self.dataset = self.dataset.isel(
-                        latitude=slice(None, None, downscaling_factor),
-                        longitude=slice(None, None, downscaling_factor),
-                    )
+            latitude=slice(None, None, downscaling_factor),
+            longitude=slice(None, None, downscaling_factor),
+        )
         if preload:
             self.data_array = self.dataset.to_array().load()
         else:
             self.data_array = None
-           
-        self.time_len = self.dataset.time[4:- last_t_steps][::4].size # Adjust for UTC00
-        self.n_vars = len(WB_INPUT)
 
+        self.time_len = self.dataset.time[4:-last_t_steps][::4].size  # Adjust for UTC00
+        self.n_vars = len(WB_INPUT)
 
     @staticmethod
     def get_split(var: str) -> slice:
@@ -274,13 +309,19 @@ class WeatherBench(Dataset):
             return slice("2020", "2020")
         elif var == "test":
             return slice("2021", "2022")
-        elif var == "ood":
-            return slice("2022", "2022")
         else:
             raise AssertionError(f"{var} is not in [train, val, test]")
 
     @staticmethod
     def get_statistics(data_path: str) -> Tuple:
+        """Load data statistics from path.
+
+        Args:
+            data_path (str): Path to data folder
+
+        Returns:
+            Tuple: Tuple of mean and standard deviation of data.
+        """
         statistics = np.load(os.path.join(data_path, "era5_statistics.npy"))
         mean, std = np.split(statistics, 2, axis=-1)
         return mean.squeeze(), std.squeeze()
@@ -303,12 +344,14 @@ class WeatherBench(Dataset):
             tuple: Tuple containing the input and output tensors
         """
         # Create index for UTC00 and 6h forecast
-        utc_idx = ((idx+1) * 4) - self.last_t_steps + 1
+        utc_idx = ((idx + 1) * 4) - self.last_t_steps + 1
         if self.data_array is not None:
-            sample = self.data_array[:, utc_idx : utc_idx + self.last_t_steps + 1].values.copy()
+            sample = self.data_array[
+                :, utc_idx : utc_idx + self.last_t_steps + 1
+            ].values.copy()
         else:
             sample = (
-                self.dataset.isel(time=slice(utc_idx , utc_idx + self.last_t_steps + 1))
+                self.dataset.isel(time=slice(utc_idx, utc_idx + self.last_t_steps + 1))
                 .to_array()
                 .values.copy()
             )
@@ -338,7 +381,15 @@ class WeatherBench(Dataset):
 
         return target_tensor, input_tensor
 
-    def destandardize_output(self, u):
+    def destandardize_output(self, u:torch.Tensor)->torch.Tensor:
+        """Destandardize a tensor.
+
+        Args:
+            u (torch.Tensor): Input Tensor.
+
+        Returns:
+            torch.Tensor: Destandardized output tensor
+        """
         if self.normalize:
             target_idx = np.isin(WB_INPUT, WB_TARGET)
             return (
@@ -349,12 +400,22 @@ class WeatherBench(Dataset):
             return u
 
     def get_grid(self) -> Tuple:
+        """Returns the grid of the dataset.
+
+        Returns:
+            Tuple: Tuple containing x (lat,lon) and t coordinate values
+        """
         lat = self.dataset.latitude.values
         lon = self.dataset.longitude.values
-        t = self.dataset.time[4:][::4] + pd.Timedelta("6h") # Returns prediction time
+        t = self.dataset.time[4:][::4] + pd.Timedelta("6h")  # Returns prediction time
         return ((lat, lon), t)
 
     def get_dimensions(self) -> Tuple:
+        """Get dimensions of the coordinates.
+
+        Returns:
+            Tuple: Size of the data-dimensions (lat,lon).
+        """
         x = self.dataset.sizes["latitude"]
         y = self.dataset.sizes["longitude"]
         return (x, y)
@@ -362,7 +423,9 @@ class WeatherBench(Dataset):
 
 if __name__ == "__main__":
     # # Example usage
-    dataset = WeatherBench(var="train", normalize=True, downscaling_factor=2, preload = False)
+    dataset = WeatherBench(
+        var="train", normalize=True, downscaling_factor=2, preload=False
+    )
     print(f"Dataset length: {len(dataset)}")
     print(f"Temporal: {dataset.time_len}")
     target_tensor, input_tensor = dataset.__getitem__(728)
@@ -372,40 +435,5 @@ if __name__ == "__main__":
     ll, t = dataset.get_grid()
     lat, lon = ll
     print(lat.shape, lon.shape, t.shape)
-    x,y = dataset.get_dimensions()
+    x, y = dataset.get_dimensions()
     print(x, y)
-
-
-    import resource
-    point = ""
-    usage = resource.getrusage(resource.RUSAGE_SELF)
-    # you can convert that object to a dictionary
-    print(f"{point}: mem (CPU python)={usage[2] / 1024.0}MB;")
-
-    # data_dir = "data"
-    # dataset = PDE1D(
-    #     data_dir,
-    #     pde="Burgers",
-    #     var="train",
-    #     downscaling_factor=4,
-    #     temporal_downscaling_factor=2,
-    #     normalize=True,
-    #     last_t_steps=2,
-    #     select_timesteps="zero",
-    #     seed = 0
-    # )
-    # print(f"Dataset length: {len(dataset)}")
-    # print(f"Temporal: {dataset.t_size}")
-    # target_tensor, input_tensor = dataset.__getitem__(899)
-    # print(f"Input tensor shape: {input_tensor.shape}")
-    # print(f"Target tensor shape: {target_tensor.shape}")
-    # x_coordinates = dataset.get_coordinates()
-    # print(f"x-coordinates shape: {x_coordinates[0].shape}")
-    # print(
-    #     input_tensor[0].mean(),
-    #     target_tensor.mean(),
-    #     input_tensor[0].std(),
-    #     target_tensor.std(),
-    # )
-    # x, t = dataset.get_grid()
-    # print(x.shape, t.shape)
