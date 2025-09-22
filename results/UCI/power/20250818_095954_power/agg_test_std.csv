@@ -1,5 +1,5 @@
-n_timesteps,n_epochs,distributional_method,n_components,RMSETest,EnergyScoreTest,CRPSTest,Gaussian NLLTest,CoverageTest,QICETest
-50,5000,deterministic,3,3.86 ± 0.17,2.06 ± 0.05,2.04 ± 0.05,2.98 ± 0.12,0.82 ± 0.02,0.04 ± 0.0
-50,5000,mixednormal,3,3.59 ± 0.17,1.82 ± 0.06,1.81 ± 0.06,2.92 ± 0.3,0.87 ± 0.02,0.02 ± 0.0
-50,5000,normal,3,3.64 ± 0.19,1.85 ± 0.06,1.84 ± 0.06,2.84 ± 0.19,0.89 ± 0.01,0.02 ± 0.0
-50,5000,sample,3,3.78 ± 0.17,1.95 ± 0.07,1.93 ± 0.07,2.77 ± 0.08,0.9 ± 0.01,0.01 ± 0.0
+n_timesteps, n_epochs, distributional_method, n_components, RMSETest   , EnergyScoreTest, CRPSTest   , Gaussian NLLTest, CoverageTest, QICETest
+         50,     5000, deterministic        ,            3, 3.86 ± 0.17, 2.06 ± 0.05    , 2.04 ± 0.05, 2.98 ± 0.12     , 0.82 ± 0.02 , 0.04 ± 0.0
+         50,     5000, mixednormal          ,            3, 3.59 ± 0.17, 1.82 ± 0.06    , 1.81 ± 0.06, 2.92 ± 0.3      , 0.87 ± 0.02 , 0.02 ± 0.0
+         50,     5000, normal               ,            3, 3.64 ± 0.19, 1.85 ± 0.06    , 1.84 ± 0.06, 2.84 ± 0.19     , 0.89 ± 0.01 , 0.02 ± 0.0
+         50,     5000, sample               ,            3, 3.78 ± 0.17, 1.95 ± 0.07    , 1.93 ± 0.07, 2.77 ± 0.08     , 0.9 ± 0.01  , 0.01 ± 0.0
