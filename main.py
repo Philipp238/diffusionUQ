@@ -247,10 +247,10 @@ if __name__ == "__main__":
                 regressor.eval()
 
                 training_dataset, validation_dataset, test_dataset = get_datasets(
-                data_dir,
-                data_parameters,
-                training_parameters,
-                seed,
+                    data_dir,
+                    data_parameters,
+                    training_parameters,
+                    seed,
                 )
 
                 logging.info(using("After creating the dataloaders"))
@@ -295,34 +295,6 @@ if __name__ == "__main__":
                 regressor.eval()
             else:
                 regressor = None
-
-            if training_parameters.get("match_model_in_dir", None):
-                match_model_in_dir = training_parameters["match_model_in_dir"]
-
-                if training_parameters["distributional_method"].startswith(
-                    "closed_form"
-                ):
-                    distr_method = training_parameters["distributional_method"][12:]
-                else:
-                    distr_method = training_parameters["distributional_method"]
-
-                search_string = (
-                    f"{data_parameters['dataset_name']}{splitstring}_"
-                    f"{training_parameters['model']}_"
-                    f"{training_parameters['uncertainty_quantification']}_"
-                    f"{distr_method}_"
-                    f"T{training_parameters['n_timesteps']}_"
-                    f"DDIM1.pt"
-                )
-
-                pattern = re.compile(search_string)
-
-                files = [f for f in os.listdir(match_model_in_dir) if pattern.search(f)]
-                assert len(files) == 1
-
-                training_parameters["filename_to_validate"] = os.path.join(
-                    match_model_in_dir, files[0]
-                )
 
             if training_parameters.get("filename_to_validate", None):
                 # In case you ONLY want to validate all models in a certain directory; loads the model (instead of training it)

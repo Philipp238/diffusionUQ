@@ -120,8 +120,8 @@ def train(
         predicted_noise = net(x_t, t, input, pred = pred)
         loss = criterion(noise, predicted_noise)
     else:
-        predicted_images = net(input)
-        loss = criterion(target, predicted_images)
+        predicted_noise = net(input)
+        loss = criterion(target, predicted_noise)
 
 
     loss = loss / batch_accumulation
