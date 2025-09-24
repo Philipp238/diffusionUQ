@@ -1,5 +1,0 @@
-backbone,x_T_sampling_method,distributional_method,RMSETest,EnergyScoreTest,CRPSTest,Gaussian NLLTest,CoverageTest,QICETest
-CARD,CARD,deterministic,1.295,0.565,0.561,1.264,0.903,0.065
-CARD,CARD,mixednormal,1.217,0.523,0.519,1.265,0.918,0.056
-CARD,CARD,normal,1.268,0.549,0.545,1.439,0.9,0.06
-CARD,CARD,sample,1.258,0.532,0.529,1.437,0.891,0.057
