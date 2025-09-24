@@ -1,0 +1,17 @@
+INFO:root:Starting the logger.
+INFO:root:Using device cuda.
+INFO:root:Using 4 threads
+INFO:root:: mem (CPU python)=574.5703125MB; mem (CPU total)=2768.6953125MB
+INFO:root:############### Starting experiment with config file configs_250814_CARD_sampling_and_epochs_likeCARD/concrete.ini ###############
+INFO:root:###1 out of 9 data set parameter combinations ###
+INFO:root:Data parameters: {'dataset_name': 'concrete', 'downscaling_factor': 1, 'yarin_gal_uci_split_indices': 11, 'max_dataset_size': 1000, 'standardize': True, 'select_timesteps': 'zero', 'temporal_downscaling_factor': 1, 'validation_ratio': 0.0}
+INFO:root:After loading the datasets: mem (CPU python)=574.5703125MB; mem (CPU total)=2768.6953125MB
+INFO:root:###1 out of 4 training parameter combinations ###
+INFO:root:Training parameters: {'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'report_every': 50, 'seed': 1234, 'distributed_training': False, 'backbone': 'CARD', 'batch_size': 32, 'batch_accumulation': 1, 'eval_batch_size': 16384, 'n_epochs': 5000, 'early_stopping': 1000, 'init': 'default', 'learning_rate': 0.001, 'warmup_lr': 0, 'lr_schedule': 'no', 'optimizer': 'adam', 'gradient_clipping': 1, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'n_val_samples': 10, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'n_timesteps': 50, 'beta_endpoints': (0.001, 0.35), 'distributional_method': 'deterministic', 'loss': 'crps', 'closed_form': True, 'concat_condition_diffusion': True, 'evaluate': True, 'val_only': False, 'x_T_sampling_method': 'CARD', 'conditional_free_guidance_training': False, 'ddim_churn': 1.0, 'noise_schedule': 'linear', 'regressor': 'orig_CARD_pretrain', 'n_components': 3, 'gamma': 5.0, 'rank': 10, 'mvnormal_method': 'lora', 'n_train_samples': 10, 'metrics_plots': False}
+INFO:root:Using pre-trained regressor from the CARD repo
+INFO:root:After creating the dataloaders: mem (CPU python)=684.6484375MB; mem (CPU total)=2863.984375MB
+INFO:root:Performance of pre-trained regressor on test set: RMSE=4.2
+INFO:train:NumberParameters: 418945.0
+INFO:train:GPU memory allocated: 23068672
+INFO:train:After setting up the model: mem (CPU python)=722.2890625MB; mem (CPU total)=2884.484375MB
+INFO:train:Training starts now.

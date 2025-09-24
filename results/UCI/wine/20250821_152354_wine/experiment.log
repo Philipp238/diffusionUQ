@@ -1,0 +1,1328 @@
+INFO:root:Starting the logger.
+INFO:root:Using device cuda.
+INFO:root:Using 4 threads
+INFO:root:: mem (CPU python)=599.33203125MB; mem (CPU total)=7187.87109375MB
+INFO:root:############### Starting experiment with config file configs_250814_CARD_sampling_and_epochs_likeCARD/wine.ini ###############
+INFO:root:###1 out of 9 data set parameter combinations ###
+INFO:root:Data parameters: {'dataset_name': 'wine-quality-red', 'downscaling_factor': 1, 'yarin_gal_uci_split_indices': 11, 'max_dataset_size': 1000, 'standardize': True, 'select_timesteps': 'zero', 'temporal_downscaling_factor': 1, 'validation_ratio': 0.0}
+INFO:root:After loading the datasets: mem (CPU python)=599.51171875MB; mem (CPU total)=7187.87109375MB
+INFO:root:###1 out of 4 training parameter combinations ###
+INFO:root:Training parameters: {'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'report_every': 50, 'seed': 1234, 'distributed_training': False, 'backbone': 'CARD', 'batch_size': 32, 'batch_accumulation': 1, 'eval_batch_size': 16384, 'n_epochs': 5000, 'early_stopping': 1000, 'init': 'default', 'learning_rate': 0.001, 'warmup_lr': 0, 'lr_schedule': 'no', 'optimizer': 'adam', 'gradient_clipping': 1, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'n_val_samples': 10, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'n_timesteps': 50, 'beta_endpoints': (0.001, 0.35), 'distributional_method': 'deterministic', 'loss': 'crps', 'closed_form': True, 'concat_condition_diffusion': True, 'evaluate': True, 'val_only': False, 'x_T_sampling_method': 'CARD', 'conditional_free_guidance_training': False, 'ddim_churn': 1.0, 'noise_schedule': 'linear', 'regressor': 'orig_CARD_pretrain', 'n_components': 3, 'gamma': 5.0, 'rank': 10, 'mvnormal_method': 'lora', 'n_train_samples': 10, 'metrics_plots': False}
+INFO:root:Using pre-trained regressor from the CARD repo
+INFO:root:After creating the dataloaders: mem (CPU python)=2119.953125MB; mem (CPU total)=9763.0859375MB
+INFO:root:Performance of pre-trained regressor on test set: RMSE=0.63
+INFO:train:NumberParameters: 419329.0
+INFO:train:GPU memory allocated: 23068672
+INFO:train:After setting up the model: mem (CPU python)=3152.2890625MB; mem (CPU total)=11470.33203125MB
+INFO:train:Training starts now.
+INFO:train:t_training_avg: 0.21006
+INFO:train:t_training_med: 0.20903
+INFO:train:t_training_std: 0.01315
+INFO:train:After finishing all epochs: mem (CPU python)=3167.234375MB; mem (CPU total)=11000.91015625MB
+INFO:train:Proceeding with diffusion model after 5000 epochs of training
+INFO:root:Training the model took 1740.511s.
+INFO:root:Emptying the cuda cache took 0.0s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.
+INFO:root:Evaluating the model on Train data took 4.555s.
+INFO:root:MSETrain: 0.05021
+INFO:root:RMSETrain: 0.22408
+INFO:root:EnergyScoreTrain: 0.05707
+INFO:root:CRPSTrain: 0.05627
+INFO:root:Gaussian NLLTrain: 2.09669
+INFO:root:CoverageTrain: 0.52884
+INFO:root:QICETrain: 0.09885
+INFO:root:Evaluating the model on Test data.
+INFO:root:Evaluating the model on Test data took 4.497s.
+INFO:root:MSETest: 0.4802
+INFO:root:RMSETest: 0.69297
+INFO:root:EnergyScoreTest: 0.32318
+INFO:root:CRPSTest: 0.32209
+INFO:root:Gaussian NLLTest: 6669.85303
+INFO:root:CoverageTest: 0.38125
+INFO:root:QICETest: 0.10875
+INFO:root:After validation: mem (CPU python)=3184.25390625MB; mem (CPU total)=11008.9765625MB
+INFO:root:###2 out of 4 training parameter combinations ###
+INFO:root:Training parameters: {'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'report_every': 50, 'seed': 1234, 'distributed_training': False, 'backbone': 'CARD', 'batch_size': 32, 'batch_accumulation': 1, 'eval_batch_size': 16384, 'n_epochs': 5000, 'early_stopping': 1000, 'init': 'default', 'learning_rate': 0.001, 'warmup_lr': 0, 'lr_schedule': 'no', 'optimizer': 'adam', 'gradient_clipping': 1, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'n_val_samples': 10, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'n_timesteps': 50, 'beta_endpoints': (0.001, 0.35), 'distributional_method': 'normal', 'loss': 'crps', 'closed_form': True, 'concat_condition_diffusion': True, 'evaluate': True, 'val_only': False, 'x_T_sampling_method': 'CARD', 'conditional_free_guidance_training': False, 'ddim_churn': 1.0, 'noise_schedule': 'linear', 'regressor': 'orig_CARD_pretrain', 'n_components': 3, 'gamma': 5.0, 'rank': 10, 'mvnormal_method': 'lora', 'n_train_samples': 10, 'metrics_plots': False}
+INFO:root:Using pre-trained regressor from the CARD repo
+INFO:root:After creating the dataloaders: mem (CPU python)=3184.25390625MB; mem (CPU total)=11008.9765625MB
+INFO:root:Performance of pre-trained regressor on test set: RMSE=0.63
+INFO:train:NumberParameters: 419587.0
+INFO:train:GPU memory allocated: 33554432
+INFO:train:After setting up the model: mem (CPU python)=3184.25390625MB; mem (CPU total)=11008.9765625MB
+INFO:train:Training starts now.
+INFO:train:t_training_avg: 0.24729
+INFO:train:t_training_med: 0.24727
+INFO:train:t_training_std: 0.00219
+INFO:train:After finishing all epochs: mem (CPU python)=3185.0234375MB; mem (CPU total)=11020.1640625MB
+INFO:train:Proceeding with diffusion model after 5000 epochs of training
+INFO:root:Training the model took 1914.833s.
+INFO:root:Emptying the cuda cache took 0.0s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.
+INFO:root:Evaluating the model on Train data took 6.308s.
+INFO:root:MSETrain: 0.0389
+INFO:root:RMSETrain: 0.19723
+INFO:root:EnergyScoreTrain: 0.04081
+INFO:root:CRPSTrain: 0.04
+INFO:root:Gaussian NLLTrain: -0.56636
+INFO:root:CoverageTrain: 0.98541
+INFO:root:QICETrain: 0.05191
+INFO:root:Evaluating the model on Test data.
+INFO:root:Evaluating the model on Test data took 6.166s.
+INFO:root:MSETest: 0.39808
+INFO:root:RMSETest: 0.63093
+INFO:root:EnergyScoreTest: 0.29145
+INFO:root:CRPSTest: 0.29031
+INFO:root:Gaussian NLLTest: 124.80193
+INFO:root:CoverageTest: 0.825
+INFO:root:QICETest: 0.03625
+INFO:root:After validation: mem (CPU python)=3186.43359375MB; mem (CPU total)=11021.78125MB
+INFO:root:###3 out of 4 training parameter combinations ###
+INFO:root:Training parameters: {'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'report_every': 50, 'seed': 1234, 'distributed_training': False, 'backbone': 'CARD', 'batch_size': 32, 'batch_accumulation': 1, 'eval_batch_size': 16384, 'n_epochs': 5000, 'early_stopping': 1000, 'init': 'default', 'learning_rate': 0.001, 'warmup_lr': 0, 'lr_schedule': 'no', 'optimizer': 'adam', 'gradient_clipping': 1, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'n_val_samples': 10, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'n_timesteps': 50, 'beta_endpoints': (0.001, 0.35), 'distributional_method': 'sample', 'loss': 'crps', 'closed_form': True, 'concat_condition_diffusion': True, 'evaluate': True, 'val_only': False, 'x_T_sampling_method': 'CARD', 'conditional_free_guidance_training': False, 'ddim_churn': 1.0, 'noise_schedule': 'linear', 'regressor': 'orig_CARD_pretrain', 'n_components': 3, 'gamma': 5.0, 'rank': 10, 'mvnormal_method': 'lora', 'n_train_samples': 10, 'metrics_plots': False}
+INFO:root:Using pre-trained regressor from the CARD repo
+INFO:root:After creating the dataloaders: mem (CPU python)=3186.43359375MB; mem (CPU total)=11021.78125MB
+INFO:root:Performance of pre-trained regressor on test set: RMSE=0.63
+INFO:train:NumberParameters: 419457.0
+INFO:train:GPU memory allocated: 25165824
+INFO:train:After setting up the model: mem (CPU python)=3186.43359375MB; mem (CPU total)=11021.78125MB
+INFO:train:Training starts now.
+INFO:train:t_training_avg: 0.2354
+INFO:train:t_training_med: 0.23504
+INFO:train:t_training_std: 0.0028
+INFO:train:After finishing all epochs: mem (CPU python)=3191.12109375MB; mem (CPU total)=11096.4140625MB
+INFO:train:Proceeding with diffusion model after 5000 epochs of training
+INFO:root:Training the model took 1844.523s.
+INFO:root:Emptying the cuda cache took 0.001s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.
+INFO:root:Evaluating the model on Train data took 5.559s.
+INFO:root:MSETrain: 0.11982
+INFO:root:RMSETrain: 0.34615
+INFO:root:EnergyScoreTrain: 0.11068
+INFO:root:CRPSTrain: 0.10918
+INFO:root:Gaussian NLLTrain: -0.03102
+INFO:root:CoverageTrain: 0.92286
+INFO:root:QICETrain: 0.04064
+INFO:root:Evaluating the model on Test data.
+INFO:root:Evaluating the model on Test data took 5.438s.
+INFO:root:MSETest: 0.42733
+INFO:root:RMSETest: 0.65371
+INFO:root:EnergyScoreTest: 0.32322
+INFO:root:CRPSTest: 0.32156
+INFO:root:Gaussian NLLTest: 58.59431
+INFO:root:CoverageTest: 0.7375
+INFO:root:QICETest: 0.0575
+INFO:root:After validation: mem (CPU python)=3192.18359375MB; mem (CPU total)=11097.23828125MB
+INFO:root:###4 out of 4 training parameter combinations ###
+INFO:root:Training parameters: {'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'report_every': 50, 'seed': 1234, 'distributed_training': False, 'backbone': 'CARD', 'batch_size': 32, 'batch_accumulation': 1, 'eval_batch_size': 16384, 'n_epochs': 5000, 'early_stopping': 1000, 'init': 'default', 'learning_rate': 0.001, 'warmup_lr': 0, 'lr_schedule': 'no', 'optimizer': 'adam', 'gradient_clipping': 1, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'n_val_samples': 10, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'n_timesteps': 50, 'beta_endpoints': (0.001, 0.35), 'distributional_method': 'mixednormal', 'loss': 'crps', 'closed_form': True, 'concat_condition_diffusion': True, 'evaluate': True, 'val_only': False, 'x_T_sampling_method': 'CARD', 'conditional_free_guidance_training': False, 'ddim_churn': 1.0, 'noise_schedule': 'linear', 'regressor': 'orig_CARD_pretrain', 'n_components': 3, 'gamma': 5.0, 'rank': 10, 'mvnormal_method': 'lora', 'n_train_samples': 10, 'metrics_plots': False}
+INFO:root:Using pre-trained regressor from the CARD repo
+INFO:root:After creating the dataloaders: mem (CPU python)=3192.18359375MB; mem (CPU total)=11097.23828125MB
+INFO:root:Performance of pre-trained regressor on test set: RMSE=0.63
+INFO:train:NumberParameters: 519947.0
+INFO:train:GPU memory allocated: 25165824
+INFO:train:After setting up the model: mem (CPU python)=3192.18359375MB; mem (CPU total)=11097.23828125MB
+INFO:train:Training starts now.
+INFO:train:t_training_avg: 0.36461
+INFO:train:t_training_med: 0.36106
+INFO:train:t_training_std: 0.00964
+INFO:train:After finishing all epochs: mem (CPU python)=3192.69921875MB; mem (CPU total)=11103.875MB
+INFO:train:Proceeding with diffusion model after 5000 epochs of training
+INFO:root:Training the model took 2480.766s.
+INFO:root:Emptying the cuda cache took 0.0s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.
+INFO:root:Evaluating the model on Train data took 8.351s.
+INFO:root:MSETrain: 0.02874
+INFO:root:RMSETrain: 0.16954
+INFO:root:EnergyScoreTrain: 0.03515
+INFO:root:CRPSTrain: 0.03466
+INFO:root:Gaussian NLLTrain: -1.11208
+INFO:root:CoverageTrain: 0.89437
+INFO:root:QICETrain: 0.06703
+INFO:root:Evaluating the model on Test data.
+INFO:root:Evaluating the model on Test data took 8.069s.
+INFO:root:MSETest: 0.46909
+INFO:root:RMSETest: 0.6849
+INFO:root:EnergyScoreTest: 0.34045
+INFO:root:CRPSTest: 0.33979
+INFO:root:Gaussian NLLTest: 557.2301
+INFO:root:CoverageTest: 0.70625
+INFO:root:QICETest: 0.0625
+INFO:root:After validation: mem (CPU python)=3193.5390625MB; mem (CPU total)=11104.1796875MB
+INFO:root:###2 out of 9 data set parameter combinations ###
+INFO:root:Data parameters: {'dataset_name': 'wine-quality-red', 'downscaling_factor': 1, 'yarin_gal_uci_split_indices': 12, 'max_dataset_size': 1000, 'standardize': True, 'select_timesteps': 'zero', 'temporal_downscaling_factor': 1, 'validation_ratio': 0.0}
+INFO:root:After loading the datasets: mem (CPU python)=3193.5390625MB; mem (CPU total)=11104.1796875MB
+INFO:root:###1 out of 4 training parameter combinations ###
+INFO:root:Training parameters: {'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'report_every': 50, 'seed': 1234, 'distributed_training': False, 'backbone': 'CARD', 'batch_size': 32, 'batch_accumulation': 1, 'eval_batch_size': 16384, 'n_epochs': 5000, 'early_stopping': 1000, 'init': 'default', 'learning_rate': 0.001, 'warmup_lr': 0, 'lr_schedule': 'no', 'optimizer': 'adam', 'gradient_clipping': 1, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'n_val_samples': 10, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'n_timesteps': 50, 'beta_endpoints': (0.001, 0.35), 'distributional_method': 'deterministic', 'loss': 'crps', 'closed_form': True, 'concat_condition_diffusion': True, 'evaluate': True, 'val_only': False, 'x_T_sampling_method': 'CARD', 'conditional_free_guidance_training': False, 'ddim_churn': 1.0, 'noise_schedule': 'linear', 'regressor': 'orig_CARD_pretrain', 'n_components': 3, 'gamma': 5.0, 'rank': 10, 'mvnormal_method': 'lora', 'n_train_samples': 10, 'metrics_plots': False}
+INFO:root:Using pre-trained regressor from the CARD repo
+INFO:root:After creating the dataloaders: mem (CPU python)=3193.5390625MB; mem (CPU total)=11104.30078125MB
+INFO:root:Performance of pre-trained regressor on test set: RMSE=0.67
+INFO:train:NumberParameters: 419329.0
+INFO:train:GPU memory allocated: 25165824
+INFO:train:After setting up the model: mem (CPU python)=3193.5390625MB; mem (CPU total)=11104.30078125MB
+INFO:train:Training starts now.
+INFO:train:t_training_avg: 0.19372
+INFO:train:t_training_med: 0.19383
+INFO:train:t_training_std: 0.00158
+INFO:train:After finishing all epochs: mem (CPU python)=3193.5390625MB; mem (CPU total)=11118.2734375MB
+INFO:train:Proceeding with diffusion model after 5000 epochs of training
+INFO:root:Training the model took 1624.533s.
+INFO:root:Emptying the cuda cache took 0.0s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.
+INFO:root:Evaluating the model on Train data took 4.385s.
+INFO:root:MSETrain: 0.01983
+INFO:root:RMSETrain: 0.14081
+INFO:root:EnergyScoreTrain: 0.03199
+INFO:root:CRPSTrain: 0.03149
+INFO:root:Gaussian NLLTrain: -0.37746
+INFO:root:CoverageTrain: 0.77276
+INFO:root:QICETrain: 0.06535
+INFO:root:Evaluating the model on Test data.
+INFO:root:Evaluating the model on Test data took 4.306s.
+INFO:root:MSETest: 0.54202
+INFO:root:RMSETest: 0.73622
+INFO:root:EnergyScoreTest: 0.42935
+INFO:root:CRPSTest: 0.42855
+INFO:root:Gaussian NLLTest: 1381.77905
+INFO:root:CoverageTest: 0.475
+INFO:root:QICETest: 0.10625
+INFO:root:After validation: mem (CPU python)=3193.5390625MB; mem (CPU total)=11118.4453125MB
+INFO:root:###2 out of 4 training parameter combinations ###
+INFO:root:Training parameters: {'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'report_every': 50, 'seed': 1234, 'distributed_training': False, 'backbone': 'CARD', 'batch_size': 32, 'batch_accumulation': 1, 'eval_batch_size': 16384, 'n_epochs': 5000, 'early_stopping': 1000, 'init': 'default', 'learning_rate': 0.001, 'warmup_lr': 0, 'lr_schedule': 'no', 'optimizer': 'adam', 'gradient_clipping': 1, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'n_val_samples': 10, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'n_timesteps': 50, 'beta_endpoints': (0.001, 0.35), 'distributional_method': 'normal', 'loss': 'crps', 'closed_form': True, 'concat_condition_diffusion': True, 'evaluate': True, 'val_only': False, 'x_T_sampling_method': 'CARD', 'conditional_free_guidance_training': False, 'ddim_churn': 1.0, 'noise_schedule': 'linear', 'regressor': 'orig_CARD_pretrain', 'n_components': 3, 'gamma': 5.0, 'rank': 10, 'mvnormal_method': 'lora', 'n_train_samples': 10, 'metrics_plots': False}
+INFO:root:Using pre-trained regressor from the CARD repo
+INFO:root:After creating the dataloaders: mem (CPU python)=3193.5390625MB; mem (CPU total)=11118.4453125MB
+INFO:root:Performance of pre-trained regressor on test set: RMSE=0.67
+INFO:train:NumberParameters: 419587.0
+INFO:train:GPU memory allocated: 25165824
+INFO:train:After setting up the model: mem (CPU python)=3193.5390625MB; mem (CPU total)=11118.4453125MB
+INFO:train:Training starts now.
+INFO:train:t_training_avg: 0.28489
+INFO:train:t_training_med: 0.30718
+INFO:train:t_training_std: 0.03362
+INFO:train:After finishing all epochs: mem (CPU python)=3193.5390625MB; mem (CPU total)=11123.921875MB
+INFO:train:Proceeding with diffusion model after 5000 epochs of training
+INFO:root:Training the model took 2082.795s.
+INFO:root:Emptying the cuda cache took 0.0s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.
+INFO:root:Evaluating the model on Train data took 6.211s.
+INFO:root:MSETrain: 0.02919
+INFO:root:RMSETrain: 0.17086
+INFO:root:EnergyScoreTrain: 0.03202
+INFO:root:CRPSTrain: 0.03149
+INFO:root:Gaussian NLLTrain: -1.07469
+INFO:root:CoverageTrain: 0.95483
+INFO:root:QICETrain: 0.02259
+INFO:root:Evaluating the model on Test data.
+INFO:root:Evaluating the model on Test data took 6.086s.
+INFO:root:MSETest: 0.52117
+INFO:root:RMSETest: 0.72192
+INFO:root:EnergyScoreTest: 0.39404
+INFO:root:CRPSTest: 0.39325
+INFO:root:Gaussian NLLTest: 723.02594
+INFO:root:CoverageTest: 0.71875
+INFO:root:QICETest: 0.04
+INFO:root:After validation: mem (CPU python)=3193.55078125MB; mem (CPU total)=11124.31640625MB
+INFO:root:###3 out of 4 training parameter combinations ###
+INFO:root:Training parameters: {'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'report_every': 50, 'seed': 1234, 'distributed_training': False, 'backbone': 'CARD', 'batch_size': 32, 'batch_accumulation': 1, 'eval_batch_size': 16384, 'n_epochs': 5000, 'early_stopping': 1000, 'init': 'default', 'learning_rate': 0.001, 'warmup_lr': 0, 'lr_schedule': 'no', 'optimizer': 'adam', 'gradient_clipping': 1, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'n_val_samples': 10, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'n_timesteps': 50, 'beta_endpoints': (0.001, 0.35), 'distributional_method': 'sample', 'loss': 'crps', 'closed_form': True, 'concat_condition_diffusion': True, 'evaluate': True, 'val_only': False, 'x_T_sampling_method': 'CARD', 'conditional_free_guidance_training': False, 'ddim_churn': 1.0, 'noise_schedule': 'linear', 'regressor': 'orig_CARD_pretrain', 'n_components': 3, 'gamma': 5.0, 'rank': 10, 'mvnormal_method': 'lora', 'n_train_samples': 10, 'metrics_plots': False}
+INFO:root:Using pre-trained regressor from the CARD repo
+INFO:root:After creating the dataloaders: mem (CPU python)=3193.55078125MB; mem (CPU total)=11124.31640625MB
+INFO:root:Performance of pre-trained regressor on test set: RMSE=0.67
+INFO:train:NumberParameters: 419457.0
+INFO:train:GPU memory allocated: 25165824
+INFO:train:After setting up the model: mem (CPU python)=3193.55078125MB; mem (CPU total)=11124.34765625MB
+INFO:train:Training starts now.
+INFO:train:t_training_avg: 0.2325
+INFO:train:t_training_med: 0.23257
+INFO:train:t_training_std: 0.00243
+INFO:train:After finishing all epochs: mem (CPU python)=3193.5546875MB; mem (CPU total)=11123.62890625MB
+INFO:train:Proceeding with diffusion model after 5000 epochs of training
+INFO:root:Training the model took 1817.42s.
+INFO:root:Emptying the cuda cache took 0.002s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.
+INFO:root:Evaluating the model on Train data took 5.561s.
+INFO:root:MSETrain: 0.08343
+INFO:root:RMSETrain: 0.28884
+INFO:root:EnergyScoreTrain: 0.08311
+INFO:root:CRPSTrain: 0.08214
+INFO:root:Gaussian NLLTrain: 7.34591
+INFO:root:CoverageTrain: 0.97429
+INFO:root:QICETrain: 0.04468
+INFO:root:Evaluating the model on Test data.
+INFO:root:Evaluating the model on Test data took 5.454s.
+INFO:root:MSETest: 0.55899
+INFO:root:RMSETest: 0.74766
+INFO:root:EnergyScoreTest: 0.42455
+INFO:root:CRPSTest: 0.42338
+INFO:root:Gaussian NLLTest: 458.63495
+INFO:root:CoverageTest: 0.74375
+INFO:root:QICETest: 0.04125
+INFO:root:After validation: mem (CPU python)=3193.5546875MB; mem (CPU total)=11123.78515625MB
+INFO:root:###4 out of 4 training parameter combinations ###
+INFO:root:Training parameters: {'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'report_every': 50, 'seed': 1234, 'distributed_training': False, 'backbone': 'CARD', 'batch_size': 32, 'batch_accumulation': 1, 'eval_batch_size': 16384, 'n_epochs': 5000, 'early_stopping': 1000, 'init': 'default', 'learning_rate': 0.001, 'warmup_lr': 0, 'lr_schedule': 'no', 'optimizer': 'adam', 'gradient_clipping': 1, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'n_val_samples': 10, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'n_timesteps': 50, 'beta_endpoints': (0.001, 0.35), 'distributional_method': 'mixednormal', 'loss': 'crps', 'closed_form': True, 'concat_condition_diffusion': True, 'evaluate': True, 'val_only': False, 'x_T_sampling_method': 'CARD', 'conditional_free_guidance_training': False, 'ddim_churn': 1.0, 'noise_schedule': 'linear', 'regressor': 'orig_CARD_pretrain', 'n_components': 3, 'gamma': 5.0, 'rank': 10, 'mvnormal_method': 'lora', 'n_train_samples': 10, 'metrics_plots': False}
+INFO:root:Using pre-trained regressor from the CARD repo
+INFO:root:After creating the dataloaders: mem (CPU python)=3193.5546875MB; mem (CPU total)=11123.78515625MB
+INFO:root:Performance of pre-trained regressor on test set: RMSE=0.67
+INFO:train:NumberParameters: 519947.0
+INFO:train:GPU memory allocated: 25165824
+INFO:train:After setting up the model: mem (CPU python)=3193.5546875MB; mem (CPU total)=11123.78515625MB
+INFO:train:Training starts now.
+INFO:train:t_training_avg: 0.35481
+INFO:train:t_training_med: 0.35478
+INFO:train:t_training_std: 0.00289
+INFO:train:After finishing all epochs: mem (CPU python)=3193.5703125MB; mem (CPU total)=11124.53515625MB
+INFO:train:Proceeding with diffusion model after 5000 epochs of training
+INFO:root:Training the model took 2421.556s.
+INFO:root:Emptying the cuda cache took 0.0s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.
+INFO:root:Evaluating the model on Train data took 8.203s.
+INFO:root:MSETrain: 0.01559
+INFO:root:RMSETrain: 0.12485
+INFO:root:EnergyScoreTrain: 0.01839
+INFO:root:CRPSTrain: 0.01807
+INFO:root:Gaussian NLLTrain: 6.19552
+INFO:root:CoverageTrain: 0.97846
+INFO:root:QICETrain: 0.033
+INFO:root:Evaluating the model on Test data.
+INFO:root:Evaluating the model on Test data took 7.983s.
+INFO:root:MSETest: 0.63979
+INFO:root:RMSETest: 0.79987
+INFO:root:EnergyScoreTest: 0.46478
+INFO:root:CRPSTest: 0.46424
+INFO:root:Gaussian NLLTest: 1545.90393
+INFO:root:CoverageTest: 0.6625
+INFO:root:QICETest: 0.0525
+INFO:root:After validation: mem (CPU python)=3193.625MB; mem (CPU total)=11124.546875MB
+INFO:root:###3 out of 9 data set parameter combinations ###
+INFO:root:Data parameters: {'dataset_name': 'wine-quality-red', 'downscaling_factor': 1, 'yarin_gal_uci_split_indices': 13, 'max_dataset_size': 1000, 'standardize': True, 'select_timesteps': 'zero', 'temporal_downscaling_factor': 1, 'validation_ratio': 0.0}
+INFO:root:After loading the datasets: mem (CPU python)=3193.625MB; mem (CPU total)=11124.54296875MB
+INFO:root:###1 out of 4 training parameter combinations ###
+INFO:root:Training parameters: {'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'report_every': 50, 'seed': 1234, 'distributed_training': False, 'backbone': 'CARD', 'batch_size': 32, 'batch_accumulation': 1, 'eval_batch_size': 16384, 'n_epochs': 5000, 'early_stopping': 1000, 'init': 'default', 'learning_rate': 0.001, 'warmup_lr': 0, 'lr_schedule': 'no', 'optimizer': 'adam', 'gradient_clipping': 1, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'n_val_samples': 10, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'n_timesteps': 50, 'beta_endpoints': (0.001, 0.35), 'distributional_method': 'deterministic', 'loss': 'crps', 'closed_form': True, 'concat_condition_diffusion': True, 'evaluate': True, 'val_only': False, 'x_T_sampling_method': 'CARD', 'conditional_free_guidance_training': False, 'ddim_churn': 1.0, 'noise_schedule': 'linear', 'regressor': 'orig_CARD_pretrain', 'n_components': 3, 'gamma': 5.0, 'rank': 10, 'mvnormal_method': 'lora', 'n_train_samples': 10, 'metrics_plots': False}
+INFO:root:Using pre-trained regressor from the CARD repo
+INFO:root:After creating the dataloaders: mem (CPU python)=3193.625MB; mem (CPU total)=11124.42578125MB
+INFO:root:Performance of pre-trained regressor on test set: RMSE=0.61
+INFO:train:NumberParameters: 419329.0
+INFO:train:GPU memory allocated: 27262976
+INFO:train:After setting up the model: mem (CPU python)=3193.625MB; mem (CPU total)=11124.42578125MB
+INFO:train:Training starts now.
+INFO:train:t_training_avg: 0.19864
+INFO:train:t_training_med: 0.19182
+INFO:train:t_training_std: 0.01757
+INFO:train:After finishing all epochs: mem (CPU python)=3193.625MB; mem (CPU total)=11123.28125MB
+INFO:train:Proceeding with diffusion model after 5000 epochs of training
+INFO:root:Training the model took 1648.592s.
+INFO:root:Emptying the cuda cache took 0.001s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.
+INFO:root:Evaluating the model on Train data took 5.798s.
+INFO:root:MSETrain: 0.03424
+INFO:root:RMSETrain: 0.18503
+INFO:root:EnergyScoreTrain: 0.04747
+INFO:root:CRPSTrain: 0.04668
+INFO:root:Gaussian NLLTrain: 14.14723
+INFO:root:CoverageTrain: 0.66782
+INFO:root:QICETrain: 0.12386
+INFO:root:Evaluating the model on Test data.
+INFO:root:Evaluating the model on Test data took 5.718s.
+INFO:root:MSETest: 0.37176
+INFO:root:RMSETest: 0.60972
+INFO:root:EnergyScoreTest: 0.31128
+INFO:root:CRPSTest: 0.31025
+INFO:root:Gaussian NLLTest: 1262.87183
+INFO:root:CoverageTest: 0.55
+INFO:root:QICETest: 0.105
+INFO:root:After validation: mem (CPU python)=3194.06640625MB; mem (CPU total)=11123.21875MB
+INFO:root:###2 out of 4 training parameter combinations ###
+INFO:root:Training parameters: {'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'report_every': 50, 'seed': 1234, 'distributed_training': False, 'backbone': 'CARD', 'batch_size': 32, 'batch_accumulation': 1, 'eval_batch_size': 16384, 'n_epochs': 5000, 'early_stopping': 1000, 'init': 'default', 'learning_rate': 0.001, 'warmup_lr': 0, 'lr_schedule': 'no', 'optimizer': 'adam', 'gradient_clipping': 1, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'n_val_samples': 10, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'n_timesteps': 50, 'beta_endpoints': (0.001, 0.35), 'distributional_method': 'normal', 'loss': 'crps', 'closed_form': True, 'concat_condition_diffusion': True, 'evaluate': True, 'val_only': False, 'x_T_sampling_method': 'CARD', 'conditional_free_guidance_training': False, 'ddim_churn': 1.0, 'noise_schedule': 'linear', 'regressor': 'orig_CARD_pretrain', 'n_components': 3, 'gamma': 5.0, 'rank': 10, 'mvnormal_method': 'lora', 'n_train_samples': 10, 'metrics_plots': False}
+INFO:root:Using pre-trained regressor from the CARD repo
+INFO:root:After creating the dataloaders: mem (CPU python)=3194.06640625MB; mem (CPU total)=11123.21875MB
+INFO:root:Performance of pre-trained regressor on test set: RMSE=0.61
+INFO:train:NumberParameters: 419587.0
+INFO:train:GPU memory allocated: 27262976
+INFO:train:After setting up the model: mem (CPU python)=3194.06640625MB; mem (CPU total)=11123.21875MB
+INFO:train:Training starts now.
+INFO:train:t_training_avg: 0.24019
+INFO:train:t_training_med: 0.23723
+INFO:train:t_training_std: 0.01376
+INFO:train:After finishing all epochs: mem (CPU python)=3195.046875MB; mem (CPU total)=11125.5546875MB
+INFO:train:Proceeding with diffusion model after 5000 epochs of training
+INFO:root:Training the model took 1856.194s.
+INFO:root:Emptying the cuda cache took 0.0s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.
+INFO:root:Evaluating the model on Train data took 6.136s.
+INFO:root:MSETrain: 0.02077
+INFO:root:RMSETrain: 0.1441
+INFO:root:EnergyScoreTrain: 0.02585
+INFO:root:CRPSTrain: 0.02513
+INFO:root:Gaussian NLLTrain: -0.67202
+INFO:root:CoverageTrain: 0.98819
+INFO:root:QICETrain: 0.06192
+INFO:root:Evaluating the model on Test data.
+INFO:root:Evaluating the model on Test data took 5.982s.
+INFO:root:MSETest: 0.3792
+INFO:root:RMSETest: 0.61579
+INFO:root:EnergyScoreTest: 0.31124
+INFO:root:CRPSTest: 0.31034
+INFO:root:Gaussian NLLTest: 3.47451
+INFO:root:CoverageTest: 0.75625
+INFO:root:QICETest: 0.04375
+INFO:root:After validation: mem (CPU python)=3195.046875MB; mem (CPU total)=11125.4140625MB
+INFO:root:###3 out of 4 training parameter combinations ###
+INFO:root:Training parameters: {'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'report_every': 50, 'seed': 1234, 'distributed_training': False, 'backbone': 'CARD', 'batch_size': 32, 'batch_accumulation': 1, 'eval_batch_size': 16384, 'n_epochs': 5000, 'early_stopping': 1000, 'init': 'default', 'learning_rate': 0.001, 'warmup_lr': 0, 'lr_schedule': 'no', 'optimizer': 'adam', 'gradient_clipping': 1, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'n_val_samples': 10, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'n_timesteps': 50, 'beta_endpoints': (0.001, 0.35), 'distributional_method': 'sample', 'loss': 'crps', 'closed_form': True, 'concat_condition_diffusion': True, 'evaluate': True, 'val_only': False, 'x_T_sampling_method': 'CARD', 'conditional_free_guidance_training': False, 'ddim_churn': 1.0, 'noise_schedule': 'linear', 'regressor': 'orig_CARD_pretrain', 'n_components': 3, 'gamma': 5.0, 'rank': 10, 'mvnormal_method': 'lora', 'n_train_samples': 10, 'metrics_plots': False}
+INFO:root:Using pre-trained regressor from the CARD repo
+INFO:root:After creating the dataloaders: mem (CPU python)=3195.046875MB; mem (CPU total)=11125.4140625MB
+INFO:root:Performance of pre-trained regressor on test set: RMSE=0.61
+INFO:train:NumberParameters: 419457.0
+INFO:train:GPU memory allocated: 25165824
+INFO:train:After setting up the model: mem (CPU python)=3195.046875MB; mem (CPU total)=11125.4140625MB
+INFO:train:Training starts now.
+INFO:train:t_training_avg: 0.23223
+INFO:train:t_training_med: 0.23226
+INFO:train:t_training_std: 0.00232
+INFO:train:After finishing all epochs: mem (CPU python)=3195.05078125MB; mem (CPU total)=11125.03125MB
+INFO:train:Proceeding with diffusion model after 5000 epochs of training
+INFO:root:Training the model took 1816.307s.
+INFO:root:Emptying the cuda cache took 0.001s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.
+INFO:root:Evaluating the model on Train data took 5.556s.
+INFO:root:MSETrain: 0.1306
+INFO:root:RMSETrain: 0.36138
+INFO:root:EnergyScoreTrain: 0.11992
+INFO:root:CRPSTrain: 0.11844
+INFO:root:Gaussian NLLTrain: 0.01542
+INFO:root:CoverageTrain: 0.89993
+INFO:root:QICETrain: 0.03077
+INFO:root:Evaluating the model on Test data.
+INFO:root:Evaluating the model on Test data took 5.429s.
+INFO:root:MSETest: 0.37079
+INFO:root:RMSETest: 0.60893
+INFO:root:EnergyScoreTest: 0.29288
+INFO:root:CRPSTest: 0.29141
+INFO:root:Gaussian NLLTest: 36.26379
+INFO:root:CoverageTest: 0.7875
+INFO:root:QICETest: 0.0525
+INFO:root:After validation: mem (CPU python)=3195.11328125MB; mem (CPU total)=11125.3359375MB
+INFO:root:###4 out of 4 training parameter combinations ###
+INFO:root:Training parameters: {'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'report_every': 50, 'seed': 1234, 'distributed_training': False, 'backbone': 'CARD', 'batch_size': 32, 'batch_accumulation': 1, 'eval_batch_size': 16384, 'n_epochs': 5000, 'early_stopping': 1000, 'init': 'default', 'learning_rate': 0.001, 'warmup_lr': 0, 'lr_schedule': 'no', 'optimizer': 'adam', 'gradient_clipping': 1, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'n_val_samples': 10, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'n_timesteps': 50, 'beta_endpoints': (0.001, 0.35), 'distributional_method': 'mixednormal', 'loss': 'crps', 'closed_form': True, 'concat_condition_diffusion': True, 'evaluate': True, 'val_only': False, 'x_T_sampling_method': 'CARD', 'conditional_free_guidance_training': False, 'ddim_churn': 1.0, 'noise_schedule': 'linear', 'regressor': 'orig_CARD_pretrain', 'n_components': 3, 'gamma': 5.0, 'rank': 10, 'mvnormal_method': 'lora', 'n_train_samples': 10, 'metrics_plots': False}
+INFO:root:Using pre-trained regressor from the CARD repo
+INFO:root:After creating the dataloaders: mem (CPU python)=3195.11328125MB; mem (CPU total)=11125.3359375MB
+INFO:root:Performance of pre-trained regressor on test set: RMSE=0.61
+INFO:train:NumberParameters: 519947.0
+INFO:train:GPU memory allocated: 25165824
+INFO:train:After setting up the model: mem (CPU python)=3195.11328125MB; mem (CPU total)=11125.3359375MB
+INFO:train:Training starts now.
+INFO:train:t_training_avg: 0.36877
+INFO:train:t_training_med: 0.35773
+INFO:train:t_training_std: 0.03258
+INFO:train:After finishing all epochs: mem (CPU python)=3195.11328125MB; mem (CPU total)=11128.6484375MB
+INFO:train:Proceeding with diffusion model after 5000 epochs of training
+INFO:root:Training the model took 2497.197s.
+INFO:root:Emptying the cuda cache took 0.0s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.
+INFO:root:Evaluating the model on Train data took 10.842s.
+INFO:root:MSETrain: 0.02202
+INFO:root:RMSETrain: 0.14841
+INFO:root:EnergyScoreTrain: 0.04347
+INFO:root:CRPSTrain: 0.04305
+INFO:root:Gaussian NLLTrain: 0.35416
+INFO:root:CoverageTrain: 0.51981
+INFO:root:QICETrain: 0.08873
+INFO:root:Evaluating the model on Test data.
+INFO:root:Evaluating the model on Test data took 10.604s.
+INFO:root:MSETest: 0.37399
+INFO:root:RMSETest: 0.61155
+INFO:root:EnergyScoreTest: 0.30652
+INFO:root:CRPSTest: 0.30598
+INFO:root:Gaussian NLLTest: 187.43803
+INFO:root:CoverageTest: 0.4125
+INFO:root:QICETest: 0.10125
+INFO:root:After validation: mem (CPU python)=3195.171875MB; mem (CPU total)=11128.37890625MB
+INFO:root:###4 out of 9 data set parameter combinations ###
+INFO:root:Data parameters: {'dataset_name': 'wine-quality-red', 'downscaling_factor': 1, 'yarin_gal_uci_split_indices': 14, 'max_dataset_size': 1000, 'standardize': True, 'select_timesteps': 'zero', 'temporal_downscaling_factor': 1, 'validation_ratio': 0.0}
+INFO:root:After loading the datasets: mem (CPU python)=3195.171875MB; mem (CPU total)=11128.37890625MB
+INFO:root:###1 out of 4 training parameter combinations ###
+INFO:root:Training parameters: {'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'report_every': 50, 'seed': 1234, 'distributed_training': False, 'backbone': 'CARD', 'batch_size': 32, 'batch_accumulation': 1, 'eval_batch_size': 16384, 'n_epochs': 5000, 'early_stopping': 1000, 'init': 'default', 'learning_rate': 0.001, 'warmup_lr': 0, 'lr_schedule': 'no', 'optimizer': 'adam', 'gradient_clipping': 1, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'n_val_samples': 10, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'n_timesteps': 50, 'beta_endpoints': (0.001, 0.35), 'distributional_method': 'deterministic', 'loss': 'crps', 'closed_form': True, 'concat_condition_diffusion': True, 'evaluate': True, 'val_only': False, 'x_T_sampling_method': 'CARD', 'conditional_free_guidance_training': False, 'ddim_churn': 1.0, 'noise_schedule': 'linear', 'regressor': 'orig_CARD_pretrain', 'n_components': 3, 'gamma': 5.0, 'rank': 10, 'mvnormal_method': 'lora', 'n_train_samples': 10, 'metrics_plots': False}
+INFO:root:Using pre-trained regressor from the CARD repo
+INFO:root:After creating the dataloaders: mem (CPU python)=3195.171875MB; mem (CPU total)=11128.37890625MB
+INFO:root:Performance of pre-trained regressor on test set: RMSE=0.61
+INFO:train:NumberParameters: 419329.0
+INFO:train:GPU memory allocated: 25165824
+INFO:train:After setting up the model: mem (CPU python)=3195.171875MB; mem (CPU total)=11128.37890625MB
+INFO:train:Training starts now.
+INFO:train:t_training_avg: 0.20415
+INFO:train:t_training_med: 0.19366
+INFO:train:t_training_std: 0.02059
+INFO:train:After finishing all epochs: mem (CPU python)=3195.171875MB; mem (CPU total)=11128.67578125MB
+INFO:train:Proceeding with diffusion model after 5000 epochs of training
+INFO:root:Training the model took 1677.361s.
+INFO:root:Emptying the cuda cache took 0.001s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.
+INFO:root:Evaluating the model on Train data took 4.36s.
+INFO:root:MSETrain: 0.07047
+INFO:root:RMSETrain: 0.26546
+INFO:root:EnergyScoreTrain: 0.07455
+INFO:root:CRPSTrain: 0.07358
+INFO:root:Gaussian NLLTrain: 0.8321
+INFO:root:CoverageTrain: 0.44406
+INFO:root:QICETrain: 0.10315
+INFO:root:Evaluating the model on Test data.
+INFO:root:Evaluating the model on Test data took 4.312s.
+INFO:root:MSETest: 0.4661
+INFO:root:RMSETest: 0.68271
+INFO:root:EnergyScoreTest: 0.38121
+INFO:root:CRPSTest: 0.38012
+INFO:root:Gaussian NLLTest: 3424.78955
+INFO:root:CoverageTest: 0.33125
+INFO:root:QICETest: 0.1125
+INFO:root:After validation: mem (CPU python)=3195.19140625MB; mem (CPU total)=11128.4453125MB
+INFO:root:###2 out of 4 training parameter combinations ###
+INFO:root:Training parameters: {'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'report_every': 50, 'seed': 1234, 'distributed_training': False, 'backbone': 'CARD', 'batch_size': 32, 'batch_accumulation': 1, 'eval_batch_size': 16384, 'n_epochs': 5000, 'early_stopping': 1000, 'init': 'default', 'learning_rate': 0.001, 'warmup_lr': 0, 'lr_schedule': 'no', 'optimizer': 'adam', 'gradient_clipping': 1, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'n_val_samples': 10, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'n_timesteps': 50, 'beta_endpoints': (0.001, 0.35), 'distributional_method': 'normal', 'loss': 'crps', 'closed_form': True, 'concat_condition_diffusion': True, 'evaluate': True, 'val_only': False, 'x_T_sampling_method': 'CARD', 'conditional_free_guidance_training': False, 'ddim_churn': 1.0, 'noise_schedule': 'linear', 'regressor': 'orig_CARD_pretrain', 'n_components': 3, 'gamma': 5.0, 'rank': 10, 'mvnormal_method': 'lora', 'n_train_samples': 10, 'metrics_plots': False}
+INFO:root:Using pre-trained regressor from the CARD repo
+INFO:root:After creating the dataloaders: mem (CPU python)=3195.19140625MB; mem (CPU total)=11128.4453125MB
+INFO:root:Performance of pre-trained regressor on test set: RMSE=0.61
+INFO:train:NumberParameters: 419587.0
+INFO:train:GPU memory allocated: 25165824
+INFO:train:After setting up the model: mem (CPU python)=3195.19140625MB; mem (CPU total)=11128.4453125MB
+INFO:train:Training starts now.
+INFO:train:t_training_avg: 0.28161
+INFO:train:t_training_med: 0.30691
+INFO:train:t_training_std: 0.03509
+INFO:train:After finishing all epochs: mem (CPU python)=3195.19140625MB; mem (CPU total)=11128.62890625MB
+INFO:train:Proceeding with diffusion model after 5000 epochs of training
+INFO:root:Training the model took 2061.658s.
+INFO:root:Emptying the cuda cache took 0.0s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.
+INFO:root:Evaluating the model on Train data took 6.15s.
+INFO:root:MSETrain: 0.02929
+INFO:root:RMSETrain: 0.17114
+INFO:root:EnergyScoreTrain: 0.03234
+INFO:root:CRPSTrain: 0.0316
+INFO:root:Gaussian NLLTrain: -0.56211
+INFO:root:CoverageTrain: 0.96734
+INFO:root:QICETrain: 0.02618
+INFO:root:Evaluating the model on Test data.
+INFO:root:Evaluating the model on Test data took 5.983s.
+INFO:root:MSETest: 0.38358
+INFO:root:RMSETest: 0.61934
+INFO:root:EnergyScoreTest: 0.30399
+INFO:root:CRPSTest: 0.30299
+INFO:root:Gaussian NLLTest: 306.95218
+INFO:root:CoverageTest: 0.7875
+INFO:root:QICETest: 0.02875
+INFO:root:After validation: mem (CPU python)=3195.19140625MB; mem (CPU total)=11129.55078125MB
+INFO:root:###3 out of 4 training parameter combinations ###
+INFO:root:Training parameters: {'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'report_every': 50, 'seed': 1234, 'distributed_training': False, 'backbone': 'CARD', 'batch_size': 32, 'batch_accumulation': 1, 'eval_batch_size': 16384, 'n_epochs': 5000, 'early_stopping': 1000, 'init': 'default', 'learning_rate': 0.001, 'warmup_lr': 0, 'lr_schedule': 'no', 'optimizer': 'adam', 'gradient_clipping': 1, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'n_val_samples': 10, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'n_timesteps': 50, 'beta_endpoints': (0.001, 0.35), 'distributional_method': 'sample', 'loss': 'crps', 'closed_form': True, 'concat_condition_diffusion': True, 'evaluate': True, 'val_only': False, 'x_T_sampling_method': 'CARD', 'conditional_free_guidance_training': False, 'ddim_churn': 1.0, 'noise_schedule': 'linear', 'regressor': 'orig_CARD_pretrain', 'n_components': 3, 'gamma': 5.0, 'rank': 10, 'mvnormal_method': 'lora', 'n_train_samples': 10, 'metrics_plots': False}
+INFO:root:Using pre-trained regressor from the CARD repo
+INFO:root:After creating the dataloaders: mem (CPU python)=3195.19140625MB; mem (CPU total)=11129.546875MB
+INFO:root:Performance of pre-trained regressor on test set: RMSE=0.61
+INFO:train:NumberParameters: 419457.0
+INFO:train:GPU memory allocated: 25165824
+INFO:train:After setting up the model: mem (CPU python)=3195.19140625MB; mem (CPU total)=11129.546875MB
+INFO:train:Training starts now.
+INFO:train:t_training_avg: 0.23064
+INFO:train:t_training_med: 0.23074
+INFO:train:t_training_std: 0.00291
+INFO:train:After finishing all epochs: mem (CPU python)=3195.19140625MB; mem (CPU total)=11129.26171875MB
+INFO:train:Proceeding with diffusion model after 5000 epochs of training
+INFO:root:Training the model took 1804.756s.
+INFO:root:Emptying the cuda cache took 0.001s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.
+INFO:root:Evaluating the model on Train data took 5.457s.
+INFO:root:MSETrain: 0.10084
+INFO:root:RMSETrain: 0.31756
+INFO:root:EnergyScoreTrain: 0.09151
+INFO:root:CRPSTrain: 0.09014
+INFO:root:Gaussian NLLTrain: 2.63972
+INFO:root:CoverageTrain: 0.94858
+INFO:root:QICETrain: 0.06122
+INFO:root:Evaluating the model on Test data.
+INFO:root:Evaluating the model on Test data took 5.345s.
+INFO:root:MSETest: 0.38627
+INFO:root:RMSETest: 0.62151
+INFO:root:EnergyScoreTest: 0.31519
+INFO:root:CRPSTest: 0.31374
+INFO:root:Gaussian NLLTest: 3.13288
+INFO:root:CoverageTest: 0.8
+INFO:root:QICETest: 0.05375
+INFO:root:After validation: mem (CPU python)=3195.19140625MB; mem (CPU total)=11129.41796875MB
+INFO:root:###4 out of 4 training parameter combinations ###
+INFO:root:Training parameters: {'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'report_every': 50, 'seed': 1234, 'distributed_training': False, 'backbone': 'CARD', 'batch_size': 32, 'batch_accumulation': 1, 'eval_batch_size': 16384, 'n_epochs': 5000, 'early_stopping': 1000, 'init': 'default', 'learning_rate': 0.001, 'warmup_lr': 0, 'lr_schedule': 'no', 'optimizer': 'adam', 'gradient_clipping': 1, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'n_val_samples': 10, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'n_timesteps': 50, 'beta_endpoints': (0.001, 0.35), 'distributional_method': 'mixednormal', 'loss': 'crps', 'closed_form': True, 'concat_condition_diffusion': True, 'evaluate': True, 'val_only': False, 'x_T_sampling_method': 'CARD', 'conditional_free_guidance_training': False, 'ddim_churn': 1.0, 'noise_schedule': 'linear', 'regressor': 'orig_CARD_pretrain', 'n_components': 3, 'gamma': 5.0, 'rank': 10, 'mvnormal_method': 'lora', 'n_train_samples': 10, 'metrics_plots': False}
+INFO:root:Using pre-trained regressor from the CARD repo
+INFO:root:After creating the dataloaders: mem (CPU python)=3195.19140625MB; mem (CPU total)=11129.41796875MB
+INFO:root:Performance of pre-trained regressor on test set: RMSE=0.61
+INFO:train:NumberParameters: 519947.0
+INFO:train:GPU memory allocated: 25165824
+INFO:train:After setting up the model: mem (CPU python)=3195.19140625MB; mem (CPU total)=11129.41796875MB
+INFO:train:Training starts now.
+INFO:train:t_training_avg: 0.36127
+INFO:train:t_training_med: 0.35907
+INFO:train:t_training_std: 0.01812
+INFO:train:After finishing all epochs: mem (CPU python)=3195.19140625MB; mem (CPU total)=11131.25MB
+INFO:train:Proceeding with diffusion model after 5000 epochs of training
+INFO:root:Training the model took 2464.118s.
+INFO:root:Emptying the cuda cache took 0.001s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.
+INFO:root:Evaluating the model on Train data took 8.348s.
+INFO:root:MSETrain: 0.01329
+INFO:root:RMSETrain: 0.11529
+INFO:root:EnergyScoreTrain: 0.0176
+INFO:root:CRPSTrain: 0.0172
+INFO:root:Gaussian NLLTrain: -1.47037
+INFO:root:CoverageTrain: 0.8353
+INFO:root:QICETrain: 0.05425
+INFO:root:Evaluating the model on Test data.
+INFO:root:Evaluating the model on Test data took 8.119s.
+INFO:root:MSETest: 0.50088
+INFO:root:RMSETest: 0.70773
+INFO:root:EnergyScoreTest: 0.38162
+INFO:root:CRPSTest: 0.38093
+INFO:root:Gaussian NLLTest: 1455.76843
+INFO:root:CoverageTest: 0.63125
+INFO:root:QICETest: 0.0725
+INFO:root:After validation: mem (CPU python)=3195.23046875MB; mem (CPU total)=11131.046875MB
+INFO:root:###5 out of 9 data set parameter combinations ###
+INFO:root:Data parameters: {'dataset_name': 'wine-quality-red', 'downscaling_factor': 1, 'yarin_gal_uci_split_indices': 15, 'max_dataset_size': 1000, 'standardize': True, 'select_timesteps': 'zero', 'temporal_downscaling_factor': 1, 'validation_ratio': 0.0}
+INFO:root:After loading the datasets: mem (CPU python)=3195.23046875MB; mem (CPU total)=11131.046875MB
+INFO:root:###1 out of 4 training parameter combinations ###
+INFO:root:Training parameters: {'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'report_every': 50, 'seed': 1234, 'distributed_training': False, 'backbone': 'CARD', 'batch_size': 32, 'batch_accumulation': 1, 'eval_batch_size': 16384, 'n_epochs': 5000, 'early_stopping': 1000, 'init': 'default', 'learning_rate': 0.001, 'warmup_lr': 0, 'lr_schedule': 'no', 'optimizer': 'adam', 'gradient_clipping': 1, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'n_val_samples': 10, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'n_timesteps': 50, 'beta_endpoints': (0.001, 0.35), 'distributional_method': 'deterministic', 'loss': 'crps', 'closed_form': True, 'concat_condition_diffusion': True, 'evaluate': True, 'val_only': False, 'x_T_sampling_method': 'CARD', 'conditional_free_guidance_training': False, 'ddim_churn': 1.0, 'noise_schedule': 'linear', 'regressor': 'orig_CARD_pretrain', 'n_components': 3, 'gamma': 5.0, 'rank': 10, 'mvnormal_method': 'lora', 'n_train_samples': 10, 'metrics_plots': False}
+INFO:root:Using pre-trained regressor from the CARD repo
+INFO:root:After creating the dataloaders: mem (CPU python)=3195.23046875MB; mem (CPU total)=11131.046875MB
+INFO:root:Performance of pre-trained regressor on test set: RMSE=0.58
+INFO:train:NumberParameters: 419329.0
+INFO:train:GPU memory allocated: 27262976
+INFO:train:After setting up the model: mem (CPU python)=3195.23046875MB; mem (CPU total)=11131.046875MB
+INFO:train:Training starts now.
+INFO:train:t_training_avg: 0.19212
+INFO:train:t_training_med: 0.19208
+INFO:train:t_training_std: 0.00186
+INFO:train:After finishing all epochs: mem (CPU python)=3195.23046875MB; mem (CPU total)=11141.57421875MB
+INFO:train:Proceeding with diffusion model after 5000 epochs of training
+INFO:root:Training the model took 1613.308s.
+INFO:root:Emptying the cuda cache took 0.001s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.
+INFO:root:Evaluating the model on Train data took 4.378s.
+INFO:root:MSETrain: 0.0495
+INFO:root:RMSETrain: 0.22248
+INFO:root:EnergyScoreTrain: 0.05887
+INFO:root:CRPSTrain: 0.05793
+INFO:root:Gaussian NLLTrain: 0.23142
+INFO:root:CoverageTrain: 0.6032
+INFO:root:QICETrain: 0.10746
+INFO:root:Evaluating the model on Test data.
+INFO:root:Evaluating the model on Test data took 4.332s.
+INFO:root:MSETest: 0.36236
+INFO:root:RMSETest: 0.60197
+INFO:root:EnergyScoreTest: 0.28391
+INFO:root:CRPSTest: 0.28273
+INFO:root:Gaussian NLLTest: 414.17496
+INFO:root:CoverageTest: 0.49375
+INFO:root:QICETest: 0.115
+INFO:root:After validation: mem (CPU python)=3195.23046875MB; mem (CPU total)=11140.7421875MB
+INFO:root:###2 out of 4 training parameter combinations ###
+INFO:root:Training parameters: {'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'report_every': 50, 'seed': 1234, 'distributed_training': False, 'backbone': 'CARD', 'batch_size': 32, 'batch_accumulation': 1, 'eval_batch_size': 16384, 'n_epochs': 5000, 'early_stopping': 1000, 'init': 'default', 'learning_rate': 0.001, 'warmup_lr': 0, 'lr_schedule': 'no', 'optimizer': 'adam', 'gradient_clipping': 1, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'n_val_samples': 10, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'n_timesteps': 50, 'beta_endpoints': (0.001, 0.35), 'distributional_method': 'normal', 'loss': 'crps', 'closed_form': True, 'concat_condition_diffusion': True, 'evaluate': True, 'val_only': False, 'x_T_sampling_method': 'CARD', 'conditional_free_guidance_training': False, 'ddim_churn': 1.0, 'noise_schedule': 'linear', 'regressor': 'orig_CARD_pretrain', 'n_components': 3, 'gamma': 5.0, 'rank': 10, 'mvnormal_method': 'lora', 'n_train_samples': 10, 'metrics_plots': False}
+INFO:root:Using pre-trained regressor from the CARD repo
+INFO:root:After creating the dataloaders: mem (CPU python)=3195.23046875MB; mem (CPU total)=11140.73828125MB
+INFO:root:Performance of pre-trained regressor on test set: RMSE=0.58
+INFO:train:NumberParameters: 419587.0
+INFO:train:GPU memory allocated: 27262976
+INFO:train:After setting up the model: mem (CPU python)=3195.23046875MB; mem (CPU total)=11140.73828125MB
+INFO:train:Training starts now.
+INFO:train:t_training_avg: 0.26579
+INFO:train:t_training_med: 0.2412
+INFO:train:t_training_std: 0.03421
+INFO:train:After finishing all epochs: mem (CPU python)=3195.23046875MB; mem (CPU total)=11141.09375MB
+INFO:train:Proceeding with diffusion model after 5000 epochs of training
+INFO:root:Training the model took 1985.551s.
+INFO:root:Emptying the cuda cache took 0.0s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.
+INFO:root:Evaluating the model on Train data took 6.238s.
+INFO:root:MSETrain: 0.0448
+INFO:root:RMSETrain: 0.21166
+INFO:root:EnergyScoreTrain: 0.04754
+INFO:root:CRPSTrain: 0.04652
+INFO:root:Gaussian NLLTrain: -0.3103
+INFO:root:CoverageTrain: 0.98819
+INFO:root:QICETrain: 0.05469
+INFO:root:Evaluating the model on Test data.
+INFO:root:Evaluating the model on Test data took 6.067s.
+INFO:root:MSETest: 0.37085
+INFO:root:RMSETest: 0.60898
+INFO:root:EnergyScoreTest: 0.27466
+INFO:root:CRPSTest: 0.27341
+INFO:root:Gaussian NLLTest: 3.23099
+INFO:root:CoverageTest: 0.86875
+INFO:root:QICETest: 0.02375
+INFO:root:After validation: mem (CPU python)=3195.30078125MB; mem (CPU total)=11140.42578125MB
+INFO:root:###3 out of 4 training parameter combinations ###
+INFO:root:Training parameters: {'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'report_every': 50, 'seed': 1234, 'distributed_training': False, 'backbone': 'CARD', 'batch_size': 32, 'batch_accumulation': 1, 'eval_batch_size': 16384, 'n_epochs': 5000, 'early_stopping': 1000, 'init': 'default', 'learning_rate': 0.001, 'warmup_lr': 0, 'lr_schedule': 'no', 'optimizer': 'adam', 'gradient_clipping': 1, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'n_val_samples': 10, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'n_timesteps': 50, 'beta_endpoints': (0.001, 0.35), 'distributional_method': 'sample', 'loss': 'crps', 'closed_form': True, 'concat_condition_diffusion': True, 'evaluate': True, 'val_only': False, 'x_T_sampling_method': 'CARD', 'conditional_free_guidance_training': False, 'ddim_churn': 1.0, 'noise_schedule': 'linear', 'regressor': 'orig_CARD_pretrain', 'n_components': 3, 'gamma': 5.0, 'rank': 10, 'mvnormal_method': 'lora', 'n_train_samples': 10, 'metrics_plots': False}
+INFO:root:Using pre-trained regressor from the CARD repo
+INFO:root:After creating the dataloaders: mem (CPU python)=3195.30078125MB; mem (CPU total)=11140.42578125MB
+INFO:root:Performance of pre-trained regressor on test set: RMSE=0.58
+INFO:train:NumberParameters: 419457.0
+INFO:train:GPU memory allocated: 23068672
+INFO:train:After setting up the model: mem (CPU python)=3195.30078125MB; mem (CPU total)=11140.42578125MB
+INFO:train:Training starts now.
+INFO:train:t_training_avg: 0.23358
+INFO:train:t_training_med: 0.23006
+INFO:train:t_training_std: 0.01451
+INFO:train:After finishing all epochs: mem (CPU python)=3195.3046875MB; mem (CPU total)=11141.3046875MB
+INFO:train:Proceeding with diffusion model after 5000 epochs of training
+INFO:root:Training the model took 1818.811s.
+INFO:root:Emptying the cuda cache took 0.001s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.
+INFO:root:Evaluating the model on Train data took 7.226s.
+INFO:root:MSETrain: 0.12849
+INFO:root:RMSETrain: 0.35846
+INFO:root:EnergyScoreTrain: 0.1108
+INFO:root:CRPSTrain: 0.10945
+INFO:root:Gaussian NLLTrain: -0.0234
+INFO:root:CoverageTrain: 0.96386
+INFO:root:QICETrain: 0.06122
+INFO:root:Evaluating the model on Test data.
+INFO:root:Evaluating the model on Test data took 7.094s.
+INFO:root:MSETest: 0.41943
+INFO:root:RMSETest: 0.64763
+INFO:root:EnergyScoreTest: 0.32349
+INFO:root:CRPSTest: 0.32212
+INFO:root:Gaussian NLLTest: 113.55595
+INFO:root:CoverageTest: 0.84375
+INFO:root:QICETest: 0.05625
+INFO:root:After validation: mem (CPU python)=3195.78125MB; mem (CPU total)=11141.39453125MB
+INFO:root:###4 out of 4 training parameter combinations ###
+INFO:root:Training parameters: {'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'report_every': 50, 'seed': 1234, 'distributed_training': False, 'backbone': 'CARD', 'batch_size': 32, 'batch_accumulation': 1, 'eval_batch_size': 16384, 'n_epochs': 5000, 'early_stopping': 1000, 'init': 'default', 'learning_rate': 0.001, 'warmup_lr': 0, 'lr_schedule': 'no', 'optimizer': 'adam', 'gradient_clipping': 1, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'n_val_samples': 10, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'n_timesteps': 50, 'beta_endpoints': (0.001, 0.35), 'distributional_method': 'mixednormal', 'loss': 'crps', 'closed_form': True, 'concat_condition_diffusion': True, 'evaluate': True, 'val_only': False, 'x_T_sampling_method': 'CARD', 'conditional_free_guidance_training': False, 'ddim_churn': 1.0, 'noise_schedule': 'linear', 'regressor': 'orig_CARD_pretrain', 'n_components': 3, 'gamma': 5.0, 'rank': 10, 'mvnormal_method': 'lora', 'n_train_samples': 10, 'metrics_plots': False}
+INFO:root:Using pre-trained regressor from the CARD repo
+INFO:root:After creating the dataloaders: mem (CPU python)=3195.78125MB; mem (CPU total)=11141.39453125MB
+INFO:root:Performance of pre-trained regressor on test set: RMSE=0.58
+INFO:train:NumberParameters: 519947.0
+INFO:train:GPU memory allocated: 25165824
+INFO:train:After setting up the model: mem (CPU python)=3195.78125MB; mem (CPU total)=11141.39453125MB
+INFO:train:Training starts now.
+INFO:train:t_training_avg: 0.37382
+INFO:train:t_training_med: 0.36033
+INFO:train:t_training_std: 0.0344
+INFO:train:After finishing all epochs: mem (CPU python)=3195.7890625MB; mem (CPU total)=11140.27734375MB
+INFO:train:Proceeding with diffusion model after 5000 epochs of training
+INFO:root:Training the model took 2532.915s.
+INFO:root:Emptying the cuda cache took 0.0s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.
+INFO:root:Evaluating the model on Train data took 8.331s.
+INFO:root:MSETrain: 0.01022
+INFO:root:RMSETrain: 0.10107
+INFO:root:EnergyScoreTrain: 0.01984
+INFO:root:CRPSTrain: 0.01932
+INFO:root:Gaussian NLLTrain: -0.65152
+INFO:root:CoverageTrain: 0.99792
+INFO:root:QICETrain: 0.08789
+INFO:root:Evaluating the model on Test data.
+INFO:root:Evaluating the model on Test data took 8.118s.
+INFO:root:MSETest: 0.4163
+INFO:root:RMSETest: 0.64521
+INFO:root:EnergyScoreTest: 0.33079
+INFO:root:CRPSTest: 0.32994
+INFO:root:Gaussian NLLTest: 41.5799
+INFO:root:CoverageTest: 0.775
+INFO:root:QICETest: 0.0775
+INFO:root:After validation: mem (CPU python)=3195.82421875MB; mem (CPU total)=11139.62890625MB
+INFO:root:###6 out of 9 data set parameter combinations ###
+INFO:root:Data parameters: {'dataset_name': 'wine-quality-red', 'downscaling_factor': 1, 'yarin_gal_uci_split_indices': 16, 'max_dataset_size': 1000, 'standardize': True, 'select_timesteps': 'zero', 'temporal_downscaling_factor': 1, 'validation_ratio': 0.0}
+INFO:root:After loading the datasets: mem (CPU python)=3195.82421875MB; mem (CPU total)=11139.62890625MB
+INFO:root:###1 out of 4 training parameter combinations ###
+INFO:root:Training parameters: {'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'report_every': 50, 'seed': 1234, 'distributed_training': False, 'backbone': 'CARD', 'batch_size': 32, 'batch_accumulation': 1, 'eval_batch_size': 16384, 'n_epochs': 5000, 'early_stopping': 1000, 'init': 'default', 'learning_rate': 0.001, 'warmup_lr': 0, 'lr_schedule': 'no', 'optimizer': 'adam', 'gradient_clipping': 1, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'n_val_samples': 10, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'n_timesteps': 50, 'beta_endpoints': (0.001, 0.35), 'distributional_method': 'deterministic', 'loss': 'crps', 'closed_form': True, 'concat_condition_diffusion': True, 'evaluate': True, 'val_only': False, 'x_T_sampling_method': 'CARD', 'conditional_free_guidance_training': False, 'ddim_churn': 1.0, 'noise_schedule': 'linear', 'regressor': 'orig_CARD_pretrain', 'n_components': 3, 'gamma': 5.0, 'rank': 10, 'mvnormal_method': 'lora', 'n_train_samples': 10, 'metrics_plots': False}
+INFO:root:Using pre-trained regressor from the CARD repo
+INFO:root:After creating the dataloaders: mem (CPU python)=3195.82421875MB; mem (CPU total)=11139.99609375MB
+INFO:root:Performance of pre-trained regressor on test set: RMSE=0.62
+INFO:train:NumberParameters: 419329.0
+INFO:train:GPU memory allocated: 23068672
+INFO:train:After setting up the model: mem (CPU python)=3195.82421875MB; mem (CPU total)=11139.99609375MB
+INFO:train:Training starts now.
+INFO:train:t_training_avg: 0.19382
+INFO:train:t_training_med: 0.19401
+INFO:train:t_training_std: 0.00158
+INFO:train:After finishing all epochs: mem (CPU python)=3195.82421875MB; mem (CPU total)=11138.83984375MB
+INFO:train:Proceeding with diffusion model after 5000 epochs of training
+INFO:root:Training the model took 1629.507s.
+INFO:root:Emptying the cuda cache took 0.0s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.
+INFO:root:Evaluating the model on Train data took 4.453s.
+INFO:root:MSETrain: 0.02979
+INFO:root:RMSETrain: 0.1726
+INFO:root:EnergyScoreTrain: 0.03767
+INFO:root:CRPSTrain: 0.03687
+INFO:root:Gaussian NLLTrain: -0.15723
+INFO:root:CoverageTrain: 0.68381
+INFO:root:QICETrain: 0.07704
+INFO:root:Evaluating the model on Test data.
+INFO:root:Evaluating the model on Test data took 4.338s.
+INFO:root:MSETest: 0.37977
+INFO:root:RMSETest: 0.61625
+INFO:root:EnergyScoreTest: 0.29253
+INFO:root:CRPSTest: 0.29144
+INFO:root:Gaussian NLLTest: 952.27148
+INFO:root:CoverageTest: 0.6125
+INFO:root:QICETest: 0.0825
+INFO:root:After validation: mem (CPU python)=3195.82421875MB; mem (CPU total)=11139.48828125MB
+INFO:root:###2 out of 4 training parameter combinations ###
+INFO:root:Training parameters: {'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'report_every': 50, 'seed': 1234, 'distributed_training': False, 'backbone': 'CARD', 'batch_size': 32, 'batch_accumulation': 1, 'eval_batch_size': 16384, 'n_epochs': 5000, 'early_stopping': 1000, 'init': 'default', 'learning_rate': 0.001, 'warmup_lr': 0, 'lr_schedule': 'no', 'optimizer': 'adam', 'gradient_clipping': 1, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'n_val_samples': 10, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'n_timesteps': 50, 'beta_endpoints': (0.001, 0.35), 'distributional_method': 'normal', 'loss': 'crps', 'closed_form': True, 'concat_condition_diffusion': True, 'evaluate': True, 'val_only': False, 'x_T_sampling_method': 'CARD', 'conditional_free_guidance_training': False, 'ddim_churn': 1.0, 'noise_schedule': 'linear', 'regressor': 'orig_CARD_pretrain', 'n_components': 3, 'gamma': 5.0, 'rank': 10, 'mvnormal_method': 'lora', 'n_train_samples': 10, 'metrics_plots': False}
+INFO:root:Using pre-trained regressor from the CARD repo
+INFO:root:After creating the dataloaders: mem (CPU python)=3195.82421875MB; mem (CPU total)=11139.48828125MB
+INFO:root:Performance of pre-trained regressor on test set: RMSE=0.62
+INFO:train:NumberParameters: 419587.0
+INFO:train:GPU memory allocated: 23068672
+INFO:train:After setting up the model: mem (CPU python)=3195.82421875MB; mem (CPU total)=11139.48828125MB
+INFO:train:Training starts now.
+INFO:train:t_training_avg: 0.23775
+INFO:train:t_training_med: 0.23772
+INFO:train:t_training_std: 0.00304
+INFO:train:After finishing all epochs: mem (CPU python)=3195.82421875MB; mem (CPU total)=11138.6875MB
+INFO:train:Proceeding with diffusion model after 5000 epochs of training
+INFO:root:Training the model took 1844.391s.
+INFO:root:Emptying the cuda cache took 0.0s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.
+INFO:root:Evaluating the model on Train data took 6.127s.
+INFO:root:MSETrain: 0.02942
+INFO:root:RMSETrain: 0.17153
+INFO:root:EnergyScoreTrain: 0.03348
+INFO:root:CRPSTrain: 0.0327
+INFO:root:Gaussian NLLTrain: -0.69208
+INFO:root:CoverageTrain: 0.99236
+INFO:root:QICETrain: 0.05163
+INFO:root:Evaluating the model on Test data.
+INFO:root:Evaluating the model on Test data took 5.958s.
+INFO:root:MSETest: 0.36466
+INFO:root:RMSETest: 0.60387
+INFO:root:EnergyScoreTest: 0.26547
+INFO:root:CRPSTest: 0.26444
+INFO:root:Gaussian NLLTest: 3.12065
+INFO:root:CoverageTest: 0.8375
+INFO:root:QICETest: 0.02875
+INFO:root:After validation: mem (CPU python)=3195.8359375MB; mem (CPU total)=11137.8828125MB
+INFO:root:###3 out of 4 training parameter combinations ###
+INFO:root:Training parameters: {'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'report_every': 50, 'seed': 1234, 'distributed_training': False, 'backbone': 'CARD', 'batch_size': 32, 'batch_accumulation': 1, 'eval_batch_size': 16384, 'n_epochs': 5000, 'early_stopping': 1000, 'init': 'default', 'learning_rate': 0.001, 'warmup_lr': 0, 'lr_schedule': 'no', 'optimizer': 'adam', 'gradient_clipping': 1, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'n_val_samples': 10, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'n_timesteps': 50, 'beta_endpoints': (0.001, 0.35), 'distributional_method': 'sample', 'loss': 'crps', 'closed_form': True, 'concat_condition_diffusion': True, 'evaluate': True, 'val_only': False, 'x_T_sampling_method': 'CARD', 'conditional_free_guidance_training': False, 'ddim_churn': 1.0, 'noise_schedule': 'linear', 'regressor': 'orig_CARD_pretrain', 'n_components': 3, 'gamma': 5.0, 'rank': 10, 'mvnormal_method': 'lora', 'n_train_samples': 10, 'metrics_plots': False}
+INFO:root:Using pre-trained regressor from the CARD repo
+INFO:root:After creating the dataloaders: mem (CPU python)=3195.8359375MB; mem (CPU total)=11137.8828125MB
+INFO:root:Performance of pre-trained regressor on test set: RMSE=0.62
+INFO:train:NumberParameters: 419457.0
+INFO:train:GPU memory allocated: 25165824
+INFO:train:After setting up the model: mem (CPU python)=3195.8359375MB; mem (CPU total)=11137.8828125MB
+INFO:train:Training starts now.
+INFO:train:t_training_avg: 0.23064
+INFO:train:t_training_med: 0.23063
+INFO:train:t_training_std: 0.00247
+INFO:train:After finishing all epochs: mem (CPU python)=3195.83984375MB; mem (CPU total)=11136.8671875MB
+INFO:train:Proceeding with diffusion model after 5000 epochs of training
+INFO:root:Training the model took 1805.279s.
+INFO:root:Emptying the cuda cache took 0.001s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.
+INFO:root:Evaluating the model on Train data took 5.468s.
+INFO:root:MSETrain: 0.17128
+INFO:root:RMSETrain: 0.41386
+INFO:root:EnergyScoreTrain: 0.14872
+INFO:root:CRPSTrain: 0.14715
+INFO:root:Gaussian NLLTrain: 0.23173
+INFO:root:CoverageTrain: 0.93398
+INFO:root:QICETrain: 0.03425
+INFO:root:Evaluating the model on Test data.
+INFO:root:Evaluating the model on Test data took 5.356s.
+INFO:root:MSETest: 0.38415
+INFO:root:RMSETest: 0.6198
+INFO:root:EnergyScoreTest: 0.3168
+INFO:root:CRPSTest: 0.31507
+INFO:root:Gaussian NLLTest: 2.22144
+INFO:root:CoverageTest: 0.81875
+INFO:root:QICETest: 0.05875
+INFO:root:After validation: mem (CPU python)=3195.84765625MB; mem (CPU total)=11136.80859375MB
+INFO:root:###4 out of 4 training parameter combinations ###
+INFO:root:Training parameters: {'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'report_every': 50, 'seed': 1234, 'distributed_training': False, 'backbone': 'CARD', 'batch_size': 32, 'batch_accumulation': 1, 'eval_batch_size': 16384, 'n_epochs': 5000, 'early_stopping': 1000, 'init': 'default', 'learning_rate': 0.001, 'warmup_lr': 0, 'lr_schedule': 'no', 'optimizer': 'adam', 'gradient_clipping': 1, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'n_val_samples': 10, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'n_timesteps': 50, 'beta_endpoints': (0.001, 0.35), 'distributional_method': 'mixednormal', 'loss': 'crps', 'closed_form': True, 'concat_condition_diffusion': True, 'evaluate': True, 'val_only': False, 'x_T_sampling_method': 'CARD', 'conditional_free_guidance_training': False, 'ddim_churn': 1.0, 'noise_schedule': 'linear', 'regressor': 'orig_CARD_pretrain', 'n_components': 3, 'gamma': 5.0, 'rank': 10, 'mvnormal_method': 'lora', 'n_train_samples': 10, 'metrics_plots': False}
+INFO:root:Using pre-trained regressor from the CARD repo
+INFO:root:After creating the dataloaders: mem (CPU python)=3195.84765625MB; mem (CPU total)=11136.80859375MB
+INFO:root:Performance of pre-trained regressor on test set: RMSE=0.62
+INFO:train:NumberParameters: 519947.0
+INFO:train:GPU memory allocated: 25165824
+INFO:train:After setting up the model: mem (CPU python)=3195.84765625MB; mem (CPU total)=11136.8046875MB
+INFO:train:Training starts now.
+INFO:train:t_training_avg: 0.41058
+INFO:train:t_training_med: 0.45785
+INFO:train:t_training_std: 0.05304
+INFO:train:After finishing all epochs: mem (CPU python)=3195.84765625MB; mem (CPU total)=11135.18359375MB
+INFO:train:Proceeding with diffusion model after 5000 epochs of training
+INFO:root:Training the model took 2710.045s.
+INFO:root:Emptying the cuda cache took 0.0s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.
+INFO:root:Evaluating the model on Train data took 8.316s.
+INFO:root:MSETrain: 0.01524
+INFO:root:RMSETrain: 0.12347
+INFO:root:EnergyScoreTrain: 0.02236
+INFO:root:CRPSTrain: 0.02192
+INFO:root:Gaussian NLLTrain: -1.1024
+INFO:root:CoverageTrain: 0.85059
+INFO:root:QICETrain: 0.0487
+INFO:root:Evaluating the model on Test data.
+INFO:root:Evaluating the model on Test data took 8.084s.
+INFO:root:MSETest: 0.47367
+INFO:root:RMSETest: 0.68824
+INFO:root:EnergyScoreTest: 0.35596
+INFO:root:CRPSTest: 0.35528
+INFO:root:Gaussian NLLTest: 333.09833
+INFO:root:CoverageTest: 0.69375
+INFO:root:QICETest: 0.055
+INFO:root:After validation: mem (CPU python)=3195.87890625MB; mem (CPU total)=11135.40234375MB
+INFO:root:###7 out of 9 data set parameter combinations ###
+INFO:root:Data parameters: {'dataset_name': 'wine-quality-red', 'downscaling_factor': 1, 'yarin_gal_uci_split_indices': 17, 'max_dataset_size': 1000, 'standardize': True, 'select_timesteps': 'zero', 'temporal_downscaling_factor': 1, 'validation_ratio': 0.0}
+INFO:root:After loading the datasets: mem (CPU python)=3195.88671875MB; mem (CPU total)=11135.40234375MB
+INFO:root:###1 out of 4 training parameter combinations ###
+INFO:root:Training parameters: {'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'report_every': 50, 'seed': 1234, 'distributed_training': False, 'backbone': 'CARD', 'batch_size': 32, 'batch_accumulation': 1, 'eval_batch_size': 16384, 'n_epochs': 5000, 'early_stopping': 1000, 'init': 'default', 'learning_rate': 0.001, 'warmup_lr': 0, 'lr_schedule': 'no', 'optimizer': 'adam', 'gradient_clipping': 1, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'n_val_samples': 10, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'n_timesteps': 50, 'beta_endpoints': (0.001, 0.35), 'distributional_method': 'deterministic', 'loss': 'crps', 'closed_form': True, 'concat_condition_diffusion': True, 'evaluate': True, 'val_only': False, 'x_T_sampling_method': 'CARD', 'conditional_free_guidance_training': False, 'ddim_churn': 1.0, 'noise_schedule': 'linear', 'regressor': 'orig_CARD_pretrain', 'n_components': 3, 'gamma': 5.0, 'rank': 10, 'mvnormal_method': 'lora', 'n_train_samples': 10, 'metrics_plots': False}
+INFO:root:Using pre-trained regressor from the CARD repo
+INFO:root:After creating the dataloaders: mem (CPU python)=3195.88671875MB; mem (CPU total)=11135.40234375MB
+INFO:root:Performance of pre-trained regressor on test set: RMSE=0.6
+INFO:train:NumberParameters: 419329.0
+INFO:train:GPU memory allocated: 27262976
+INFO:train:After setting up the model: mem (CPU python)=3195.88671875MB; mem (CPU total)=11135.40234375MB
+INFO:train:Training starts now.
+INFO:train:t_training_avg: 0.19511
+INFO:train:t_training_med: 0.19465
+INFO:train:t_training_std: 0.00272
+INFO:train:After finishing all epochs: mem (CPU python)=3195.88671875MB; mem (CPU total)=11135.29296875MB
+INFO:train:Proceeding with diffusion model after 5000 epochs of training
+INFO:root:Training the model took 1636.541s.
+INFO:root:Emptying the cuda cache took 0.0s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.
+INFO:root:Evaluating the model on Train data took 4.494s.
+INFO:root:MSETrain: 0.03521
+INFO:root:RMSETrain: 0.18765
+INFO:root:EnergyScoreTrain: 0.03948
+INFO:root:CRPSTrain: 0.0387
+INFO:root:Gaussian NLLTrain: -0.74322
+INFO:root:CoverageTrain: 0.80056
+INFO:root:QICETrain: 0.04827
+INFO:root:Evaluating the model on Test data.
+INFO:root:Evaluating the model on Test data took 4.442s.
+INFO:root:MSETest: 0.33382
+INFO:root:RMSETest: 0.57777
+INFO:root:EnergyScoreTest: 0.26542
+INFO:root:CRPSTest: 0.26443
+INFO:root:Gaussian NLLTest: 566.77997
+INFO:root:CoverageTest: 0.65625
+INFO:root:QICETest: 0.07375
+INFO:root:After validation: mem (CPU python)=3195.890625MB; mem (CPU total)=11135.71875MB
+INFO:root:###2 out of 4 training parameter combinations ###
+INFO:root:Training parameters: {'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'report_every': 50, 'seed': 1234, 'distributed_training': False, 'backbone': 'CARD', 'batch_size': 32, 'batch_accumulation': 1, 'eval_batch_size': 16384, 'n_epochs': 5000, 'early_stopping': 1000, 'init': 'default', 'learning_rate': 0.001, 'warmup_lr': 0, 'lr_schedule': 'no', 'optimizer': 'adam', 'gradient_clipping': 1, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'n_val_samples': 10, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'n_timesteps': 50, 'beta_endpoints': (0.001, 0.35), 'distributional_method': 'normal', 'loss': 'crps', 'closed_form': True, 'concat_condition_diffusion': True, 'evaluate': True, 'val_only': False, 'x_T_sampling_method': 'CARD', 'conditional_free_guidance_training': False, 'ddim_churn': 1.0, 'noise_schedule': 'linear', 'regressor': 'orig_CARD_pretrain', 'n_components': 3, 'gamma': 5.0, 'rank': 10, 'mvnormal_method': 'lora', 'n_train_samples': 10, 'metrics_plots': False}
+INFO:root:Using pre-trained regressor from the CARD repo
+INFO:root:After creating the dataloaders: mem (CPU python)=3195.890625MB; mem (CPU total)=11135.71875MB
+INFO:root:Performance of pre-trained regressor on test set: RMSE=0.6
+INFO:train:NumberParameters: 419587.0
+INFO:train:GPU memory allocated: 25165824
+INFO:train:After setting up the model: mem (CPU python)=3195.890625MB; mem (CPU total)=11135.71875MB
+INFO:train:Training starts now.
+INFO:train:t_training_avg: 0.24164
+INFO:train:t_training_med: 0.23973
+INFO:train:t_training_std: 0.00549
+INFO:train:After finishing all epochs: mem (CPU python)=3195.890625MB; mem (CPU total)=11135.15234375MB
+INFO:train:Proceeding with diffusion model after 5000 epochs of training
+INFO:root:Training the model took 1866.855s.
+INFO:root:Emptying the cuda cache took 0.0s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.
+INFO:root:Evaluating the model on Train data took 6.138s.
+INFO:root:MSETrain: 0.02407
+INFO:root:RMSETrain: 0.15514
+INFO:root:EnergyScoreTrain: 0.0287
+INFO:root:CRPSTrain: 0.02788
+INFO:root:Gaussian NLLTrain: -0.67706
+INFO:root:CoverageTrain: 0.99236
+INFO:root:QICETrain: 0.0312
+INFO:root:Evaluating the model on Test data.
+INFO:root:Evaluating the model on Test data took 5.977s.
+INFO:root:MSETest: 0.32899
+INFO:root:RMSETest: 0.57358
+INFO:root:EnergyScoreTest: 0.27724
+INFO:root:CRPSTest: 0.27623
+INFO:root:Gaussian NLLTest: 333.41354
+INFO:root:CoverageTest: 0.80625
+INFO:root:QICETest: 0.035
+INFO:root:After validation: mem (CPU python)=3195.90234375MB; mem (CPU total)=11135.26171875MB
+INFO:root:###3 out of 4 training parameter combinations ###
+INFO:root:Training parameters: {'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'report_every': 50, 'seed': 1234, 'distributed_training': False, 'backbone': 'CARD', 'batch_size': 32, 'batch_accumulation': 1, 'eval_batch_size': 16384, 'n_epochs': 5000, 'early_stopping': 1000, 'init': 'default', 'learning_rate': 0.001, 'warmup_lr': 0, 'lr_schedule': 'no', 'optimizer': 'adam', 'gradient_clipping': 1, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'n_val_samples': 10, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'n_timesteps': 50, 'beta_endpoints': (0.001, 0.35), 'distributional_method': 'sample', 'loss': 'crps', 'closed_form': True, 'concat_condition_diffusion': True, 'evaluate': True, 'val_only': False, 'x_T_sampling_method': 'CARD', 'conditional_free_guidance_training': False, 'ddim_churn': 1.0, 'noise_schedule': 'linear', 'regressor': 'orig_CARD_pretrain', 'n_components': 3, 'gamma': 5.0, 'rank': 10, 'mvnormal_method': 'lora', 'n_train_samples': 10, 'metrics_plots': False}
+INFO:root:Using pre-trained regressor from the CARD repo
+INFO:root:After creating the dataloaders: mem (CPU python)=3195.90625MB; mem (CPU total)=11135.26171875MB
+INFO:root:Performance of pre-trained regressor on test set: RMSE=0.6
+INFO:train:NumberParameters: 419457.0
+INFO:train:GPU memory allocated: 25165824
+INFO:train:After setting up the model: mem (CPU python)=3195.90625MB; mem (CPU total)=11135.26171875MB
+INFO:train:Training starts now.
+INFO:train:t_training_avg: 0.23428
+INFO:train:t_training_med: 0.23384
+INFO:train:t_training_std: 0.00335
+INFO:train:After finishing all epochs: mem (CPU python)=3195.90625MB; mem (CPU total)=11135.28515625MB
+INFO:train:Proceeding with diffusion model after 5000 epochs of training
+INFO:root:Training the model took 1829.787s.
+INFO:root:Emptying the cuda cache took 0.001s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.
+INFO:root:Evaluating the model on Train data took 5.548s.
+INFO:root:MSETrain: 0.13709
+INFO:root:RMSETrain: 0.37026
+INFO:root:EnergyScoreTrain: 0.1196
+INFO:root:CRPSTrain: 0.11823
+INFO:root:Gaussian NLLTrain: -0.0101
+INFO:root:CoverageTrain: 0.94371
+INFO:root:QICETrain: 0.02079
+INFO:root:Evaluating the model on Test data.
+INFO:root:Evaluating the model on Test data took 5.489s.
+INFO:root:MSETest: 0.33909
+INFO:root:RMSETest: 0.58232
+INFO:root:EnergyScoreTest: 0.27602
+INFO:root:CRPSTest: 0.27468
+INFO:root:Gaussian NLLTest: 64.05588
+INFO:root:CoverageTest: 0.81875
+INFO:root:QICETest: 0.0325
+INFO:root:After validation: mem (CPU python)=3195.90625MB; mem (CPU total)=11135.6875MB
+INFO:root:###4 out of 4 training parameter combinations ###
+INFO:root:Training parameters: {'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'report_every': 50, 'seed': 1234, 'distributed_training': False, 'backbone': 'CARD', 'batch_size': 32, 'batch_accumulation': 1, 'eval_batch_size': 16384, 'n_epochs': 5000, 'early_stopping': 1000, 'init': 'default', 'learning_rate': 0.001, 'warmup_lr': 0, 'lr_schedule': 'no', 'optimizer': 'adam', 'gradient_clipping': 1, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'n_val_samples': 10, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'n_timesteps': 50, 'beta_endpoints': (0.001, 0.35), 'distributional_method': 'mixednormal', 'loss': 'crps', 'closed_form': True, 'concat_condition_diffusion': True, 'evaluate': True, 'val_only': False, 'x_T_sampling_method': 'CARD', 'conditional_free_guidance_training': False, 'ddim_churn': 1.0, 'noise_schedule': 'linear', 'regressor': 'orig_CARD_pretrain', 'n_components': 3, 'gamma': 5.0, 'rank': 10, 'mvnormal_method': 'lora', 'n_train_samples': 10, 'metrics_plots': False}
+INFO:root:Using pre-trained regressor from the CARD repo
+INFO:root:After creating the dataloaders: mem (CPU python)=3195.90625MB; mem (CPU total)=11135.6875MB
+INFO:root:Performance of pre-trained regressor on test set: RMSE=0.6
+INFO:train:NumberParameters: 519947.0
+INFO:train:GPU memory allocated: 27262976
+INFO:train:After setting up the model: mem (CPU python)=3195.90625MB; mem (CPU total)=11135.6875MB
+INFO:train:Training starts now.
+INFO:train:t_training_avg: 0.35867
+INFO:train:t_training_med: 0.35933
+INFO:train:t_training_std: 0.00387
+INFO:train:After finishing all epochs: mem (CPU python)=3195.90625MB; mem (CPU total)=11141.37109375MB
+INFO:train:Proceeding with diffusion model after 5000 epochs of training
+INFO:root:Training the model took 2451.767s.
+INFO:root:Emptying the cuda cache took 0.0s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.
+INFO:root:Evaluating the model on Train data took 8.192s.
+INFO:root:MSETrain: 0.0351
+INFO:root:RMSETrain: 0.18735
+INFO:root:EnergyScoreTrain: 0.03535
+INFO:root:CRPSTrain: 0.03479
+INFO:root:Gaussian NLLTrain: -0.90689
+INFO:root:CoverageTrain: 0.86657
+INFO:root:QICETrain: 0.04771
+INFO:root:Evaluating the model on Test data.
+INFO:root:Evaluating the model on Test data took 7.999s.
+INFO:root:MSETest: 0.42064
+INFO:root:RMSETest: 0.64857
+INFO:root:EnergyScoreTest: 0.34421
+INFO:root:CRPSTest: 0.34336
+INFO:root:Gaussian NLLTest: 229.21477
+INFO:root:CoverageTest: 0.69375
+INFO:root:QICETest: 0.05
+INFO:root:After validation: mem (CPU python)=3195.99609375MB; mem (CPU total)=11141.1640625MB
+INFO:root:###8 out of 9 data set parameter combinations ###
+INFO:root:Data parameters: {'dataset_name': 'wine-quality-red', 'downscaling_factor': 1, 'yarin_gal_uci_split_indices': 18, 'max_dataset_size': 1000, 'standardize': True, 'select_timesteps': 'zero', 'temporal_downscaling_factor': 1, 'validation_ratio': 0.0}
+INFO:root:After loading the datasets: mem (CPU python)=3195.99609375MB; mem (CPU total)=11141.1640625MB
+INFO:root:###1 out of 4 training parameter combinations ###
+INFO:root:Training parameters: {'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'report_every': 50, 'seed': 1234, 'distributed_training': False, 'backbone': 'CARD', 'batch_size': 32, 'batch_accumulation': 1, 'eval_batch_size': 16384, 'n_epochs': 5000, 'early_stopping': 1000, 'init': 'default', 'learning_rate': 0.001, 'warmup_lr': 0, 'lr_schedule': 'no', 'optimizer': 'adam', 'gradient_clipping': 1, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'n_val_samples': 10, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'n_timesteps': 50, 'beta_endpoints': (0.001, 0.35), 'distributional_method': 'deterministic', 'loss': 'crps', 'closed_form': True, 'concat_condition_diffusion': True, 'evaluate': True, 'val_only': False, 'x_T_sampling_method': 'CARD', 'conditional_free_guidance_training': False, 'ddim_churn': 1.0, 'noise_schedule': 'linear', 'regressor': 'orig_CARD_pretrain', 'n_components': 3, 'gamma': 5.0, 'rank': 10, 'mvnormal_method': 'lora', 'n_train_samples': 10, 'metrics_plots': False}
+INFO:root:Using pre-trained regressor from the CARD repo
+INFO:root:After creating the dataloaders: mem (CPU python)=3195.99609375MB; mem (CPU total)=11141.1640625MB
+INFO:root:Performance of pre-trained regressor on test set: RMSE=0.64
+INFO:train:NumberParameters: 419329.0
+INFO:train:GPU memory allocated: 27262976
+INFO:train:After setting up the model: mem (CPU python)=3195.99609375MB; mem (CPU total)=11141.1640625MB
+INFO:train:Training starts now.
+INFO:train:t_training_avg: 0.21925
+INFO:train:t_training_med: 0.23953
+INFO:train:t_training_std: 0.02425
+INFO:train:After finishing all epochs: mem (CPU python)=3196.00390625MB; mem (CPU total)=11141.328125MB
+INFO:train:Proceeding with diffusion model after 5000 epochs of training
+INFO:root:Training the model took 1752.05s.
+INFO:root:Emptying the cuda cache took 0.0s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.
+INFO:root:Evaluating the model on Train data took 4.391s.
+INFO:root:MSETrain: 0.03953
+INFO:root:RMSETrain: 0.19881
+INFO:root:EnergyScoreTrain: 0.04842
+INFO:root:CRPSTrain: 0.04759
+INFO:root:Gaussian NLLTrain: 37.98602
+INFO:root:CoverageTrain: 0.66018
+INFO:root:QICETrain: 0.09817
+INFO:root:Evaluating the model on Test data.
+INFO:root:Evaluating the model on Test data took 4.336s.
+INFO:root:MSETest: 0.42741
+INFO:root:RMSETest: 0.65377
+INFO:root:EnergyScoreTest: 0.32015
+INFO:root:CRPSTest: 0.31907
+INFO:root:Gaussian NLLTest: 373.52765
+INFO:root:CoverageTest: 0.525
+INFO:root:QICETest: 0.10375
+INFO:root:After validation: mem (CPU python)=3196.0625MB; mem (CPU total)=11141.7265625MB
+INFO:root:###2 out of 4 training parameter combinations ###
+INFO:root:Training parameters: {'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'report_every': 50, 'seed': 1234, 'distributed_training': False, 'backbone': 'CARD', 'batch_size': 32, 'batch_accumulation': 1, 'eval_batch_size': 16384, 'n_epochs': 5000, 'early_stopping': 1000, 'init': 'default', 'learning_rate': 0.001, 'warmup_lr': 0, 'lr_schedule': 'no', 'optimizer': 'adam', 'gradient_clipping': 1, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'n_val_samples': 10, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'n_timesteps': 50, 'beta_endpoints': (0.001, 0.35), 'distributional_method': 'normal', 'loss': 'crps', 'closed_form': True, 'concat_condition_diffusion': True, 'evaluate': True, 'val_only': False, 'x_T_sampling_method': 'CARD', 'conditional_free_guidance_training': False, 'ddim_churn': 1.0, 'noise_schedule': 'linear', 'regressor': 'orig_CARD_pretrain', 'n_components': 3, 'gamma': 5.0, 'rank': 10, 'mvnormal_method': 'lora', 'n_train_samples': 10, 'metrics_plots': False}
+INFO:root:Using pre-trained regressor from the CARD repo
+INFO:root:After creating the dataloaders: mem (CPU python)=3196.0625MB; mem (CPU total)=11141.7265625MB
+INFO:root:Performance of pre-trained regressor on test set: RMSE=0.64
+INFO:train:NumberParameters: 419587.0
+INFO:train:GPU memory allocated: 25165824
+INFO:train:After setting up the model: mem (CPU python)=3196.0625MB; mem (CPU total)=11141.7265625MB
+INFO:train:Training starts now.
+INFO:train:t_training_avg: 0.24313
+INFO:train:t_training_med: 0.24395
+INFO:train:t_training_std: 0.00563
+INFO:train:After finishing all epochs: mem (CPU python)=3196.0625MB; mem (CPU total)=11144.91796875MB
+INFO:train:Proceeding with diffusion model after 5000 epochs of training
+INFO:root:Training the model took 1873.96s.
+INFO:root:Emptying the cuda cache took 0.0s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.
+INFO:root:Evaluating the model on Train data took 6.102s.
+INFO:root:MSETrain: 0.03493
+INFO:root:RMSETrain: 0.18689
+INFO:root:EnergyScoreTrain: 0.04118
+INFO:root:CRPSTrain: 0.04039
+INFO:root:Gaussian NLLTrain: -0.46276
+INFO:root:CoverageTrain: 0.95413
+INFO:root:QICETrain: 0.07582
+INFO:root:Evaluating the model on Test data.
+INFO:root:Evaluating the model on Test data took 5.949s.
+INFO:root:MSETest: 0.42836
+INFO:root:RMSETest: 0.6545
+INFO:root:EnergyScoreTest: 0.36198
+INFO:root:CRPSTest: 0.36102
+INFO:root:Gaussian NLLTest: 69.72276
+INFO:root:CoverageTest: 0.73125
+INFO:root:QICETest: 0.06125
+INFO:root:After validation: mem (CPU python)=3196.06640625MB; mem (CPU total)=11144.69921875MB
+INFO:root:###3 out of 4 training parameter combinations ###
+INFO:root:Training parameters: {'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'report_every': 50, 'seed': 1234, 'distributed_training': False, 'backbone': 'CARD', 'batch_size': 32, 'batch_accumulation': 1, 'eval_batch_size': 16384, 'n_epochs': 5000, 'early_stopping': 1000, 'init': 'default', 'learning_rate': 0.001, 'warmup_lr': 0, 'lr_schedule': 'no', 'optimizer': 'adam', 'gradient_clipping': 1, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'n_val_samples': 10, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'n_timesteps': 50, 'beta_endpoints': (0.001, 0.35), 'distributional_method': 'sample', 'loss': 'crps', 'closed_form': True, 'concat_condition_diffusion': True, 'evaluate': True, 'val_only': False, 'x_T_sampling_method': 'CARD', 'conditional_free_guidance_training': False, 'ddim_churn': 1.0, 'noise_schedule': 'linear', 'regressor': 'orig_CARD_pretrain', 'n_components': 3, 'gamma': 5.0, 'rank': 10, 'mvnormal_method': 'lora', 'n_train_samples': 10, 'metrics_plots': False}
+INFO:root:Using pre-trained regressor from the CARD repo
+INFO:root:After creating the dataloaders: mem (CPU python)=3196.06640625MB; mem (CPU total)=11144.6953125MB
+INFO:root:Performance of pre-trained regressor on test set: RMSE=0.64
+INFO:train:NumberParameters: 419457.0
+INFO:train:GPU memory allocated: 25165824
+INFO:train:After setting up the model: mem (CPU python)=3196.06640625MB; mem (CPU total)=11144.6953125MB
+INFO:train:Training starts now.
+INFO:train:t_training_avg: 0.2316
+INFO:train:t_training_med: 0.23155
+INFO:train:t_training_std: 0.00225
+INFO:train:After finishing all epochs: mem (CPU python)=3196.06640625MB; mem (CPU total)=11144.65234375MB
+INFO:train:Proceeding with diffusion model after 5000 epochs of training
+INFO:root:Training the model took 1817.286s.
+INFO:root:Emptying the cuda cache took 0.001s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.
+INFO:root:Evaluating the model on Train data took 5.53s.
+INFO:root:MSETrain: 0.1566
+INFO:root:RMSETrain: 0.39573
+INFO:root:EnergyScoreTrain: 0.14056
+INFO:root:CRPSTrain: 0.13903
+INFO:root:Gaussian NLLTrain: 0.17823
+INFO:root:CoverageTrain: 0.92078
+INFO:root:QICETrain: 0.04521
+INFO:root:Evaluating the model on Test data.
+INFO:root:Evaluating the model on Test data took 5.423s.
+INFO:root:MSETest: 0.48612
+INFO:root:RMSETest: 0.69722
+INFO:root:EnergyScoreTest: 0.34513
+INFO:root:CRPSTest: 0.34351
+INFO:root:Gaussian NLLTest: 4.25284
+INFO:root:CoverageTest: 0.8125
+INFO:root:QICETest: 0.05125
+INFO:root:After validation: mem (CPU python)=3196.06640625MB; mem (CPU total)=11145.0390625MB
+INFO:root:###4 out of 4 training parameter combinations ###
+INFO:root:Training parameters: {'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'report_every': 50, 'seed': 1234, 'distributed_training': False, 'backbone': 'CARD', 'batch_size': 32, 'batch_accumulation': 1, 'eval_batch_size': 16384, 'n_epochs': 5000, 'early_stopping': 1000, 'init': 'default', 'learning_rate': 0.001, 'warmup_lr': 0, 'lr_schedule': 'no', 'optimizer': 'adam', 'gradient_clipping': 1, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'n_val_samples': 10, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'n_timesteps': 50, 'beta_endpoints': (0.001, 0.35), 'distributional_method': 'mixednormal', 'loss': 'crps', 'closed_form': True, 'concat_condition_diffusion': True, 'evaluate': True, 'val_only': False, 'x_T_sampling_method': 'CARD', 'conditional_free_guidance_training': False, 'ddim_churn': 1.0, 'noise_schedule': 'linear', 'regressor': 'orig_CARD_pretrain', 'n_components': 3, 'gamma': 5.0, 'rank': 10, 'mvnormal_method': 'lora', 'n_train_samples': 10, 'metrics_plots': False}
+INFO:root:Using pre-trained regressor from the CARD repo
+INFO:root:After creating the dataloaders: mem (CPU python)=3196.06640625MB; mem (CPU total)=11145.0390625MB
+INFO:root:Performance of pre-trained regressor on test set: RMSE=0.64
+INFO:train:NumberParameters: 519947.0
+INFO:train:GPU memory allocated: 27262976
+INFO:train:After setting up the model: mem (CPU python)=3196.06640625MB; mem (CPU total)=11145.0390625MB
+INFO:train:Training starts now.
+INFO:train:t_training_avg: 0.36506
+INFO:train:t_training_med: 0.35988
+INFO:train:t_training_std: 0.01078
+INFO:train:After finishing all epochs: mem (CPU python)=3196.06640625MB; mem (CPU total)=11143.48046875MB
+INFO:train:Proceeding with diffusion model after 5000 epochs of training
+INFO:root:Training the model took 2488.543s.
+INFO:root:Emptying the cuda cache took 0.0s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.
+INFO:root:Evaluating the model on Train data took 8.324s.
+INFO:root:MSETrain: 0.01264
+INFO:root:RMSETrain: 0.11244
+INFO:root:EnergyScoreTrain: 0.01701
+INFO:root:CRPSTrain: 0.01652
+INFO:root:Gaussian NLLTrain: -1.08436
+INFO:root:CoverageTrain: 0.98471
+INFO:root:QICETrain: 0.03035
+INFO:root:Evaluating the model on Test data.
+INFO:root:Evaluating the model on Test data took 8.045s.
+INFO:root:MSETest: 0.43287
+INFO:root:RMSETest: 0.65793
+INFO:root:EnergyScoreTest: 0.33612
+INFO:root:CRPSTest: 0.33522
+INFO:root:Gaussian NLLTest: 67.7043
+INFO:root:CoverageTest: 0.78125
+INFO:root:QICETest: 0.03625
+INFO:root:After validation: mem (CPU python)=3196.66796875MB; mem (CPU total)=11143.88671875MB
+INFO:root:###9 out of 9 data set parameter combinations ###
+INFO:root:Data parameters: {'dataset_name': 'wine-quality-red', 'downscaling_factor': 1, 'yarin_gal_uci_split_indices': 19, 'max_dataset_size': 1000, 'standardize': True, 'select_timesteps': 'zero', 'temporal_downscaling_factor': 1, 'validation_ratio': 0.0}
+INFO:root:After loading the datasets: mem (CPU python)=3196.66796875MB; mem (CPU total)=11143.88671875MB
+INFO:root:###1 out of 4 training parameter combinations ###
+INFO:root:Training parameters: {'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'report_every': 50, 'seed': 1234, 'distributed_training': False, 'backbone': 'CARD', 'batch_size': 32, 'batch_accumulation': 1, 'eval_batch_size': 16384, 'n_epochs': 5000, 'early_stopping': 1000, 'init': 'default', 'learning_rate': 0.001, 'warmup_lr': 0, 'lr_schedule': 'no', 'optimizer': 'adam', 'gradient_clipping': 1, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'n_val_samples': 10, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'n_timesteps': 50, 'beta_endpoints': (0.001, 0.35), 'distributional_method': 'deterministic', 'loss': 'crps', 'closed_form': True, 'concat_condition_diffusion': True, 'evaluate': True, 'val_only': False, 'x_T_sampling_method': 'CARD', 'conditional_free_guidance_training': False, 'ddim_churn': 1.0, 'noise_schedule': 'linear', 'regressor': 'orig_CARD_pretrain', 'n_components': 3, 'gamma': 5.0, 'rank': 10, 'mvnormal_method': 'lora', 'n_train_samples': 10, 'metrics_plots': False}
+INFO:root:Using pre-trained regressor from the CARD repo
+INFO:root:After creating the dataloaders: mem (CPU python)=3196.66796875MB; mem (CPU total)=11143.88671875MB
+INFO:root:Performance of pre-trained regressor on test set: RMSE=0.61
+INFO:train:NumberParameters: 419329.0
+INFO:train:GPU memory allocated: 27262976
+INFO:train:After setting up the model: mem (CPU python)=3196.66796875MB; mem (CPU total)=11143.88671875MB
+INFO:train:Training starts now.
+INFO:train:t_training_avg: 0.19348
+INFO:train:t_training_med: 0.19366
+INFO:train:t_training_std: 0.00162
+INFO:train:After finishing all epochs: mem (CPU python)=3196.67578125MB; mem (CPU total)=11143.609375MB
+INFO:train:Proceeding with diffusion model after 5000 epochs of training
+INFO:root:Training the model took 1628.681s.
+INFO:root:Emptying the cuda cache took 0.0s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.
+INFO:root:Evaluating the model on Train data took 4.404s.
+INFO:root:MSETrain: 0.02016
+INFO:root:RMSETrain: 0.142
+INFO:root:EnergyScoreTrain: 0.02853
+INFO:root:CRPSTrain: 0.02779
+INFO:root:Gaussian NLLTrain: 0.97292
+INFO:root:CoverageTrain: 0.73245
+INFO:root:QICETrain: 0.07996
+INFO:root:Evaluating the model on Test data.
+INFO:root:Evaluating the model on Test data took 4.343s.
+INFO:root:MSETest: 0.5054
+INFO:root:RMSETest: 0.71092
+INFO:root:EnergyScoreTest: 0.34382
+INFO:root:CRPSTest: 0.34272
+INFO:root:Gaussian NLLTest: 12.90816
+INFO:root:CoverageTest: 0.475
+INFO:root:QICETest: 0.1025
+INFO:root:After validation: mem (CPU python)=3196.67578125MB; mem (CPU total)=11144.0078125MB
+INFO:root:###2 out of 4 training parameter combinations ###
+INFO:root:Training parameters: {'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'report_every': 50, 'seed': 1234, 'distributed_training': False, 'backbone': 'CARD', 'batch_size': 32, 'batch_accumulation': 1, 'eval_batch_size': 16384, 'n_epochs': 5000, 'early_stopping': 1000, 'init': 'default', 'learning_rate': 0.001, 'warmup_lr': 0, 'lr_schedule': 'no', 'optimizer': 'adam', 'gradient_clipping': 1, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'n_val_samples': 10, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'n_timesteps': 50, 'beta_endpoints': (0.001, 0.35), 'distributional_method': 'normal', 'loss': 'crps', 'closed_form': True, 'concat_condition_diffusion': True, 'evaluate': True, 'val_only': False, 'x_T_sampling_method': 'CARD', 'conditional_free_guidance_training': False, 'ddim_churn': 1.0, 'noise_schedule': 'linear', 'regressor': 'orig_CARD_pretrain', 'n_components': 3, 'gamma': 5.0, 'rank': 10, 'mvnormal_method': 'lora', 'n_train_samples': 10, 'metrics_plots': False}
+INFO:root:Using pre-trained regressor from the CARD repo
+INFO:root:After creating the dataloaders: mem (CPU python)=3196.67578125MB; mem (CPU total)=11144.0078125MB
+INFO:root:Performance of pre-trained regressor on test set: RMSE=0.61
+INFO:train:NumberParameters: 419587.0
+INFO:train:GPU memory allocated: 27262976
+INFO:train:After setting up the model: mem (CPU python)=3196.67578125MB; mem (CPU total)=11144.0078125MB
+INFO:train:Training starts now.
+INFO:train:t_training_avg: 0.23458
+INFO:train:t_training_med: 0.23441
+INFO:train:t_training_std: 0.00251
+INFO:train:After finishing all epochs: mem (CPU python)=3196.67578125MB; mem (CPU total)=11144.6015625MB
+INFO:train:Proceeding with diffusion model after 5000 epochs of training
+INFO:root:Training the model took 1826.721s.
+INFO:root:Emptying the cuda cache took 0.0s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.
+INFO:root:Evaluating the model on Train data took 6.004s.
+INFO:root:MSETrain: 0.02782
+INFO:root:RMSETrain: 0.16679
+INFO:root:EnergyScoreTrain: 0.03237
+INFO:root:CRPSTrain: 0.03157
+INFO:root:Gaussian NLLTrain: -0.56755
+INFO:root:CoverageTrain: 0.99514
+INFO:root:QICETrain: 0.06261
+INFO:root:Evaluating the model on Test data.
+INFO:root:Evaluating the model on Test data took 5.891s.
+INFO:root:MSETest: 0.4536
+INFO:root:RMSETest: 0.6735
+INFO:root:EnergyScoreTest: 0.34908
+INFO:root:CRPSTest: 0.34811
+INFO:root:Gaussian NLLTest: 4.52468
+INFO:root:CoverageTest: 0.75
+INFO:root:QICETest: 0.055
+INFO:root:After validation: mem (CPU python)=3196.90234375MB; mem (CPU total)=11144.01953125MB
+INFO:root:###3 out of 4 training parameter combinations ###
+INFO:root:Training parameters: {'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'report_every': 50, 'seed': 1234, 'distributed_training': False, 'backbone': 'CARD', 'batch_size': 32, 'batch_accumulation': 1, 'eval_batch_size': 16384, 'n_epochs': 5000, 'early_stopping': 1000, 'init': 'default', 'learning_rate': 0.001, 'warmup_lr': 0, 'lr_schedule': 'no', 'optimizer': 'adam', 'gradient_clipping': 1, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'n_val_samples': 10, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'n_timesteps': 50, 'beta_endpoints': (0.001, 0.35), 'distributional_method': 'sample', 'loss': 'crps', 'closed_form': True, 'concat_condition_diffusion': True, 'evaluate': True, 'val_only': False, 'x_T_sampling_method': 'CARD', 'conditional_free_guidance_training': False, 'ddim_churn': 1.0, 'noise_schedule': 'linear', 'regressor': 'orig_CARD_pretrain', 'n_components': 3, 'gamma': 5.0, 'rank': 10, 'mvnormal_method': 'lora', 'n_train_samples': 10, 'metrics_plots': False}
+INFO:root:Using pre-trained regressor from the CARD repo
+INFO:root:After creating the dataloaders: mem (CPU python)=3196.90234375MB; mem (CPU total)=11144.01953125MB
+INFO:root:Performance of pre-trained regressor on test set: RMSE=0.61
+INFO:train:NumberParameters: 419457.0
+INFO:train:GPU memory allocated: 27262976
+INFO:train:After setting up the model: mem (CPU python)=3196.90234375MB; mem (CPU total)=11144.01953125MB
+INFO:train:Training starts now.
+INFO:train:t_training_avg: 0.23194
+INFO:train:t_training_med: 0.23139
+INFO:train:t_training_std: 0.00399
+INFO:train:After finishing all epochs: mem (CPU python)=3196.90625MB; mem (CPU total)=12377.31640625MB
+INFO:train:Proceeding with diffusion model after 5000 epochs of training
+INFO:root:Training the model took 1780.52s.
+INFO:root:Emptying the cuda cache took 0.001s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.
+INFO:root:Evaluating the model on Train data took 5.505s.
+INFO:root:MSETrain: 0.14334
+INFO:root:RMSETrain: 0.3786
+INFO:root:EnergyScoreTrain: 0.12392
+INFO:root:CRPSTrain: 0.12256
+INFO:root:Gaussian NLLTrain: 0.01014
+INFO:root:CoverageTrain: 0.94232
+INFO:root:QICETrain: 0.06067
+INFO:root:Evaluating the model on Test data.
+INFO:root:Evaluating the model on Test data took 5.407s.
+INFO:root:MSETest: 0.47547
+INFO:root:RMSETest: 0.68954
+INFO:root:EnergyScoreTest: 0.33867
+INFO:root:CRPSTest: 0.33728
+INFO:root:Gaussian NLLTest: 108.27448
+INFO:root:CoverageTest: 0.8125
+INFO:root:QICETest: 0.055
+INFO:root:After validation: mem (CPU python)=3196.90625MB; mem (CPU total)=12377.61328125MB
+INFO:root:###4 out of 4 training parameter combinations ###
+INFO:root:Training parameters: {'model': 'MLP', 'uncertainty_quantification': 'diffusion', 'report_every': 50, 'seed': 1234, 'distributed_training': False, 'backbone': 'CARD', 'batch_size': 32, 'batch_accumulation': 1, 'eval_batch_size': 16384, 'n_epochs': 5000, 'early_stopping': 1000, 'init': 'default', 'learning_rate': 0.001, 'warmup_lr': 0, 'lr_schedule': 'no', 'optimizer': 'adam', 'gradient_clipping': 1, 'alpha': 0.05, 'n_samples_uq': 100, 'weight_decay': 0.0, 'n_val_samples': 10, 'dropout': 0.1, 'hidden_dim': 64, 'n_layers': 2, 'n_timesteps': 50, 'beta_endpoints': (0.001, 0.35), 'distributional_method': 'mixednormal', 'loss': 'crps', 'closed_form': True, 'concat_condition_diffusion': True, 'evaluate': True, 'val_only': False, 'x_T_sampling_method': 'CARD', 'conditional_free_guidance_training': False, 'ddim_churn': 1.0, 'noise_schedule': 'linear', 'regressor': 'orig_CARD_pretrain', 'n_components': 3, 'gamma': 5.0, 'rank': 10, 'mvnormal_method': 'lora', 'n_train_samples': 10, 'metrics_plots': False}
+INFO:root:Using pre-trained regressor from the CARD repo
+INFO:root:After creating the dataloaders: mem (CPU python)=3196.90625MB; mem (CPU total)=12377.61328125MB
+INFO:root:Performance of pre-trained regressor on test set: RMSE=0.61
+INFO:train:NumberParameters: 519947.0
+INFO:train:GPU memory allocated: 27262976
+INFO:train:After setting up the model: mem (CPU python)=3196.90625MB; mem (CPU total)=12377.61328125MB
+INFO:train:Training starts now.
+INFO:train:t_training_avg: 0.38338
+INFO:train:t_training_med: 0.38294
+INFO:train:t_training_std: 0.00325
+INFO:train:After finishing all epochs: mem (CPU python)=3196.90625MB; mem (CPU total)=14001.6953125MB
+INFO:train:Proceeding with diffusion model after 5000 epochs of training
+INFO:root:Training the model took 2539.222s.
+INFO:root:Emptying the cuda cache took 0.0s.
+INFO:root:Starting evaluation: model MLP & uncertainty quantification diffusion
+INFO:root:Evaluating the model on Train data.
+INFO:root:Evaluating the model on Train data took 8.285s.
+INFO:root:MSETrain: 0.01226
+INFO:root:RMSETrain: 0.11074
+INFO:root:EnergyScoreTrain: 0.01712
+INFO:root:CRPSTrain: 0.0167
+INFO:root:Gaussian NLLTrain: -1.56112
+INFO:root:CoverageTrain: 0.98749
+INFO:root:QICETrain: 0.08635
+INFO:root:Evaluating the model on Test data.
+INFO:root:Evaluating the model on Test data took 8.041s.
+INFO:root:MSETest: 0.49887
+INFO:root:RMSETest: 0.70631
+INFO:root:EnergyScoreTest: 0.37973
+INFO:root:CRPSTest: 0.37897
+INFO:root:Gaussian NLLTest: 1796.40063
+INFO:root:CoverageTest: 0.7125
+INFO:root:QICETest: 0.0575
+INFO:root:After validation: mem (CPU python)=3196.9453125MB; mem (CPU total)=14001.37109375MB
