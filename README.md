@@ -64,13 +64,13 @@ Probabilistic regression models the entire predictive distribution of a response
 
 If you use this codebase in your work, please cite the accompanying paper:
 
-> *Improved probabilistic regression using diffusion models*, 2024.
+> *Improved probabilistic regression using diffusion models*, 2025.
 
 ```
 @article{diffusionuq2024,
   title   = {Improved probabilistic regression using diffusion models},
-  year    = {2024},
-  author  = {To be updated},
+  year    = {2025},
+  author  = {Carlo Kneissl*, Christopher Bülte*, Philipp Scholl*, and Gitta Kutyniok},
   journal = {To be updated}
 }
 ```
