@@ -70,7 +70,7 @@ If you use this codebase in your work, please cite the accompanying paper:
 @article{diffusionuq2024,
   title   = {Improved probabilistic regression using diffusion models},
   year    = {2025},
-  author  = {Carlo Kneissl*, Christopher Bülte*, Philipp Scholl*, and Gitta Kutyniok},
+  author  = {Carlo Kneissl, Christopher Bülte, Philipp Scholl, and Gitta Kutyniok},
   journal = {To be updated}
 }
 ```
