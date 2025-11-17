@@ -118,7 +118,11 @@ def train(
         if np.random.random() < 0.1 and conditional_free_guidance_training:
             input = None
         predicted_noise = net(x_t, t, input, pred = pred)
-        loss = criterion(noise, predicted_noise)
+        
+        if diffusion.distributional_method == "iDDPM":
+            loss = criterion(noise, predicted_noise, t)
+        else:
+            loss = criterion(noise, predicted_noise)
     else:
         predicted_noise = net(input)
         loss = criterion(target, predicted_noise)
@@ -205,12 +209,6 @@ def trainer(
     if device == "cpu":
         assert not training_parameters["data_loader_pin_memory"]
 
-    criterion = train_utils.get_criterion(
-        training_parameters, device=device
-    )  # Different loss functions for noise prediction
-    eval_criterion = (
-        energy_score  # torch.nn.MSELoss() # MSE loss for evaluating generated samples
-    )
 
     # Setup up parallel dataloaders
     if training_parameters["distributed_training"]:
@@ -243,7 +241,52 @@ def trainer(
             )
         else:
             val_loader = None
-    model = train_utils.setup_model(data_parameters,training_parameters, device, target_dim, input_dim)
+            
+    # UQ setup
+    uncertainty_quantification = training_parameters["uncertainty_quantification"]
+    distributional_method = training_parameters["distributional_method"]
+    closed_form = training_parameters["closed_form"]
+    noise_schedule = training_parameters['noise_schedule']
+    if uncertainty_quantification == 'diffusion':
+        if distributional_method == "deterministic":
+            diffusion = Diffusion(
+                noise_steps=training_parameters["n_timesteps"],
+                img_size=target_dim,
+                ddim_churn=training_parameters['ddim_churn'],
+                device=device,
+                x_T_sampling_method=training_parameters['x_T_sampling_method'],
+                noise_schedule=noise_schedule,
+                beta_endpoints=training_parameters["beta_endpoints"],
+                tau = training_parameters["tau"]
+            )
+        else:
+            diffusion = DistributionalDiffusion(
+                noise_steps=training_parameters["n_timesteps"],
+                img_size=target_dim,
+                device=device,
+                ddim_churn=training_parameters['ddim_churn'],
+                distributional_method=distributional_method,
+                closed_form=closed_form,
+                x_T_sampling_method=training_parameters['x_T_sampling_method'],
+                noise_schedule=noise_schedule,
+                beta_endpoints=training_parameters["beta_endpoints"],
+                tau = training_parameters["tau"]
+            )
+            
+        beta = diffusion.beta # need it for iDDPM
+    else:
+        diffusion = None
+        beta = None
+        
+    criterion = train_utils.get_criterion(
+        training_parameters, device=device, beta=beta
+    )  # Different loss functions for noise prediction
+    eval_criterion = (
+        energy_score  # torch.nn.MSELoss() # MSE loss for evaluating generated samples
+    )
+
+           
+    model = train_utils.setup_model(data_parameters, training_parameters, device, target_dim, input_dim, beta)
     # Setup distributed model
     if training_parameters["distributed_training"]:
         model = DDP(model, device_ids=[gpu_id], find_unused_parameters=True, broadcast_buffers=False)
@@ -310,40 +353,6 @@ def trainer(
     warmup_lr = training_parameters["warmup_lr"]
     if warmup_lr > 0:
         warmup_schedule = np.linspace(lr*0.1, lr, warmup_lr)
-        
-
-    # Additional parameters
-    uncertainty_quantification = training_parameters["uncertainty_quantification"]
-    distributional_method = training_parameters["distributional_method"]
-    closed_form = training_parameters["closed_form"]
-    noise_schedule = training_parameters['noise_schedule']
-    if uncertainty_quantification == 'diffusion':
-        if distributional_method == "deterministic":
-            diffusion = Diffusion(
-                noise_steps=training_parameters["n_timesteps"],
-                img_size=target_dim,
-                ddim_churn=training_parameters['ddim_churn'],
-                device=device,
-                x_T_sampling_method=training_parameters['x_T_sampling_method'],
-                noise_schedule=noise_schedule,
-                beta_endpoints=training_parameters["beta_endpoints"],
-                tau = training_parameters["tau"]
-            )
-        else:
-            diffusion = DistributionalDiffusion(
-                noise_steps=training_parameters["n_timesteps"],
-                img_size=target_dim,
-                device=device,
-                ddim_churn=training_parameters['ddim_churn'],
-                distributional_method=distributional_method,
-                closed_form=closed_form,
-                x_T_sampling_method=training_parameters['x_T_sampling_method'],
-                noise_schedule=noise_schedule,
-                beta_endpoints=training_parameters["beta_endpoints"],
-                tau = training_parameters["tau"]
-            )
-    else:
-        diffusion = None
 
     ema = EMA(0.995)
     ema_model = copy.deepcopy(model.module if training_parameters["distributed_training"] else model)

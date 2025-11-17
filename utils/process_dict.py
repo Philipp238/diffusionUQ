@@ -74,7 +74,7 @@ def process_training_parameters(train_dict: dict)-> dict:
     processed_dict["rank"] = train_dict.get("rank",10)
     processed_dict["mvnormal_method"] = train_dict.get("mvnormal_method", ["lora"])
     processed_dict["n_train_samples"] = train_dict.get("n_train_samples",10)
-
+    processed_dict["loss_lambda"] = train_dict.get("loss_lambda", 0.001)
 
     
     # Misc
