@@ -580,13 +580,13 @@ def trainer(
         # Save training time
         t_training = np.array(t_training)
         train_utils.log_and_save_evaluation(
-            t_training.mean(), "t_training_avg", results_dict, logger
+            t_training[100:].mean(), "t_training_avg", results_dict, logger
         )
         train_utils.log_and_save_evaluation(
-            np.median(t_training), "t_training_med", results_dict, logger
+            np.median(t_training[100:]), "t_training_med", results_dict, logger
         )
         train_utils.log_and_save_evaluation(
-            t_training.std(), "t_training_std", results_dict, logger
+            t_training[100:].std(), "t_training_std", results_dict, logger
         )
     if is_main_process():
         logger.info(using("After finishing all epochs"))

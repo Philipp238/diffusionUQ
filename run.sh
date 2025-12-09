@@ -1,2 +1,2 @@
 #!/bin/sh
-python main.py -c Burgers/deterministic.ini
+python main.py -c debug_pde.ini
