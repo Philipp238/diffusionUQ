@@ -123,6 +123,91 @@ class UNetDiffusion(nn.Module):
         eps_pred = self.output_projection(latent_pred)
         return eps_pred
 
+class UNet_diffusion_iDDPM(nn.Module):
+    """Distributional diffusion U-Net with iDDPM parametrization."""
+
+    def __init__(self, backbone: UNetDiffusion, beta: torch.Tensor, d: int = 1, target_dim: int = 1):
+        """Initializes the UNet_diffusion_iDDPM model.
+
+        Args:
+            backbone (UNetDiffusion): Backbone diffusion model.
+            d (int, optional): Dimensionality of the input/output. Defaults to 1.
+            target_dim (int, optional): Number of output channels. Defaults to 1.
+        """
+        super(UNet_diffusion_iDDPM, self).__init__()
+        self.backbone = backbone
+        hidden_dim = backbone.features
+        self.beta = beta
+        self.alpha = 1.0 - self.beta
+        self.alpha_bar = torch.cumprod(self.alpha, dim=0)
+        
+        
+        if d == 1:
+            self.mu_projection = Conv1d(
+                in_channels=hidden_dim, out_channels=target_dim, kernel=3
+            )
+            self.sigma_projection = Conv1d(
+                in_channels=hidden_dim,
+                out_channels=target_dim,
+                kernel=3,
+                init_bias=1,
+            )
+        elif d == 2:
+            self.mu_projection = Conv2d(
+                in_channels=hidden_dim, out_channels=target_dim, kernel=3
+            )
+            self.sigma_projection = Conv2d(
+                in_channels=hidden_dim,
+                out_channels=target_dim,
+                kernel=3,
+                init_bias=1,
+            )
+
+    def forward(
+        self,
+        x_t: torch.Tensor,
+        t: torch.Tensor,
+        condition_input: torch.Tensor,
+        **kwargs,
+    ) -> torch.Tensor:
+        """Forward pass through the model.
+
+        Args:
+            x_t (torch.Tensor): Noisy input at time t of shape [B, C, D1,..., DN].
+            t (torch.Tensor): Timestep tensor [B]
+            condition_input (torch.Tensor): Conditioning input of shape [B, C, D1,..., DN].
+
+        Returns:
+            torch.Tensor: Noise prediction of shape [B, target_dim, D1,..., DN, 2] where the last dimension
+            corresponds to the mean and standard deviation.
+        """
+
+        alpha = self.alpha[t]
+        alpha_bar = self.alpha_bar[t]
+        beta = self.beta[t]
+                
+        # Reshape
+        alpha = alpha.view(*alpha.shape, *(1,) * (x_t.ndim - alpha.ndim)).expand(x_t.shape)
+        alpha_bar = alpha_bar.view(
+            *alpha_bar.shape, *(1,) * (x_t.ndim - alpha_bar.ndim)
+        ).expand(x_t.shape)
+        beta = beta.view(*beta.shape, *(1,) * (x_t.ndim - beta.ndim)).expand(x_t.shape)
+        
+        alpha_hat_t_minus_1 = self.alpha_bar[t - 1]
+        alpha_hat_t_minus_1 = alpha_hat_t_minus_1.view(
+                    *alpha_hat_t_minus_1.shape,
+                    *(1,) * (x_t.ndim - alpha_hat_t_minus_1.ndim),
+                ).expand(x_t.shape)
+        beta_wiggle = (1 - alpha_hat_t_minus_1) / (1 - alpha_bar) * beta
+        
+        
+        x_t = self.backbone.forward_body(x_t, t, condition_input)
+        mu = self.mu_projection(x_t)
+        sigma_parametrization = self.sigma_projection(x_t)
+        log_sigma = sigma_parametrization * torch.log(beta) + (1-sigma_parametrization) * torch.log(beta_wiggle)  # iDDPM never computes the variance but instead the log_variance
+        sigma = torch.exp(log_sigma)  # we compute the actual variance such that it fits to our sampler
+        output = torch.stack([mu, sigma], dim=-1)
+        return output
 
 class UNet_diffusion_normal(nn.Module):
     """Distributional diffusion U-Net with univariate normal parametrization."""

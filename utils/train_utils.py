@@ -23,6 +23,7 @@ from models import (
     UNet_diffusion_normal,
     UNet_diffusion_sample,
     UNetDiffusion,
+    UNet_diffusion_iDDPM
 )
 from models.mlp_diffusion import MLP_diffusion_CARD
 
@@ -61,7 +62,7 @@ def resume(model, filename):
     model.load_state_dict(torch.load(filename))
 
 
-def get_criterion(training_parameters, device):
+def get_criterion(training_parameters, device, beta: torch.Tensor | None =None):
     """Define criterion for the model.
     Criterion gets as arguments (truth, prediction) and returns a loss value.
     """
@@ -133,9 +134,13 @@ def get_criterion(training_parameters, device):
                         gamma=training_parameters["gamma"],
                         method="cholesky",
                     )
+        elif training_parameters["distributional_method"] == "iDDPM":
+            assert not (beta is None) 
+            criterion = losses.iDDPMLoss(beta=beta, loss_lambda=training_parameters["loss_lambda"])
+            
         else:
             raise ValueError(
-                f'"distributional_method" must be any of the following: "deterministic", "normal", "sample" or'
+                f'"distributional_method" must be any of the following: "deterministic", "normal", "sample", "iDDPM" or'
                 f'"mixednormal". You chose {training_parameters["distributional_method"]}.'
             )
     else:
@@ -159,9 +164,10 @@ def initialize_weights(model, init):
 def setup_model(
     data_parameters: dict,
     training_parameters: dict,
-    device,
-    target_dim: int,
-    input_dim: int,
+    device: str,
+    target_dim: tuple | int,
+    input_dim: tuple | int,
+    beta: torch.Tensor | None,
 ) -> nn.Module:
     """Return the model specified by the training parameters.
 
@@ -233,6 +239,15 @@ def setup_model(
                 target_dim=1,
                 n_components=training_parameters["n_components"],
             )
+        elif training_parameters["distributional_method"] == "iDDPM":
+            assert not (beta is None)
+            hidden_model = UNet_diffusion_iDDPM(
+                backbone=backbone,
+                beta=beta,
+                d=d,
+                target_dim=1,   
+            )
+            
     else:
         if training_parameters["uncertainty_quantification"] == "scoring-rule-reparam":
             raise NotImplementedError("Implement a model with parametrization trick.")
@@ -315,7 +330,7 @@ class EarlyStopper:
     Class for early stopping in training.
     """
 
-    def __init__(self, patience=1, min_delta=0):
+    def __init__(self, patience: int = 1, min_delta: float = 0.0):
         self.patience = patience
         self.min_delta = min_delta
         self.counter = 0

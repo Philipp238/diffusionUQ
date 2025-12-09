@@ -19,6 +19,7 @@ from models.unet import (
     UNet_diffusion_mvnormal,
     UNet_diffusion_sample,
     UNetDiffusion,
+    UNet_diffusion_iDDPM
 )
 
 from models.unet_layers import SongUNet

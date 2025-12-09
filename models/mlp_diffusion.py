@@ -36,7 +36,7 @@ class MLP_diffusion(nn.Module):
 
     def __init__(
         self,
-        target_dim=1,
+        target_dim: tuple | int = 1,
         conditioning_dim=None,
         concat=False,
         use_regressor_pred=False,
@@ -128,13 +128,13 @@ class ConditionalLinear(nn.Module):
 class MLP_diffusion_CARD(nn.Module):
     def __init__(
         self,
-        target_dim=1,
-        conditioning_dim=0,
-        hidden_dim=128,
-        layers=2,
-        diffusion_timesteps=1000,
-        use_regressor_pred=False,
-        device="cuda",
+        target_dim: tuple | int =1,
+        conditioning_dim: tuple | int =0,
+        hidden_dim: int = 128,
+        layers: int =2,
+        diffusion_timesteps: int =1000,
+        use_regressor_pred: bool=False,
+        device: str ="cuda",
     ):
         super(MLP_diffusion_CARD, self).__init__()
         self.device = device
