@@ -42,6 +42,8 @@ class iDDPMLoss(nn.Module):
         
         # We use the mean of the noise instead of x_{t-1} and, thus, have to scale the means accordingly
         factor_noise_to_x_t_minus_1 = (2 * alpha * (1 - alpha_bar_t)) / (1-alpha)**2
+        
+        factor_noise_to_x_t_minus_1 = 1
 
         return 0.5 * (
             -1.0
@@ -58,12 +60,12 @@ class iDDPMLoss(nn.Module):
             
             truth_logvar = torch.log(beta_wiggle)
             
-            prediction_mean, prediction_logvar = prediction[...,0], prediction[...,1]
+            prediction_mean, prediction_logvar = prediction[...,0], torch.log(prediction[...,1])  # now use the logvar to fit to the loss function from iDDPM
             
             l_simple = self.mse(truth, prediction_mean)            
             l_kl = iDDPMLoss.normal_kl(truth, truth_logvar, prediction_mean, prediction_logvar, alpha, alpha_bar)
             
-            return l_simple + self.loss_lambda * l_kl.mean(dim=0).sum()
+            return l_simple + self.loss_lambda * l_kl.mean()
 
     def compute_alphas_and_beta_wiggle(self, t: torch.Tensor, x_t: torch.Tensor) -> tuple:
         alpha = self.alpha[t]

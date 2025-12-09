@@ -119,7 +119,7 @@ def train(
             input = None
         predicted_noise = net(x_t, t, input, pred = pred)
         
-        if diffusion.distributional_method == "iDDPM":
+        if isinstance(diffusion, DistributionalDiffusion) and diffusion.distributional_method == "iDDPM":
             loss = criterion(noise, predicted_noise, t)
         else:
             loss = criterion(noise, predicted_noise)

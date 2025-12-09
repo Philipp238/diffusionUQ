@@ -140,7 +140,7 @@ def get_criterion(training_parameters, device, beta: torch.Tensor | None =None):
             
         else:
             raise ValueError(
-                f'"distributional_method" must be any of the following: "deterministic", "normal", "sample" or'
+                f'"distributional_method" must be any of the following: "deterministic", "normal", "sample", "iDDPM" or'
                 f'"mixednormal". You chose {training_parameters["distributional_method"]}.'
             )
     else:

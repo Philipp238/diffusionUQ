@@ -46,6 +46,7 @@ def process_training_parameters(train_dict: dict)-> dict:
     processed_dict["n_samples_uq"] = train_dict.get("n_samples_uq", 100)
     processed_dict["weight_decay"] = train_dict.get("weight_decay", 0.0)
     processed_dict["n_val_samples"] = train_dict.get("n_val_samples", 10)
+    processed_dict["data_loader_pin_memory"] = train_dict.get("data_loader_pin_memory", False)
 
     # Model Parameters
     processed_dict["dropout"] = train_dict.get("dropout", [0.1])

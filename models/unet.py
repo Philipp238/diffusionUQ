@@ -203,9 +203,10 @@ class UNet_diffusion_iDDPM(nn.Module):
         
         x_t = self.backbone.forward_body(x_t, t, condition_input)
         mu = self.mu_projection(x_t)
-        sigma = self.sigma_projection(x_t)
-        log_sigma = sigma * torch.log(beta) + (1-sigma) * torch.log(beta_wiggle)  # iDDPM never computes the variance but instead the log_variance
-        output = torch.stack([mu, log_sigma], dim=-1)
+        sigma_parametrization = self.sigma_projection(x_t)
+        log_sigma = sigma_parametrization * torch.log(beta) + (1-sigma_parametrization) * torch.log(beta_wiggle)  # iDDPM never computes the variance but instead the log_variance
+        sigma = torch.exp(log_sigma)  # we compute the actual variance such that it fits to our sampler
+        output = torch.stack([mu, sigma], dim=-1)
         return output
 
 class UNet_diffusion_normal(nn.Module):
