@@ -75,6 +75,8 @@ class PDE1D(Dataset):
         self.train_split = train_split
         self.seed = seed
         self.filename = "test.nc" if var == "test" else "train.nc"
+        if var == "ood":
+            self.filename = f"{var}.nc"
         self.path = os.path.join(data_dir, f"1D_{self.pde}/processed/")
         self.dataset = xr.open_dataset(self.path + self.filename)
         assert isinstance(downscaling_factor, int), "Scaling factor must be Integer"

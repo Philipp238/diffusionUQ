@@ -447,7 +447,7 @@ class DistributionalDiffusion(Diffusion):
         self.tau = tau
 
     def sample_noise(self, model, x, t, conditioning=None, pred=None):
-        if self.distributional_method == "normal":
+        if self.distributional_method in ["normal", "iDDPM"]:
             predicted_noise = model(x, t, conditioning, pred=pred)
             predicted_noise = predicted_noise[..., 0] + np.sqrt(self.tau) * predicted_noise[
                 ..., 1

@@ -16,6 +16,77 @@ from torch.distributions.multivariate_normal import (
 EPS = 1e-9
 
 
+class iDDPMLoss(nn.Module):
+    def __init__(self, beta: torch.Tensor, loss_lambda: float) -> None:
+        super().__init__()
+        self.beta = beta
+        self.alpha = 1.0 - self.beta
+        self.alpha_bar = torch.cumprod(self.alpha, dim=0)
+        
+        self.loss_lambda = loss_lambda
+        
+        self.mse = nn.MSELoss()
+        
+    @staticmethod
+    def normal_kl(noise_mean1, logvar1, noise_mean2, logvar2, alpha, alpha_bar_t):
+        """
+        Compute the KL divergence between two gaussians.
+
+        Shapes are automatically broadcasted, so batches can be compared to
+        scalars, among other use cases.
+        
+        Note that they take the log variances as input
+        
+        """
+        
+        
+        # We use the mean of the noise instead of x_{t-1} and, thus, have to scale the means accordingly
+        factor_noise_to_x_t_minus_1 = (2 * alpha * (1 - alpha_bar_t)) / (1-alpha)**2
+        
+        factor_noise_to_x_t_minus_1 = 1
+
+        return 0.5 * (
+            -1.0
+            + logvar2
+            - logvar1
+            + torch.exp(logvar1 - logvar2)
+            + factor_noise_to_x_t_minus_1 * ((noise_mean1 - noise_mean2) ** 2) * torch.exp(-logvar2)
+        )
+
+    def forward(
+        self, truth: torch.Tensor, prediction: torch.Tensor, t: torch.Tensor
+    ) -> torch.Tensor:
+            alpha, alpha_bar, beta_wiggle = self.compute_alphas_and_beta_wiggle(t, truth)
+            
+            truth_logvar = torch.log(beta_wiggle)
+            
+            prediction_mean, prediction_logvar = prediction[...,0], torch.log(prediction[...,1])  # now use the logvar to fit to the loss function from iDDPM
+            
+            l_simple = self.mse(truth, prediction_mean)            
+            l_kl = iDDPMLoss.normal_kl(truth, truth_logvar, prediction_mean, prediction_logvar, alpha, alpha_bar)
+            
+            return l_simple + self.loss_lambda * l_kl.mean()
+
+    def compute_alphas_and_beta_wiggle(self, t: torch.Tensor, x_t: torch.Tensor) -> tuple:
+        alpha = self.alpha[t]
+        alpha_bar = self.alpha_bar[t]
+        beta = self.beta[t]
+                
+        # Reshape
+        alpha = alpha.view(*alpha.shape, *(1,) * (x_t.ndim - alpha.ndim)).expand(x_t.shape)
+        alpha_bar = alpha_bar.view(
+            *alpha_bar.shape, *(1,) * (x_t.ndim - alpha_bar.ndim)
+        ).expand(x_t.shape)
+        beta = beta.view(*beta.shape, *(1,) * (x_t.ndim - beta.ndim)).expand(x_t.shape)
+        alpha_bar_t_minus_1 = self.alpha_bar[t - 1]
+        alpha_bar_t_minus_1 = alpha_bar_t_minus_1.view(
+                    *alpha_bar_t_minus_1.shape,
+                    *(1,) * (x_t.ndim - alpha_bar_t_minus_1.ndim),
+                ).expand(x_t.shape)
+        beta_wiggle = (1 - alpha_bar_t_minus_1) / (1 - alpha_bar) * beta
+        
+        return alpha, alpha_bar, beta_wiggle 
+
 class GaussianKernelScore(nn.Module):
     """Computes the Gaussian kernel score for a predictive normal distribution and corresponding observations."""
 

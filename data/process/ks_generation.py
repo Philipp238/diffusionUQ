@@ -10,6 +10,8 @@ import xarray as xr
 import yaml
 from tqdm import tqdm
 
+PATH = "data/1D_KS_ood"
+
 
 def get_sim(grid, n_steps: int, t_range: int = 150, dt: float = 0.001) -> np.ndarray:
     """Simulate an instance of the Kuramoto-Sivashinsky equation.
@@ -27,6 +29,10 @@ def get_sim(grid, n_steps: int, t_range: int = 150, dt: float = 0.001) -> np.nda
         grid, vmin=-1, vmax=1
     )  # generate initial condition
     # solve the system
+    # state = pde.ScalarField.random_normal(
+    #     grid, mean = 2, std = 1
+    # )
+
     storage = pde.MemoryStorage()
     result = eq.solve(
         state,
@@ -63,8 +69,8 @@ def simulate(config: dict) -> None:
     assert config["sim"]["n_cores"] <= mp.cpu_count()
     n_cores = config["sim"]["n_cores"]
     # Check for and create data directory
-    if not os.path.exists("data/1D_KS/raw"):
-        os.makedirs("data/1D_KS/raw")
+    if not os.path.exists(f"{PATH}/raw"):
+        os.makedirs(f"{PATH}/raw")
 
     # Create grid
     grid = pde.CartesianGrid(
@@ -87,7 +93,7 @@ def simulate(config: dict) -> None:
         pool.close()
         pool.join()
         result_array = np.array(results)
-        np.save(f"data/1D_KS/raw/ks_data_{i + 1}.npy", result_array)
+        np.save(f"{PATH}/raw/ks_data_{i + 1}.npy", result_array)
 
 
 def aggregate(config: dict, remove: bool, max_steps=104, start_step=6) -> None:
@@ -97,13 +103,13 @@ def aggregate(config: dict, remove: bool, max_steps=104, start_step=6) -> None:
         config (dict): Configuration dictionary.
     """
     # Check for and create data directory
-    if not os.path.exists("data/1D_KS/processed"):
-        os.makedirs("data/1D_KS/processed")
+    if not os.path.exists(f"{PATH}/processed"):
+        os.makedirs(f"{PATH}/processed")
 
     train_split = config["sim"]["train_split"]
 
     full_data = np.concatenate(
-        [np.load(f"data/1D_KS/raw/{name}") for name in os.listdir("data/1D_KS/raw/")],
+        [np.load(f"{PATH}/raw/{name}") for name in os.listdir(f"{PATH}/raw/")],
         axis=0,
     )
     t = np.arange(0, config["pde"]["t_max"], config["pde"]["dt"])
@@ -137,11 +143,11 @@ def aggregate(config: dict, remove: bool, max_steps=104, start_step=6) -> None:
     test_data.attrs["mean"] = mean
     test_data.attrs["std"] = std
 
-    train_data.to_netcdf("data/1D_KS/processed/train.nc")
-    test_data.to_netcdf("data/1D_KS/processed/test.nc")
+    train_data.to_netcdf(f"{PATH}/processed/train.nc")
+    test_data.to_netcdf(f"{PATH}/processed/test.nc")
 
     if remove:
-        os.system(f"rm -r data/1D_KS/raw")
+        os.system(f"rm -r {PATH}/raw")
 
 
 def main(config, sim=True, remove=False):
@@ -155,4 +161,4 @@ def main(config, sim=True, remove=False):
 
 if __name__ == "__main__":
     config = load_config()
-    main(config, sim=False)
+    main(config, sim=True)

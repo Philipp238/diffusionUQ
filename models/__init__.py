@@ -6,8 +6,6 @@ from models.diffusion import (
     generate_diffusion_samples_low_dimensional,
 )
 from models.ema import EMA
-# from models.laplace import LA_Wrapper
-# from models.mcdropout import generate_mcd_samples
 from models.mlp import MLP, MLP_CARD
 from models.mlp_diffusion import (
     MLP_diffusion,
@@ -21,6 +19,7 @@ from models.unet import (
     UNet_diffusion_mvnormal,
     UNet_diffusion_sample,
     UNetDiffusion,
+    UNet_diffusion_iDDPM
 )
 
 from models.unet_layers import SongUNet
