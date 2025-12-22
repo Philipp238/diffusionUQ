@@ -18,6 +18,7 @@ from models import (
     MLP_diffusion_mixednormal,
     MLP_diffusion_normal,
     MLP_diffusion_sample,
+    MLP_diffusion_iDDPM,
     UNet_diffusion_mixednormal,
     UNet_diffusion_mvnormal,
     UNet_diffusion_normal,
@@ -312,7 +313,15 @@ def setup_model(
                     hidden_dim=training_parameters["hidden_dim"],
                     n_components=training_parameters["n_components"],
                 )
-
+            elif training_parameters["distributional_method"] == "iDDPM":
+                assert not (beta is None)
+                hidden_model = MLP_diffusion_iDDPM(
+                    backbone=backbone,
+                    beta=beta,
+                    target_dim=target_dim,
+                    concat=training_parameters["concat_condition_diffusion"],
+                    hidden_dim=training_parameters["hidden_dim"],
+            )
         else:
             hidden_model = MLP(
                 target_dim=target_dim,
