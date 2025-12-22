@@ -10,7 +10,7 @@ def csv_aggregator(name:str, input_files: [str], output_files: [str], split_para
         df = pd.read_csv(input_file, index_col=0)
         df = df.transpose()
 
-        param_cols = ["n_timesteps", "n_epochs", "distributional_method", "n_components"]
+        param_cols = ["loss_lambda", "n_epochs", "distributional_method", "n_components"]
         eval_cols = ["RMSETest", "EnergyScoreTest", "CRPSTest", "Gaussian NLLTest", "CoverageTest", "QICETest"]
 
         df[eval_cols] = df[eval_cols].astype(float)
@@ -61,7 +61,7 @@ def csv_aggregator(name:str, input_files: [str], output_files: [str], split_para
 
 def aggregate():
     datasets = ["energy", "concrete", "kin8nm", "naval", "power", "protein", "wine", "yacht"]
-    datasets = ["wine"]
+    datasets = ["energy", "concrete", "kin8nm", "wine", "yacht"]
     dirname = os.path.dirname(__file__)
 
     for name in datasets:
@@ -70,6 +70,7 @@ def aggregate():
         # file_name = f"results_{name}_experiments"
         # file_name = f"results_{name}_CARD_sampling_and_epochs_likeCARD_2000epochs_5n_comp"
         #file_name = f"results/UCI/{name}"
+        file_name = f"results_iDDPM/{name}/"
         path = os.path.join(dirname, "..", file_name)
         print(f"Path: {path}")
         subdirs = next(os.walk(path))[1]
