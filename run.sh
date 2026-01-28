@@ -1,2 +1,2 @@
 #!/bin/sh
-python main.py -c KS/hparams/iddpm.ini
+python main.py -c T2M/iddpm.ini
