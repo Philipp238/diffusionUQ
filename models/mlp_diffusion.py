@@ -214,6 +214,53 @@ class MLP_diffusion_normal(nn.Module):
         output = torch.stack([mu, sigma], dim=-1)
         return output.unsqueeze(1)
 
+class MLP_diffusion_iDDPM(nn.Module):
+    def __init__(self, backbone, beta, target_dim=1, concat=False, hidden_dim=128):
+        super(MLP_diffusion_iDDPM, self).__init__()
+        if isinstance(target_dim, tuple):
+            target_dim = math.prod(target_dim)
+        self.backbone = backbone
+        if concat:
+            self.mu_projection = nn.Linear(2 * hidden_dim, target_dim)
+            self.sigma_projection = nn.Linear(2 * hidden_dim, target_dim)
+        else:
+            self.mu_projection = nn.Linear(hidden_dim, target_dim)
+            self.sigma_projection = nn.Linear(hidden_dim, target_dim)
+        self.softplus = nn.Softplus()
+
+        self.beta = beta
+        self.alpha = 1.0 - self.beta
+        self.alpha_bar = torch.cumprod(self.alpha, dim=0)
+
+    def forward(self, x_t, t, y=None, pred=None):
+        x_t = self.backbone.forward_body(x_t, t, y, pred)
+        mu = self.mu_projection(x_t)
+
+        alpha = self.alpha[t]
+        alpha_bar = self.alpha_bar[t]
+        beta = self.beta[t]
+                
+        # Reshape
+        alpha = alpha.view(*alpha.shape, *(1,) * (mu.ndim - alpha.ndim)).expand(mu.shape)
+        alpha_bar = alpha_bar.view(
+            *alpha_bar.shape, *(1,) * (mu.ndim - alpha_bar.ndim)
+        ).expand(mu.shape)
+        beta = beta.view(*beta.shape, *(1,) * (mu.ndim - beta.ndim)).expand(mu.shape)
+        
+        alpha_hat_t_minus_1 = self.alpha_bar[t - 1]
+        alpha_hat_t_minus_1 = alpha_hat_t_minus_1.view(
+                    *alpha_hat_t_minus_1.shape,
+                    *(1,) * (mu.ndim - alpha_hat_t_minus_1.ndim),
+                ).expand(mu.shape)
+        beta_wiggle = (1 - alpha_hat_t_minus_1) / (1 - alpha_bar) * beta
+
+
+        sigma_parametrization = self.sigma_projection(x_t)
+        log_sigma = sigma_parametrization * torch.log(beta) + (1-sigma_parametrization) * torch.log(beta_wiggle)  # iDDPM never computes the variance but instead the log_variance
+        sigma = torch.exp(log_sigma) + 1e-6  # we compute the actual variance such that it fits to our sampler
+        output = torch.stack([mu, sigma], dim=-1)
+        return output.unsqueeze(1)
+
 
 class MLP_diffusion_sample(nn.Module):
     def __init__(self, backbone, target_dim=1, hidden_dim=128, n_samples=50):

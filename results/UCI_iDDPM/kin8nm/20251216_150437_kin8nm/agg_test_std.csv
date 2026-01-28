@@ -1,0 +1,2 @@
+loss_lambda,n_epochs,distributional_method,n_components,RMSETest,EnergyScoreTest,CRPSTest,Gaussian NLLTest,CoverageTest,QICETest
+1e-11,1000,iDDPM,3,6.94 ± 0.19,3.98 ± 0.08,3.95 ± 0.08,-93.21 ± 10.61,75.71 ± 2.66,4.61 ± 0.59
