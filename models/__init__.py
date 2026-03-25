@@ -24,3 +24,4 @@ from models.unet import (
 )
 
 from models.unet_layers import SongUNet
+from models.ndp import NDP_diffusion

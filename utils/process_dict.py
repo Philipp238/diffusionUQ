@@ -70,6 +70,7 @@ def process_training_parameters(train_dict: dict)-> dict:
     processed_dict["tau"] = train_dict.get("tau",1.0)
 
     # Specific model parameters
+    processed_dict["n_ndp_heads"] = train_dict.get("n_ndp_heads", 4)
     processed_dict["n_components"] = train_dict.get("n_components", 10)
     processed_dict["gamma"] = train_dict.get("gamma", 5.0)
     processed_dict["rank"] = train_dict.get("rank",10)

@@ -27,6 +27,7 @@ from models import (
     UNet_diffusion_iDDPM
 )
 from models.mlp_diffusion import MLP_diffusion_CARD
+from models.ndp import NDP_diffusion
 
 
 def log_and_save_evaluation(value: float, key: str, results_dict: dict, logging):
@@ -189,66 +190,102 @@ def setup_model(
         "1D_KS",
         "WeatherBench",
     ]:
-        if data_parameters["dataset_name"] == "WeatherBench":
-            d = 2
+        if training_parameters.get("backbone") == "NDP":
+            # NDP spatial mode: tokens over spatial points, per-point output head
+            use_regressor_pred = training_parameters.get("regressor") is not None
+            backbone = NDP_diffusion(
+                target_dim=target_dim,
+                conditioning_dim=input_dim,
+                hidden_dim=training_parameters["hidden_dim"],
+                n_heads=training_parameters["n_ndp_heads"],
+                layers=training_parameters["n_layers"],
+                dropout=training_parameters["dropout"],
+                use_regressor_pred=use_regressor_pred,
+            )
+            if training_parameters["distributional_method"] == "deterministic":
+                hidden_model = backbone
+            elif training_parameters["distributional_method"] in ("normal", "closed_form_normal"):
+                hidden_model = MLP_diffusion_normal(
+                    backbone=backbone,
+                    target_dim=target_dim,
+                    concat=False,
+                    hidden_dim=training_parameters["hidden_dim"],
+                )
+            elif training_parameters["distributional_method"] == "iDDPM":
+                assert beta is not None
+                hidden_model = MLP_diffusion_iDDPM(
+                    backbone=backbone,
+                    beta=beta,
+                    target_dim=target_dim,
+                    concat=False,
+                    hidden_dim=training_parameters["hidden_dim"],
+                )
+            else:
+                raise ValueError(
+                    f"Distributional method '{training_parameters['distributional_method']}' "
+                    f"is not supported for NDP on PDE tasks. Use: deterministic, normal, iDDPM."
+                )
         else:
-            d = 1
-        conditioning_dim = input_dim[0]
-        backbone = UNetDiffusion(
-            d=d,
-            conditioning_dim=conditioning_dim,
-            hidden_channels=training_parameters["hidden_dim"],
-            init_features=training_parameters["hidden_dim"],
-            domain_dim=target_dim,
-        )
-        if training_parameters["distributional_method"] == "deterministic":
-            hidden_model = backbone
-        elif (
-            training_parameters["distributional_method"] == "normal"
-            or training_parameters["distributional_method"] == "closed_form_normal"
-        ):
-            hidden_model = UNet_diffusion_normal(
-                backbone=backbone,
-                d=d,
-                target_dim=1,
-            )
-        elif training_parameters["distributional_method"] == "mvnormal":
-            hidden_model = UNet_diffusion_mvnormal(
-                backbone=backbone,
-                d=d,
-                target_dim=1,
-                domain_dim=target_dim[1:],
-                rank=training_parameters["rank"],
-                method=training_parameters["mvnormal_method"],
-            )
-        elif training_parameters["distributional_method"] == "sample":
+            if data_parameters["dataset_name"] == "WeatherBench":
+                d = 2
+            else:
+                d = 1
+            conditioning_dim = input_dim[0]
             backbone = UNetDiffusion(
                 d=d,
-                conditioning_dim=conditioning_dim + 1,
+                conditioning_dim=conditioning_dim,
                 hidden_channels=training_parameters["hidden_dim"],
                 init_features=training_parameters["hidden_dim"],
                 domain_dim=target_dim,
             )
-            hidden_model = UNet_diffusion_sample(
-                backbone=backbone,
-                n_samples=training_parameters["n_train_samples"],
-            )
-        elif training_parameters["distributional_method"] == "mixednormal":
-            hidden_model = UNet_diffusion_mixednormal(
-                backbone=backbone,
-                d=d,
-                target_dim=1,
-                n_components=training_parameters["n_components"],
-            )
-        elif training_parameters["distributional_method"] == "iDDPM":
-            assert not (beta is None)
-            hidden_model = UNet_diffusion_iDDPM(
-                backbone=backbone,
-                beta=beta,
-                d=d,
-                target_dim=1,   
-            )
-            
+            if training_parameters["distributional_method"] == "deterministic":
+                hidden_model = backbone
+            elif (
+                training_parameters["distributional_method"] == "normal"
+                or training_parameters["distributional_method"] == "closed_form_normal"
+            ):
+                hidden_model = UNet_diffusion_normal(
+                    backbone=backbone,
+                    d=d,
+                    target_dim=1,
+                )
+            elif training_parameters["distributional_method"] == "mvnormal":
+                hidden_model = UNet_diffusion_mvnormal(
+                    backbone=backbone,
+                    d=d,
+                    target_dim=1,
+                    domain_dim=target_dim[1:],
+                    rank=training_parameters["rank"],
+                    method=training_parameters["mvnormal_method"],
+                )
+            elif training_parameters["distributional_method"] == "sample":
+                backbone = UNetDiffusion(
+                    d=d,
+                    conditioning_dim=conditioning_dim + 1,
+                    hidden_channels=training_parameters["hidden_dim"],
+                    init_features=training_parameters["hidden_dim"],
+                    domain_dim=target_dim,
+                )
+                hidden_model = UNet_diffusion_sample(
+                    backbone=backbone,
+                    n_samples=training_parameters["n_train_samples"],
+                )
+            elif training_parameters["distributional_method"] == "mixednormal":
+                hidden_model = UNet_diffusion_mixednormal(
+                    backbone=backbone,
+                    d=d,
+                    target_dim=1,
+                    n_components=training_parameters["n_components"],
+                )
+            elif training_parameters["distributional_method"] == "iDDPM":
+                assert not (beta is None)
+                hidden_model = UNet_diffusion_iDDPM(
+                    backbone=backbone,
+                    beta=beta,
+                    d=d,
+                    target_dim=1,
+                )
+
     else:
         if training_parameters["uncertainty_quantification"] == "scoring-rule-reparam":
             raise NotImplementedError("Implement a model with parametrization trick.")
@@ -277,10 +314,24 @@ def setup_model(
                     layers=training_parameters["n_layers"],
                     use_regressor_pred=use_regressor_pred,
                 )
+            elif training_parameters["backbone"] == "NDP":
+                backbone = NDP_diffusion(
+                    target_dim=target_dim,
+                    conditioning_dim=input_dim,
+                    hidden_dim=training_parameters["hidden_dim"],
+                    n_heads=training_parameters["n_ndp_heads"],
+                    layers=training_parameters["n_layers"],
+                    dropout=training_parameters["dropout"],
+                    use_regressor_pred=use_regressor_pred,
+                )
             else:
                 raise KeyError(
                     f"No such backbone architecture: {training_parameters['backbone']}"
                 )
+
+            # NDP handles conditioning internally via token construction, never via concat
+            is_ndp = training_parameters["backbone"] == "NDP"
+            concat_flag = False if is_ndp else training_parameters["concat_condition_diffusion"]
 
             if training_parameters["distributional_method"] == "deterministic":
                 hidden_model = backbone
@@ -291,7 +342,7 @@ def setup_model(
                 hidden_model = MLP_diffusion_normal(
                     backbone=backbone,
                     target_dim=target_dim,
-                    concat=training_parameters["concat_condition_diffusion"],
+                    concat=concat_flag,
                     hidden_dim=training_parameters["hidden_dim"],
                 )
             elif training_parameters["distributional_method"] == "sample":
@@ -309,7 +360,7 @@ def setup_model(
                 hidden_model = MLP_diffusion_mixednormal(
                     backbone=backbone,
                     target_dim=target_dim,
-                    concat=training_parameters["concat_condition_diffusion"],
+                    concat=concat_flag,
                     hidden_dim=training_parameters["hidden_dim"],
                     n_components=training_parameters["n_components"],
                 )
@@ -319,7 +370,7 @@ def setup_model(
                     backbone=backbone,
                     beta=beta,
                     target_dim=target_dim,
-                    concat=training_parameters["concat_condition_diffusion"],
+                    concat=concat_flag,
                     hidden_dim=training_parameters["hidden_dim"],
             )
         else:
