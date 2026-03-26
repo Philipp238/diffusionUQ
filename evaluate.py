@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 from scoringrules import crps_ensemble, energy_score
 
-from models import generate_diffusion_samples_low_dimensional
+from models import generate_crps_samples, generate_diffusion_samples_low_dimensional
 from utils import losses, train_utils
 
 
@@ -52,7 +52,11 @@ def generate_samples(
         torch.Tensor: sampled predictions
     """
     model.eval()
-    if uncertainty_quantification == "diffusion":
+    if uncertainty_quantification == "crps":
+        with torch.no_grad():
+            out = generate_crps_samples(model, x, n_samples)
+        return out
+    elif uncertainty_quantification == "diffusion":
         if (
             metrics_plots
             and target is not None
@@ -138,8 +142,7 @@ def evaluate(
     coverage_loss = losses.Coverage(alpha)
     qice_loss = losses.QICE()
 
-    if uncertainty_quantification == "diffusion":
-        crps_over_time, rmse_over_time, distr_over_time = [], [], []
+    crps_over_time, rmse_over_time, distr_over_time = [], [], []
 
     cfg_scale = 3 if training_parameters["conditional_free_guidance_training"] else 0
     with torch.no_grad():

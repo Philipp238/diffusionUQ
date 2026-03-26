@@ -26,6 +26,7 @@ from models import (
     UNetDiffusion,
     UNet_diffusion_iDDPM
 )
+from models.crps_ensemble import MLP_crps_ensemble, UNet_crps_ensemble
 from models.mlp_diffusion import MLP_diffusion_CARD
 from models.ndp import NDP_diffusion
 
@@ -70,7 +71,9 @@ def get_criterion(training_parameters, device, beta: torch.Tensor | None =None):
     """
     method = training_parameters["mvnormal_method"]
     loss = training_parameters["loss"]
-    if training_parameters["uncertainty_quantification"] == "diffusion":
+    if training_parameters["uncertainty_quantification"] == "crps":
+        criterion = losses.CRPSEnsembleLoss()
+    elif training_parameters["uncertainty_quantification"] == "diffusion":
         if training_parameters["distributional_method"] == "deterministic":
             criterion = nn.MSELoss()
         elif training_parameters["distributional_method"] == "normal":
@@ -190,6 +193,7 @@ def setup_model(
         "1D_KS",
         "WeatherBench",
     ]:
+<<<<<<< HEAD
         if training_parameters.get("backbone") == "NDP":
             # NDP spatial mode: tokens over spatial points, per-point output head
             use_regressor_pred = training_parameters.get("regressor") is not None
@@ -201,6 +205,46 @@ def setup_model(
                 layers=training_parameters["n_layers"],
                 dropout=training_parameters["dropout"],
                 use_regressor_pred=use_regressor_pred,
+=======
+        if data_parameters["dataset_name"] == "WeatherBench":
+            d = 2
+        else:
+            d = 1
+        conditioning_dim = input_dim[0]
+        backbone = UNetDiffusion(
+            d=d,
+            conditioning_dim=conditioning_dim,
+            hidden_channels=training_parameters["hidden_dim"],
+            init_features=training_parameters["hidden_dim"],
+            domain_dim=target_dim,
+        )
+        if training_parameters["uncertainty_quantification"] == "crps":
+            hidden_model = UNet_crps_ensemble(
+                backbone=backbone,
+                noise_dim=training_parameters["noise_dim"],
+                n_samples=training_parameters["n_train_samples"],
+                d=d,
+            )
+        elif training_parameters["distributional_method"] == "deterministic":
+            hidden_model = backbone
+        elif (
+            training_parameters["distributional_method"] == "normal"
+            or training_parameters["distributional_method"] == "closed_form_normal"
+        ):
+            hidden_model = UNet_diffusion_normal(
+                backbone=backbone,
+                d=d,
+                target_dim=1,
+            )
+        elif training_parameters["distributional_method"] == "mvnormal":
+            hidden_model = UNet_diffusion_mvnormal(
+                backbone=backbone,
+                d=d,
+                target_dim=1,
+                domain_dim=target_dim[1:],
+                rank=training_parameters["rank"],
+                method=training_parameters["mvnormal_method"],
+>>>>>>> cprs_sampling
             )
             if training_parameters["distributional_method"] == "deterministic":
                 hidden_model = backbone
@@ -238,6 +282,7 @@ def setup_model(
                 init_features=training_parameters["hidden_dim"],
                 domain_dim=target_dim,
             )
+<<<<<<< HEAD
             if training_parameters["distributional_method"] == "deterministic":
                 hidden_model = backbone
             elif (
@@ -286,8 +331,40 @@ def setup_model(
                     target_dim=1,
                 )
 
+=======
+            hidden_model = UNet_diffusion_sample(
+                backbone=backbone,
+                n_samples=training_parameters["n_train_samples"],
+            )
+        elif training_parameters["distributional_method"] == "mixednormal":
+            hidden_model = UNet_diffusion_mixednormal(
+                backbone=backbone,
+                d=d,
+                target_dim=1,
+                n_components=training_parameters["n_components"],
+            )
+        elif training_parameters["distributional_method"] == "iDDPM":
+            assert not (beta is None)
+            hidden_model = UNet_diffusion_iDDPM(
+                backbone=backbone,
+                beta=beta,
+                d=d,
+                target_dim=1,
+            )
+            
+>>>>>>> cprs_sampling
     else:
-        if training_parameters["uncertainty_quantification"] == "scoring-rule-reparam":
+        if training_parameters["uncertainty_quantification"] == "crps":
+            hidden_model = MLP_crps_ensemble(
+                target_dim=target_dim,
+                conditioning_dim=input_dim,
+                hidden_dim=training_parameters["hidden_dim"],
+                layers=training_parameters["n_layers"],
+                dropout=training_parameters["dropout"],
+                noise_dim=training_parameters["noise_dim"],
+                n_samples=training_parameters["n_train_samples"],
+            )
+        elif training_parameters["uncertainty_quantification"] == "scoring-rule-reparam":
             raise NotImplementedError("Implement a model with parametrization trick.")
         elif training_parameters["uncertainty_quantification"] == "diffusion":
             use_regressor_pred = training_parameters["regressor"] is not None
