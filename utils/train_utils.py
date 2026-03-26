@@ -26,6 +26,7 @@ from models import (
     UNetDiffusion,
     UNet_diffusion_iDDPM
 )
+from models.crps_ensemble import MLP_crps_ensemble, UNet_crps_ensemble
 from models.mlp_diffusion import MLP_diffusion_CARD
 
 
@@ -69,7 +70,9 @@ def get_criterion(training_parameters, device, beta: torch.Tensor | None =None):
     """
     method = training_parameters["mvnormal_method"]
     loss = training_parameters["loss"]
-    if training_parameters["uncertainty_quantification"] == "diffusion":
+    if training_parameters["uncertainty_quantification"] == "crps":
+        criterion = losses.CRPSEnsembleLoss()
+    elif training_parameters["uncertainty_quantification"] == "diffusion":
         if training_parameters["distributional_method"] == "deterministic":
             criterion = nn.MSELoss()
         elif training_parameters["distributional_method"] == "normal":
@@ -201,7 +204,14 @@ def setup_model(
             init_features=training_parameters["hidden_dim"],
             domain_dim=target_dim,
         )
-        if training_parameters["distributional_method"] == "deterministic":
+        if training_parameters["uncertainty_quantification"] == "crps":
+            hidden_model = UNet_crps_ensemble(
+                backbone=backbone,
+                noise_dim=training_parameters["noise_dim"],
+                n_samples=training_parameters["n_train_samples"],
+                d=d,
+            )
+        elif training_parameters["distributional_method"] == "deterministic":
             hidden_model = backbone
         elif (
             training_parameters["distributional_method"] == "normal"
@@ -246,11 +256,21 @@ def setup_model(
                 backbone=backbone,
                 beta=beta,
                 d=d,
-                target_dim=1,   
+                target_dim=1,
             )
             
     else:
-        if training_parameters["uncertainty_quantification"] == "scoring-rule-reparam":
+        if training_parameters["uncertainty_quantification"] == "crps":
+            hidden_model = MLP_crps_ensemble(
+                target_dim=target_dim,
+                conditioning_dim=input_dim,
+                hidden_dim=training_parameters["hidden_dim"],
+                layers=training_parameters["n_layers"],
+                dropout=training_parameters["dropout"],
+                noise_dim=training_parameters["noise_dim"],
+                n_samples=training_parameters["n_train_samples"],
+            )
+        elif training_parameters["uncertainty_quantification"] == "scoring-rule-reparam":
             raise NotImplementedError("Implement a model with parametrization trick.")
         elif training_parameters["uncertainty_quantification"] == "diffusion":
             use_regressor_pred = training_parameters["regressor"] is not None

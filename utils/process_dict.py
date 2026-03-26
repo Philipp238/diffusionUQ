@@ -77,6 +77,9 @@ def process_training_parameters(train_dict: dict)-> dict:
     processed_dict["n_train_samples"] = train_dict.get("n_train_samples",10)
     processed_dict["loss_lambda"] = train_dict.get("loss_lambda", 0.001)
 
+    # CRPS ensemble parameters
+    processed_dict["noise_dim"] = train_dict.get("noise_dim", 10)
+
     
     # Misc
     processed_dict["metrics_plots"] = train_dict.get("metrics_plots", False)
