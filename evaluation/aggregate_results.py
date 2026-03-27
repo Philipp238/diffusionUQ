@@ -79,7 +79,7 @@ if __name__ == "__main__":
     experiment = "Burgers"
     models = ["deterministic", "normal", "mixednormal", "mvnormal", "sample", "iddpm"]
     results_dir = "results"
-    factor = 1000
+    factor = 1
 
     
     results = process_experiment(results_dir, experiment, models, factor = factor)

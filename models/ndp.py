@@ -34,6 +34,7 @@ class NDPAttentionBlock(nn.Module):
         assert hidden_dim % n_heads == 0, (
             f"hidden_dim ({hidden_dim}) must be divisible by n_heads ({n_heads})"
         )
+        self.norm = nn.LayerNorm(hidden_dim)
         self.attn = nn.MultiheadAttention(
             embed_dim=hidden_dim,
             num_heads=n_heads,
@@ -53,7 +54,7 @@ class NDPAttentionBlock(nn.Module):
             skip: (B, N_tokens, H) skip connection for output aggregation
         """
         t_proj = self.time_linear(t_emb).unsqueeze(1)  # (B, 1, H)
-        y = s + t_proj  # (B, N_tokens, H)
+        y = self.norm(s) + t_proj  # (B, N_tokens, H)
 
         # Self-attention over token axis
         y_att, _ = self.attn(y, y, y)  # (B, N_tokens, H)
@@ -79,10 +80,12 @@ class NDP_diffusion(nn.Module):
         Skip connections are mean-pooled over the feature axis.
         Output: (B, 1, d_y).
 
-    **Spatial mode** (1D PDE tasks, target_dim = (C, N_spatial) with N_spatial > 1):
-        Attention over spatial points. Token_i = [cond_channels_i, x_t_channels_i].
+    **Spatial mode** (PDE / weather tasks, target_dim = (C, *spatial_shape)):
+        Attention over spatial points (flattened for 2D+).
+        Token_i = [cond_channels_i, x_t_channels_i].
         Per-token output projection produces a noise field.
-        Output: (B, C_target, N_spatial).
+        1D example: target_dim = (1, 128)  -> output (B, 1, 128)
+        2D example: target_dim = (1, 32, 64) -> output (B, 1, 32, 64)
         forward_body() returns (B, H) via spatial mean-pooling for MLP wrapper
         compatibility (normal, iDDPM distributional heads).
     """
@@ -102,13 +105,19 @@ class NDP_diffusion(nn.Module):
         super().__init__()
 
         # ------------------------------------------------------------------
-        # Detect spatial (PDE) vs. tabular (UCI) mode
-        # Spatial mode: target_dim is a 2-tuple (C, N) with N > 1
+        # Detect spatial (PDE / weather) vs. tabular (UCI) mode
+        # Spatial mode: target_dim is a tuple (C, *spatial_shape) with
+        #   prod(spatial_shape) > 1.  Handles 1D (C, N) and 2D (C, H, W).
         # ------------------------------------------------------------------
-        if isinstance(target_dim, tuple) and len(target_dim) == 2 and target_dim[1] > 1:
+        if (
+            isinstance(target_dim, tuple)
+            and len(target_dim) >= 2
+            and math.prod(target_dim[1:]) > 1
+        ):
             self.spatial_mode = True
-            self.n_target_channels = target_dim[0]   # e.g., 1 for Burgers/KS
-            self.n_spatial = target_dim[1]            # e.g., 128 spatial points
+            self.n_target_channels = target_dim[0]        # e.g., 1
+            self.spatial_shape = target_dim[1:]            # e.g., (128,) or (32, 64)
+            self.n_spatial = math.prod(self.spatial_shape)  # total spatial tokens
             n_cond = (
                 conditioning_dim[0]
                 if isinstance(conditioning_dim, tuple)
@@ -163,10 +172,15 @@ class NDP_diffusion(nn.Module):
             for _ in range(layers)
         ])
 
+        # Learnable spatial positional embedding (spatial mode only)
+        if self.spatial_mode:
+            self.pos_embed = nn.Parameter(torch.zeros(1, self.n_spatial, hidden_dim))
+            nn.init.trunc_normal_(self.pos_embed, std=0.02)
+
         # Output head
         # Tabular: global (mean-pooled) projection to d_y
         # Spatial: per-token projection to C_target (preserves spatial resolution)
-        self.output_norm = nn.Linear(hidden_dim, hidden_dim)
+        self.output_proj = nn.Linear(hidden_dim, hidden_dim)
         out_dim = self.n_target_channels if self.spatial_mode else self.target_dim
         self.output_head = nn.Linear(hidden_dim, out_dim)
         if init_zero:
@@ -229,29 +243,31 @@ class NDP_diffusion(nn.Module):
 
     def _tokenize_spatial(self, x_t: torch.Tensor, t: torch.Tensor, c=None):
         """
-        Spatial-mode tokenization (1D PDE tasks).
+        Spatial-mode tokenization (1D PDE or 2D weather tasks).
 
+        Spatial dimensions are flattened into a single token sequence.
         One token per spatial point i:
             token_i = [cond_channels_i, x_t_channels_i]
 
         Args:
-            x_t: (B, C_target, N_spatial)
+            x_t: (B, C_target, *spatial_shape) noisy target
             t: (B,) timestep
-            c: (B, C_cond, N_spatial) conditioning (2 past states + spatial grid)
+            c: (B, C_cond, *spatial_shape) conditioning
 
         Returns:
             tokens: (B, N_spatial, H)
             t_emb: (B, H)
         """
         B = x_t.shape[0]
-        x_t_sp = x_t.permute(0, 2, 1)  # (B, N_spatial, C_target)
+        # Flatten spatial dims: (B, C, *spatial_shape) -> (B, N_spatial, C)
+        x_t_sp = x_t.reshape(B, self.n_target_channels, self.n_spatial).permute(0, 2, 1)
 
         t_emb = sinusoidal_embedding(t, self.hidden_dim)  # (B, H)
         t_emb = self.time_mlp(t_emb)
 
         if self.n_cond_channels > 0:
             if c is not None:
-                y_sp = c.permute(0, 2, 1)  # (B, N_spatial, C_cond)
+                y_sp = c.reshape(B, self.n_cond_channels, self.n_spatial).permute(0, 2, 1)
             else:
                 y_sp = torch.zeros(
                     B, self.n_spatial, self.n_cond_channels,
@@ -262,6 +278,7 @@ class NDP_diffusion(nn.Module):
             token_inputs = x_t_sp  # (B, N_spatial, C_target)
 
         tokens = F.gelu(self.token_embed(token_inputs))  # (B, N_spatial, H)
+        tokens = tokens + self.pos_embed                  # Add positional encoding
         return tokens, t_emb
 
     # ------------------------------------------------------------------
@@ -302,7 +319,7 @@ class NDP_diffusion(nn.Module):
         Tabular mode:
             x_t: (B, 1, d_y) -> returns (B, 1, d_y)
         Spatial mode:
-            x_t: (B, C_target, N_spatial) -> returns (B, C_target, N_spatial)
+            x_t: (B, C_target, *spatial_shape) -> returns (B, C_target, *spatial_shape)
         """
         if self.spatial_mode:
             tokens, t_emb = self._tokenize_spatial(x_t, t, y)
@@ -313,11 +330,14 @@ class NDP_diffusion(nn.Module):
 
         if self.spatial_mode:
             # Per-token projection: (B, N_spatial, H) -> (B, N_spatial, C_target)
-            per_token = F.gelu(self.output_norm(skip_agg))
+            per_token = F.gelu(self.output_proj(skip_agg))
             noise_pred = self.output_head(per_token)         # (B, N_spatial, C_target)
-            return noise_pred.permute(0, 2, 1)               # (B, C_target, N_spatial)
+            noise_pred = noise_pred.permute(0, 2, 1)         # (B, C_target, N_spatial)
+            return noise_pred.reshape(
+                -1, self.n_target_channels, *self.spatial_shape
+            )
         else:
             # Global: mean-pool then project
-            pooled = F.gelu(self.output_norm(skip_agg.mean(dim=1)))  # (B, H)
+            pooled = F.gelu(self.output_proj(skip_agg.mean(dim=1)))  # (B, H)
             noise_pred = self.output_head(pooled)                     # (B, d_y)
             return noise_pred.unsqueeze(1)                            # (B, 1, d_y)
