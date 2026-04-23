@@ -28,6 +28,7 @@ alpha,0.05
 n_samples_uq,100
 weight_decay,0.0
 n_val_samples,5
+data_loader_pin_memory,False
 dropout,0.1
 hidden_dim,64
 n_layers,2
@@ -45,18 +46,23 @@ ddim_churn,1.0
 noise_schedule,linear
 regressor,
 tau,1.0
+n_ndp_heads,4
 n_components,10
 gamma,5.0
 rank,10
 mvnormal_method,lora
 n_train_samples,10
+loss_lambda,0.001
+noise_dim,10
 metrics_plots,False
-filename_to_validate,results/T2M/normal/Datetime_20250908_031720_Loss_WeatherBench_UNet_diffusion_normal_T50_DDIM1.pt
+filename_to_validate,['results/T2M/normal/Datetime_20250908_031720_Loss_WeatherBench_UNet_diffusion_normal_T50_DDIM1.pt']
 t_training,-1
-MSETest,0.5076393
-RMSETest,0.7124881
-EnergyScoreTest,96.4884087
-CRPSTest,0.3547735
-Gaussian NLLTest,0.9714061
-CoverageTest,0.8358895
-QICETest,0.0288766
+MSETest,0.5076099
+RMSETest,0.7124675
+EnergyScoreTest,96.4851019
+CRPSTest,0.3547561
+Gaussian NLLTest,0.9712821
+C95Test,0.8359036
+C90Test,0.7695019
+C75Test,0.6122564
+C50Test,0.3929385

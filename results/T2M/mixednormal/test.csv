@@ -14,7 +14,7 @@ seed,1
 distributed_training,True
 backbone,default
 batch_size,16
-batch_accumulation,4
+batch_accumulation,8
 eval_batch_size,16
 n_epochs,2000
 early_stopping,300
@@ -28,6 +28,7 @@ alpha,0.05
 n_samples_uq,100
 weight_decay,0.0
 n_val_samples,5
+data_loader_pin_memory,False
 dropout,0.1
 hidden_dim,64
 n_layers,2
@@ -45,18 +46,23 @@ ddim_churn,1.0
 noise_schedule,linear
 regressor,
 tau,1.0
+n_ndp_heads,4
 n_components,10
 gamma,5.0
 rank,10
 mvnormal_method,lora
 n_train_samples,10
+loss_lambda,0.001
+noise_dim,10
 metrics_plots,False
-filename_to_validate,results/T2M/mixednormal/Datetime_20250909_124553_Loss_WeatherBench_UNet_diffusion_mixednormal_T50_DDIM1.pt
+filename_to_validate,['results/T2M/mixednormal/Datetime_20250909_124553_Loss_WeatherBench_UNet_diffusion_mixednormal_T50_DDIM1.pt']
 t_training,-1
-MSETest,0.4971727
-RMSETest,0.7051047
-EnergyScoreTest,95.681777
-CRPSTest,0.3494781
-Gaussian NLLTest,0.9799074
-CoverageTest,0.8253124
-QICETest,0.0298353
+MSETest,0.4971725
+RMSETest,0.7051046
+EnergyScoreTest,95.6817552
+CRPSTest,0.3494784
+Gaussian NLLTest,0.9799089
+C95Test,0.8253149
+C90Test,0.7589704
+C75Test,0.6037022
+C50Test,0.3880792

@@ -1,2 +1,8 @@
 #!/bin/sh
-python main.py -c crps_ensemble/protein.ini
+python main.py -c CARD/protein2.ini
+
+
+
+
+
+

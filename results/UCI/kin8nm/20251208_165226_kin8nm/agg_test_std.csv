@@ -1,5 +1,0 @@
-n_timesteps, n_epochs, distributional_method, n_components, RMSETest   , EnergyScoreTest, CRPSTest   , Gaussian NLLTest, CoverageTest, QICETest
-         50,     1000, deterministic        ,            3, 6.91 ± 0.19, 3.96 ± 0.11    , 3.93 ± 0.11, -99.06 ± 8.53   , 76.95 ± 2.11, 4.45 ± 0.49
-         50,     1000, mixednormal          ,            3, 6.89 ± 0.19, 3.85 ± 0.1     , 3.82 ± 0.1 , -121.75 ± 4.27  , 85.81 ± 1.24, 2.45 ± 0.32
-         50,     1000, normal               ,            3, 6.88 ± 0.19, 3.84 ± 0.1     , 3.81 ± 0.1 , -122.42 ± 4.55  , 86.28 ± 1.81, 2.42 ± 0.51
-         50,     1000, sample               ,            3, 6.9 ± 0.19 , 3.86 ± 0.1     , 3.83 ± 0.1 , -121.51 ± 4.32  , 85.85 ± 1.33, 2.37 ± 0.28

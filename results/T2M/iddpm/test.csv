@@ -46,19 +46,23 @@ ddim_churn,1.0
 noise_schedule,linear
 regressor,
 tau,1.0
+n_ndp_heads,4
 n_components,10
 gamma,5.0
 rank,10
 mvnormal_method,lora
 n_train_samples,10
 loss_lambda,1e-05
+noise_dim,10
 metrics_plots,False
-filename_to_validate,results/T2M/iddpm/Datetime_20251211_163908_Loss_WeatherBench_UNet_diffusion_iDDPM_T50_DDIM1.pt
+filename_to_validate,['results/T2M/iddpm/Datetime_20251211_163908_Loss_WeatherBench_UNet_diffusion_iDDPM_T50_DDIM1.pt']
 t_training,-1
-MSETest,0.5097031
-RMSETest,0.713935
-EnergyScoreTest,95.9095532
-CRPSTest,0.3535597
-Gaussian NLLTest,0.9131162
-CoverageTest,0.8542847
-QICETest,0.0243918
+MSETest,0.518207
+RMSETest,0.7198659
+EnergyScoreTest,96.713683
+CRPSTest,0.3563023
+Gaussian NLLTest,0.9182836
+C95Test,0.8509268
+C90Test,0.7842739
+C75Test,0.6245808
+C50Test,0.4006278

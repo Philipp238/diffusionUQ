@@ -13,7 +13,7 @@ report_every,25,25,25,25,25
 seed,1,2,3,4,5
 distributed_training,False,False,False,False,False
 backbone,default,default,default,default,default
-batch_size,128,128,128,128,128
+batch_size,256,256,256,256,256
 batch_accumulation,1,1,1,1,1
 eval_batch_size,1024,1024,1024,1024,1024
 n_epochs,5000,5000,5000,5000,5000
@@ -28,11 +28,12 @@ alpha,0.05,0.05,0.05,0.05,0.05
 n_samples_uq,100,100,100,100,100
 weight_decay,0.0,0.0,0.0,0.0,0.0
 n_val_samples,10,10,10,10,10
+data_loader_pin_memory,False,False,False,False,False
 dropout,0.1,0.1,0.1,0.1,0.1
 hidden_dim,64,64,64,64,64
 n_layers,2,2,2,2,2
 n_timesteps,50,50,50,50,50
-beta_endpoints,"[0.001, 0.35]","[0.001, 0.35]","[0.001, 0.35]","[0.001, 0.35]","(0.001, 0.35)"
+beta_endpoints,"(0.001, 0.35)","(0.001, 0.35)","(0.001, 0.35)","(0.001, 0.35)","(0.001, 0.35)"
 distributional_method,deterministic,deterministic,deterministic,deterministic,deterministic
 loss,crps,crps,crps,crps,crps
 closed_form,False,False,False,False,False
@@ -44,28 +45,33 @@ conditional_free_guidance_training,False,False,False,False,False
 ddim_churn,1.0,1.0,1.0,1.0,1.0
 noise_schedule,linear,linear,linear,linear,linear
 regressor,,,,,
+tau,1.0,1.0,1.0,1.0,1.0
+n_ndp_heads,4,4,4,4,4
 n_components,10,10,10,10,10
 gamma,5.0,5.0,5.0,5.0,5.0
 rank,10,10,10,10,10
 mvnormal_method,lora,lora,lora,lora,lora
 n_train_samples,10,10,10,10,10
+loss_lambda,0.001,0.001,0.001,0.001,0.001
+noise_dim,10,10,10,10,10
 metrics_plots,False,False,False,False,False
-t_training,12504.113,15591.99,15037.147,16411.682,15030.539
-NumberParameters,6455105.0,6455105.0,6455105.0,6455105.0,6455105.0
-t_training_avg,6.5992526,6.4624719,6.4589065,6.4648753,6.4609535
-t_training_med,6.542798,6.4553041,6.4594584,6.4626008,6.4586179
-t_training_std,0.2117753,0.0376731,0.0335948,0.0270402,0.0333385
+filename_to_validate,"['results/KS/deterministic/Datetime_20250902_080935_Loss_1D_KS_UNet_diffusion_deterministic_T50_DDIM1.pt', 'results/KS/deterministic/Datetime_20250902_115757_Loss_1D_KS_UNet_diffusion_deterministic_T50_DDIM1.pt', 'results/KS/deterministic/Datetime_20250902_163740_Loss_1D_KS_UNet_diffusion_deterministic_T50_DDIM1.pt', 'results/KS/deterministic/Datetime_20250902_210806_Loss_1D_KS_UNet_diffusion_deterministic_T50_DDIM1.pt', 'results/KS/deterministic/Datetime_20250903_020127_Loss_1D_KS_UNet_diffusion_deterministic_T50_DDIM1.pt']","['results/KS/deterministic/Datetime_20250902_080935_Loss_1D_KS_UNet_diffusion_deterministic_T50_DDIM1.pt', 'results/KS/deterministic/Datetime_20250902_115757_Loss_1D_KS_UNet_diffusion_deterministic_T50_DDIM1.pt', 'results/KS/deterministic/Datetime_20250902_163740_Loss_1D_KS_UNet_diffusion_deterministic_T50_DDIM1.pt', 'results/KS/deterministic/Datetime_20250902_210806_Loss_1D_KS_UNet_diffusion_deterministic_T50_DDIM1.pt', 'results/KS/deterministic/Datetime_20250903_020127_Loss_1D_KS_UNet_diffusion_deterministic_T50_DDIM1.pt']","['results/KS/deterministic/Datetime_20250902_080935_Loss_1D_KS_UNet_diffusion_deterministic_T50_DDIM1.pt', 'results/KS/deterministic/Datetime_20250902_115757_Loss_1D_KS_UNet_diffusion_deterministic_T50_DDIM1.pt', 'results/KS/deterministic/Datetime_20250902_163740_Loss_1D_KS_UNet_diffusion_deterministic_T50_DDIM1.pt', 'results/KS/deterministic/Datetime_20250902_210806_Loss_1D_KS_UNet_diffusion_deterministic_T50_DDIM1.pt', 'results/KS/deterministic/Datetime_20250903_020127_Loss_1D_KS_UNet_diffusion_deterministic_T50_DDIM1.pt']","['results/KS/deterministic/Datetime_20250902_080935_Loss_1D_KS_UNet_diffusion_deterministic_T50_DDIM1.pt', 'results/KS/deterministic/Datetime_20250902_115757_Loss_1D_KS_UNet_diffusion_deterministic_T50_DDIM1.pt', 'results/KS/deterministic/Datetime_20250902_163740_Loss_1D_KS_UNet_diffusion_deterministic_T50_DDIM1.pt', 'results/KS/deterministic/Datetime_20250902_210806_Loss_1D_KS_UNet_diffusion_deterministic_T50_DDIM1.pt', 'results/KS/deterministic/Datetime_20250903_020127_Loss_1D_KS_UNet_diffusion_deterministic_T50_DDIM1.pt']","['results/KS/deterministic/Datetime_20250902_080935_Loss_1D_KS_UNet_diffusion_deterministic_T50_DDIM1.pt', 'results/KS/deterministic/Datetime_20250902_115757_Loss_1D_KS_UNet_diffusion_deterministic_T50_DDIM1.pt', 'results/KS/deterministic/Datetime_20250902_163740_Loss_1D_KS_UNet_diffusion_deterministic_T50_DDIM1.pt', 'results/KS/deterministic/Datetime_20250902_210806_Loss_1D_KS_UNet_diffusion_deterministic_T50_DDIM1.pt', 'results/KS/deterministic/Datetime_20250903_020127_Loss_1D_KS_UNet_diffusion_deterministic_T50_DDIM1.pt']"
+t_training,-1,-1,-1,-1,-1
 MSEValidation,3.14e-05,3.18e-05,3.63e-05,2.05e-05,2.82e-05
-RMSEValidation,0.0056041,0.0056417,0.0060268,0.0045246,0.0053128
-EnergyScoreValidation,0.0603635,0.0591642,0.0641468,0.047246,0.0571059
-CRPSValidation,0.0024059,0.0023928,0.0026443,0.0019248,0.0023125
-Gaussian NLLValidation,-3.8472211,-3.9744005,-3.9058506,-4.3083639,-4.0392699
-CoverageValidation,0.7841146,0.842895,0.8417622,0.9237891,0.8382639
-QICEValidation,0.0409904,0.0234245,0.0244002,0.0142821,0.0253307
+RMSEValidation,0.0056039,0.0056417,0.0060268,0.0045247,0.0053127
+EnergyScoreValidation,0.060362,0.0591652,0.0641461,0.0472463,0.0571051
+CRPSValidation,0.0024059,0.0023929,0.0026443,0.0019248,0.0023125
+Gaussian NLLValidation,-3.8473806,-3.9743056,-3.9059544,-4.3084135,-4.0393004
+C95Validation,0.0,0.0,0.0,0.0044444,0.0
+C90Validation,0.0,0.0,0.0,0.0011111,0.0
+C75Validation,0.0,0.0,0.0,0.0,0.0
+C50Validation,0.0,0.0,0.0,0.0,0.0
 MSETest,3.32e-05,3.23e-05,4e-05,2.17e-05,3.34e-05
-RMSETest,0.005758,0.0056834,0.0063215,0.0046569,0.005777
-EnergyScoreTest,0.0616247,0.059282,0.0662609,0.0492199,0.0600433
-CRPSTest,0.0024604,0.0023742,0.0026826,0.0019993,0.0023899
-Gaussian NLLTest,-3.8158648,-3.9900658,-3.8748174,-4.2590265,-3.9980912
-CoverageTest,0.7773633,0.8414961,0.8388399,0.9162071,0.8360234
-QICETest,0.0419617,0.0235945,0.0249664,0.0131563,0.0254727
+RMSETest,0.005758,0.0056827,0.0063216,0.0046571,0.0057759
+EnergyScoreTest,0.0616225,0.0592702,0.0662617,0.0492226,0.0600194
+CRPSTest,0.0024605,0.0023737,0.0026827,0.0019992,0.0023885
+Gaussian NLLTest,-3.8162336,-3.9907286,-3.8750629,-4.2590251,-3.9998209
+C95Test,0.0,0.0,0.0,0.006,0.0
+C90Test,0.0,0.0,0.0,0.001,0.0
+C75Test,0.0,0.0,0.0,0.0,0.0
+C50Test,0.0,0.0,0.0,0.0,0.0

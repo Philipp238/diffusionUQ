@@ -1,0 +1,32 @@
+ \begin{tabular}{|l|l|cccc|}
+    \toprule
+        Experiment & Model & $\mathcal{C}_{0.95}$ & $\mathcal{C}_{0.90}$ & $\mathcal{C}_{0.75}$ & $\mathcal{C}_{0.50}$ \\
+        \midrule
+        \multirow{8}{*}{\textbf{Burgers'}}
+        & $\bm\delta_\theta$ & \makecell{0.16 \\ ($\pm$ 0.02)} & \makecell{0.08 \\ ($\pm$ 0.01)} & \makecell{0.01 \\ ($\pm$ 0.01)} & \makecell{0.00 \\ ($\pm$ 0)} \\
+        & $\bm\Sigma_\theta^{\mathrm{diag}}$ & \makecell{\textbf{0.96} \\ ($\pm$ 0.01)} & \makecell{0.94 \\ ($\pm$ 0.01)} & \makecell{0.80 \\ ($\pm$ 0.04)} & \makecell{0.25 \\ ($\pm$ 0.11)} \\
+        & $\bm\Sigma_\theta^{\mathrm{mix}}$ & \makecell{\textbf{0.96} \\ ($\pm$ 0)} & \makecell{\textbf{0.93} \\ ($\pm$ 0.01)} & \makecell{\textbf{0.76} \\ ($\pm$ 0.1)} & \makecell{0.23 \\ ($\pm$ 0.16)} \\
+        & $\bm\Sigma_\theta^{\mathrm{mv}}$ & \makecell{0.82 \\ ($\pm$ 0.04)} & \makecell{0.75 \\ ($\pm$ 0.05)} & \makecell{0.57 \\ ($\pm$ 0.07)} & \makecell{\textbf{0.27} \\ ($\pm$ 0.09)} \\
+        & $\bm\epsilon_t^\mathrm{ES}$ & \makecell{0.62 \\ ($\pm$ 0.08)} & \makecell{0.52 \\ ($\pm$ 0.09)} & \makecell{0.30 \\ ($\pm$ 0.1)} & \makecell{0.06 \\ ($\pm$ 0.05)} \\
+        & iDDPM & \makecell{0.12 \\ ($\pm$ 0.03)} & \makecell{0.05 \\ ($\pm$ 0.02)} & \makecell{0.01 \\ ($\pm$ 0)} & \makecell{0.00 \\ ($\pm$ 0)} \\
+        & CRPS-Ens. & \makecell{0.39 \\ ($\pm$ 0.02)} & \makecell{0.32 \\ ($\pm$ 0.02)} & \makecell{0.17 \\ ($\pm$ 0.03)} & \makecell{0.02 \\ ($\pm$ 0.01)} \\
+        & NDP & \makecell{0.01 \\ ($\pm$ 0.01)} & \makecell{0.00 \\ ($\pm$ 0)} & \makecell{0.00 \\ ($\pm$ 0)} & \makecell{0.00 \\ ($\pm$ 0)} \\
+        \midrule
+        \multirow{8}{*}{\textbf{KS}}
+        & $\bm\delta_\theta$ & \makecell{0.00 \\ ($\pm$ 0)} & \makecell{0.00 \\ ($\pm$ 0)} & \makecell{0.00 \\ ($\pm$ 0)} & \makecell{0.00 \\ ($\pm$ 0)} \\
+        & $\bm\Sigma_\theta^{\mathrm{diag}}$ & \makecell{\textbf{0.96} \\ ($\pm$ 0)} & \makecell{\textbf{0.92} \\ ($\pm$ 0.01)} & \makecell{0.57 \\ ($\pm$ 0.05)} & \makecell{0.01 \\ ($\pm$ 0.01)} \\
+        & $\bm\Sigma_\theta^{\mathrm{mix}}$ & \makecell{0.98 \\ ($\pm$ 0)} & \makecell{0.93 \\ ($\pm$ 0.01)} & \makecell{\textbf{0.63} \\ ($\pm$ 0.04)} & \makecell{\textbf{0.02} \\ ($\pm$ 0.01)} \\
+        & $\bm\Sigma_\theta^{\mathrm{mv}}$ & \makecell{0.37 \\ ($\pm$ 0.06)} & \makecell{0.20 \\ ($\pm$ 0.04)} & \makecell{0.04 \\ ($\pm$ 0.01)} & \makecell{0.00 \\ ($\pm$ 0)} \\
+        & $\bm\epsilon_t^\mathrm{ES}$ & \makecell{0.26 \\ ($\pm$ 0.2)} & \makecell{0.17 \\ ($\pm$ 0.17)} & \makecell{0.05 \\ ($\pm$ 0.08)} & \makecell{0.00 \\ ($\pm$ 0)} \\
+        & iDDPM & \makecell{0.00 \\ ($\pm$ 0)} & \makecell{0.00 \\ ($\pm$ 0)} & \makecell{0.00 \\ ($\pm$ 0)} & \makecell{0.00 \\ ($\pm$ 0)} \\
+        & CRPS-Ens. & \makecell{0.32 \\ ($\pm$ 0.03)} & \makecell{0.21 \\ ($\pm$ 0.03)} & \makecell{0.05 \\ ($\pm$ 0.02)} & \makecell{0.00 \\ ($\pm$ 0)} \\
+        & NDP & \makecell{0.00 \\ ($\pm$ 0)} & \makecell{0.00 \\ ($\pm$ 0)} & \makecell{0.00 \\ ($\pm$ 0)} & \makecell{0.00 \\ ($\pm$ 0)} \\
+        \midrule
+        \multirow{5}{*}{\textbf{T2M}}
+        & $\bm\delta_\theta$ & 0.97 & 0.95 & 0.85 & 0.62 \\
+        & $\bm\Sigma_\theta^{\mathrm{diag}}$ & 0.84 & 0.77 & 0.61 & 0.39 \\
+        & $\bm\Sigma_\theta^{\mathrm{mix}}$ & 0.83 & 0.76 & 0.60 & 0.39 \\
+        & $\bm\Sigma_\theta^{\mathrm{mv}}$ & \textbf{0.94} & \textbf{0.90} & \textbf{0.78} & \textbf{0.54} \\
+        & iDDPM & 0.85 & 0.78 & 0.62 & 0.40 \\
+        \bottomrule
+    \end{tabular}
