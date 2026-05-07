@@ -1,8 +1,2 @@
 #!/bin/sh
-python main.py -c CARD/protein2.ini
-
-
-
-
-
-
+python main.py -c timing/Burgers/iddpm.ini
