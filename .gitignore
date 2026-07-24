@@ -201,4 +201,5 @@ cython_debug/
 # Exclude Git subprojects
 data/weatherbench2
 
-.vscode
+.vscode/
+.claude/

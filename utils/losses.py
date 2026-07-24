@@ -601,6 +601,21 @@ class Coverage(object):
         return self.calculate_score(y_pred, y, **kwargs)
 
 
+class CRPSEnsembleLoss(nn.Module):
+    """CRPS loss for ensemble predictions (Kelen et al. formulation).
+
+    Expects:
+        truth: (...) observation tensor
+        prediction: (..., M) ensemble tensor where M is the ensemble size (last dim)
+    """
+
+    def forward(self, truth, prediction):
+        M = prediction.shape[-1]
+        mrank = torch.argsort(torch.argsort(prediction, dim=-1), dim=-1)
+        crps = ((2 / (M * (M - 1))) * (prediction - truth.unsqueeze(-1)) * (((M - 1) * (truth.unsqueeze(-1) < prediction)) - mrank)).sum(dim=-1)
+        return crps.mean()
+
+
 if __name__ == "__main__":
     # Example usage
     y = torch.randn(5, 1, 1)
