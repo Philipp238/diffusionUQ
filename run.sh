@@ -1,2 +1,2 @@
 #!/bin/sh
-python main.py -c timing/Burgers/iddpm.ini
+python main.py -c CARD_single_split/protein.ini
