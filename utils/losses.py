@@ -531,6 +531,7 @@ class Coverage(object):
         alpha: float = 0.05,
         reduction: str = "mean",
         reduce_dims: bool = True,
+        functional:bool = False,
         **kwargs: dict,
     ):
         """Initializes the Coverage probability class.
@@ -544,8 +545,7 @@ class Coverage(object):
         self.alpha = alpha
         self.reduction = reduction
         self.reduce_dims = reduce_dims
-        # Kwargs for spherical loss
-        self.weights = kwargs.get("weights", None)
+        self.functional = functional
 
     def reduce(self, x: torch.Tensor) -> torch.Tensor:
         """Reduces the tensor across all dimensions specified in reduce_dims.
@@ -585,15 +585,14 @@ class Coverage(object):
         assert 0 < self.alpha < 1
 
         # Calculate coverage probability
-        score = ((y > q_lower) & (y < q_upper)).float()
-        # Weighting
-        if self.weights is not None:
-            weights = (self.weights / self.weights.sum()) * self.weights.size(0)
-            score = score * weights
-
-        if self.reduce_dims:
-            # Aggregate over spatial and channel dimensions
-            score = score.mean(dim=[d for d in range(1, n_dims + 1)])
+        score = ((y > q_lower) & (y < q_upper))
+        if self.functional:
+            score = (1-torch.any(~score, dim = -1).float())
+        else:
+            score = score.float()
+            if self.reduce_dims:
+                # Aggregate over spatial and channel dimensions
+                score = score.mean(dim=[d for d in range(1, n_dims + 1)])
         # Reduce
         return self.reduce(score).squeeze() if self.reduce_dims else score
 

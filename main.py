@@ -33,7 +33,7 @@ msg = "Start main"
 
 # initialize parser
 parser = argparse.ArgumentParser(description=msg)
-default_config = "debug_ndp.ini"#"debug_pde.ini"
+default_config = "KS/normal.ini"#"debug_pde.ini"
 
 parser.add_argument(
     "-c", "--config", help="Name of the config file:", default=default_config
@@ -150,6 +150,7 @@ if __name__ == "__main__":
 
     # In case you ONLY want to validate all models in a certain directory:
     # This prepares the filename_to_validate field in training_parameters_dict to contain the names of all weight files in the directory you want to validate
+    except_keys = []
     if config["META"].get("only_validate", None):
         filename_to_validate = config["META"]["only_validate"]
         if not filename_to_validate.endswith(".pt"):
@@ -159,6 +160,7 @@ if __name__ == "__main__":
         else:
             filename_to_validate = os.path.join(results_path, filename_to_validate)
         training_parameters_dict["filename_to_validate"] = filename_to_validate
+        except_keys = ["filename_to_validate"]
     elif config["META"].get("match_model_in_dir", None):
         match_model_in_dir = config["META"]["match_model_in_dir"]
         training_parameters_dict["match_model_in_dir"] = match_model_in_dir
@@ -167,7 +169,7 @@ if __name__ == "__main__":
     # except_keys for keys that are coming as a list for each training process
     training_parameters_dict = train_utils.get_hyperparameters_combination(
         training_parameters_dict,
-        except_keys=["uno_out_channels", "uno_scalings", "uno_n_modes"],
+        except_keys=except_keys,
     )
     data_parameters_dict = train_utils.get_hyperparameters_combination(
         data_parameters_dict
@@ -323,7 +325,7 @@ if __name__ == "__main__":
                 model = train_utils.setup_model(
                     data_parameters, training_parameters, device, target_dim, input_dim, beta
                 )
-                filename = training_parameters["filename_to_validate"] 
+                filename = training_parameters["filename_to_validate"][i]
                 train_utils.resume(model, filename)
                 t_training = -1
             else:

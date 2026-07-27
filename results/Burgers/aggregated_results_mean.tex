@@ -1,12 +1,12 @@
-\begin{tabular}{lllllll}
+\begin{tabular}{lllllllll}
 \toprule
- & t_training & RMSETest & EnergyScoreTest & CRPSTest & Gaussian NLLTest & CoverageTest \\
+ & RMSETest & EnergyScoreTest & CRPSTest & Gaussian NLLTest & C95Test & C90Test & C75Test & C50Test \\
 \midrule
-deterministic & 6.94 & 0.95 & 4.26 & 0.16 & -7.09 & 0.94 \\
-iDDPM & 6.49 & 0.83 & 4.68 & 0.15 & -7.21 & 0.94 \\
-mixednormal & 7.38 & 0.81 & 3.82 & 0.13 & -6.99 & 1.00 \\
-mvnormal & 7.84 & 0.70 & 6.35 & 0.24 & -6.10 & 1.00 \\
-normal & 6.81 & 0.81 & 3.67 & 0.12 & -7.12 & 1.00 \\
-sample & 10.69 & 0.81 & 3.59 & 0.14 & -7.00 & 0.99 \\
+deterministic & 0.95 & 4.26 & 0.16 & -7.09 & 0.16 & 0.08 & 0.01 & 0.00 \\
+iDDPM & 0.83 & 4.68 & 0.15 & -7.21 & 0.12 & 0.05 & 0.01 & 0.00 \\
+mixednormal & 0.81 & 3.82 & 0.13 & -6.99 & 0.96 & 0.93 & 0.76 & 0.23 \\
+mvnormal & 0.70 & 6.35 & 0.24 & -6.10 & 0.82 & 0.75 & 0.57 & 0.27 \\
+normal & 0.81 & 3.67 & 0.12 & -7.12 & 0.96 & 0.94 & 0.80 & 0.25 \\
+sample & 0.81 & 3.59 & 0.14 & -7.00 & 0.62 & 0.52 & 0.30 & 0.06 \\
 \bottomrule
 \end{tabular}

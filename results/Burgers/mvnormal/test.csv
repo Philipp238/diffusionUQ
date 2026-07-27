@@ -28,11 +28,12 @@ alpha,0.05,0.05,0.05,0.05,0.05
 n_samples_uq,100,100,100,100,100
 weight_decay,0.0,0.0,0.0,0.0,0.0
 n_val_samples,10,10,10,10,10
+data_loader_pin_memory,False,False,False,False,False
 dropout,0.1,0.1,0.1,0.1,0.1
 hidden_dim,64,64,64,64,64
 n_layers,2,2,2,2,2
 n_timesteps,50,50,50,50,50
-beta_endpoints,"[0.001, 0.2]","[0.001, 0.2]","[0.001, 0.2]","[0.001, 0.2]","(0.001, 0.2)"
+beta_endpoints,"(0.001, 0.2)","(0.001, 0.2)","(0.001, 0.2)","(0.001, 0.2)","(0.001, 0.2)"
 distributional_method,mvnormal,mvnormal,mvnormal,mvnormal,mvnormal
 loss,kernel,kernel,kernel,kernel,kernel
 closed_form,False,False,False,False,False
@@ -44,28 +45,33 @@ conditional_free_guidance_training,False,False,False,False,False
 ddim_churn,1.0,1.0,1.0,1.0,1.0
 noise_schedule,linear,linear,linear,linear,linear
 regressor,,,,,
+tau,1.0,1.0,1.0,1.0,1.0
+n_ndp_heads,4,4,4,4,4
 n_components,10,10,10,10,10
 gamma,5,5,5,5,5
 rank,1,1,1,1,1
 mvnormal_method,lora,lora,lora,lora,lora
 n_train_samples,10,10,10,10,10
+loss_lambda,0.001,0.001,0.001,0.001,0.001
+noise_dim,10,10,10,10,10
 metrics_plots,False,False,False,False,False
-t_training,20154.978,15575.011,20183.193,16658.099,15512.359
-NumberParameters,6455684.0,6455684.0,6455684.0,6455684.0,6455684.0
-t_training_avg,8.0395373,7.7100928,7.7262796,7.8330259,7.903809
-t_training_med,7.7384434,7.7149734,7.7205571,7.7197484,7.7207083
-t_training_std,0.4817866,0.0470553,0.1343674,0.4101297,0.484795
+filename_to_validate,"['results/Burgers/mvnormal/Datetime_20250830_022256_Loss_1D_Burgers_UNet_diffusion_mvnormal_T50_DDIM1.pt', 'results/Burgers/mvnormal/Datetime_20250830_081904_Loss_1D_Burgers_UNet_diffusion_mvnormal_T50_DDIM1.pt', 'results/Burgers/mvnormal/Datetime_20250830_125843_Loss_1D_Burgers_UNet_diffusion_mvnormal_T50_DDIM1.pt', 'results/Burgers/mvnormal/Datetime_20250830_185511_Loss_1D_Burgers_UNet_diffusion_mvnormal_T50_DDIM1.pt', 'results/Burgers/mvnormal/Datetime_20250830_235258_Loss_1D_Burgers_UNet_diffusion_mvnormal_T50_DDIM1.pt']","['results/Burgers/mvnormal/Datetime_20250830_022256_Loss_1D_Burgers_UNet_diffusion_mvnormal_T50_DDIM1.pt', 'results/Burgers/mvnormal/Datetime_20250830_081904_Loss_1D_Burgers_UNet_diffusion_mvnormal_T50_DDIM1.pt', 'results/Burgers/mvnormal/Datetime_20250830_125843_Loss_1D_Burgers_UNet_diffusion_mvnormal_T50_DDIM1.pt', 'results/Burgers/mvnormal/Datetime_20250830_185511_Loss_1D_Burgers_UNet_diffusion_mvnormal_T50_DDIM1.pt', 'results/Burgers/mvnormal/Datetime_20250830_235258_Loss_1D_Burgers_UNet_diffusion_mvnormal_T50_DDIM1.pt']","['results/Burgers/mvnormal/Datetime_20250830_022256_Loss_1D_Burgers_UNet_diffusion_mvnormal_T50_DDIM1.pt', 'results/Burgers/mvnormal/Datetime_20250830_081904_Loss_1D_Burgers_UNet_diffusion_mvnormal_T50_DDIM1.pt', 'results/Burgers/mvnormal/Datetime_20250830_125843_Loss_1D_Burgers_UNet_diffusion_mvnormal_T50_DDIM1.pt', 'results/Burgers/mvnormal/Datetime_20250830_185511_Loss_1D_Burgers_UNet_diffusion_mvnormal_T50_DDIM1.pt', 'results/Burgers/mvnormal/Datetime_20250830_235258_Loss_1D_Burgers_UNet_diffusion_mvnormal_T50_DDIM1.pt']","['results/Burgers/mvnormal/Datetime_20250830_022256_Loss_1D_Burgers_UNet_diffusion_mvnormal_T50_DDIM1.pt', 'results/Burgers/mvnormal/Datetime_20250830_081904_Loss_1D_Burgers_UNet_diffusion_mvnormal_T50_DDIM1.pt', 'results/Burgers/mvnormal/Datetime_20250830_125843_Loss_1D_Burgers_UNet_diffusion_mvnormal_T50_DDIM1.pt', 'results/Burgers/mvnormal/Datetime_20250830_185511_Loss_1D_Burgers_UNet_diffusion_mvnormal_T50_DDIM1.pt', 'results/Burgers/mvnormal/Datetime_20250830_235258_Loss_1D_Burgers_UNet_diffusion_mvnormal_T50_DDIM1.pt']","['results/Burgers/mvnormal/Datetime_20250830_022256_Loss_1D_Burgers_UNet_diffusion_mvnormal_T50_DDIM1.pt', 'results/Burgers/mvnormal/Datetime_20250830_081904_Loss_1D_Burgers_UNet_diffusion_mvnormal_T50_DDIM1.pt', 'results/Burgers/mvnormal/Datetime_20250830_125843_Loss_1D_Burgers_UNet_diffusion_mvnormal_T50_DDIM1.pt', 'results/Burgers/mvnormal/Datetime_20250830_185511_Loss_1D_Burgers_UNet_diffusion_mvnormal_T50_DDIM1.pt', 'results/Burgers/mvnormal/Datetime_20250830_235258_Loss_1D_Burgers_UNet_diffusion_mvnormal_T50_DDIM1.pt']"
+t_training,-1,-1,-1,-1,-1
 MSEValidation,2e-07,4e-07,2e-07,2e-07,2e-07
 RMSEValidation,0.0004468,0.0006392,0.000499,0.0004315,0.0004588
 EnergyScoreValidation,0.0059079,0.0064994,0.0059515,0.0062067,0.0060265
 CRPSValidation,0.0002251,0.0002558,0.0002304,0.000244,0.0002335
-Gaussian NLLValidation,-6.1406331,-6.1162086,-6.0901771,-6.0530066,-6.0986366
-CoverageValidation,0.9976432,0.9966233,0.9980339,0.9973915,0.9969835
-QICEValidation,0.0997049,0.0996189,0.100138,0.10523,0.0967023
+Gaussian NLLValidation,-6.140636,-6.1162086,-6.0901761,-6.0530062,-6.098639
+C95Validation,0.8611111,0.7722222,0.8477778,0.8111112,0.8311111
+C90Validation,0.8044445,0.6822222,0.79,0.7255556,0.77
+C75Validation,0.6688889,0.4433334,0.6366667,0.5477778,0.5944445
+C50Validation,0.3922222,0.1544444,0.37,0.2422222,0.2166667
 MSETest,3e-07,5e-07,1e-06,3e-07,5e-07
-RMSETest,0.0005298,0.0007316,0.0010234,0.0005295,0.0006757
-EnergyScoreTest,0.0058749,0.0067605,0.0063964,0.0063664,0.0063732
-CRPSTest,0.0002183,0.0002704,0.0002368,0.0002494,0.0002388
-Gaussian NLLTest,-6.1491027,-6.0846615,-6.1196809,-6.0528035,-6.1143603
-CoverageTest,0.9981094,0.9964414,0.9978712,0.997668,0.9965313
-QICETest,0.1004398,0.0999133,0.1008906,0.1045391,0.0951617
+RMSETest,0.0005297,0.0007317,0.0010235,0.0005293,0.0006758
+EnergyScoreTest,0.0058751,0.006761,0.0063967,0.0063651,0.0063735
+CRPSTest,0.0002183,0.0002705,0.0002368,0.0002493,0.0002388
+Gaussian NLLTest,-6.1489997,-6.0846043,-6.1196437,-6.0528641,-6.1142817
+C95Test,0.8650001,0.762,0.839,0.804,0.809
+C90Test,0.802,0.675,0.7830001,0.7360001,0.73
+C75Test,0.643,0.449,0.613,0.587,0.569
+C50Test,0.394,0.175,0.323,0.24,0.22

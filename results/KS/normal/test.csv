@@ -20,7 +20,7 @@ n_epochs,5000,5000,5000,5000,5000
 early_stopping,150,150,150,150,150
 init,default,default,default,default,default
 learning_rate,0.0005,0.0005,0.0005,0.0005,0.0005
-warmup_lr,0,0,0,0,0
+warmup_lr,100,100,100,100,100
 lr_schedule,step,step,step,step,step
 optimizer,adam,adam,adam,adam,adam
 gradient_clipping,1,1,1,1,1
@@ -28,11 +28,12 @@ alpha,0.05,0.05,0.05,0.05,0.05
 n_samples_uq,100,100,100,100,100
 weight_decay,0.0,0.0,0.0,0.0,0.0
 n_val_samples,10,10,10,10,10
+data_loader_pin_memory,False,False,False,False,False
 dropout,0.1,0.1,0.1,0.1,0.1
 hidden_dim,64,64,64,64,64
 n_layers,2,2,2,2,2
 n_timesteps,50,50,50,50,50
-beta_endpoints,"[0.001, 0.2]","[0.001, 0.2]","[0.001, 0.2]","[0.001, 0.2]","(0.001, 0.2)"
+beta_endpoints,"(0.001, 0.2)","(0.001, 0.2)","(0.001, 0.2)","(0.001, 0.2)","(0.001, 0.2)"
 distributional_method,normal,normal,normal,normal,normal
 loss,crps,crps,crps,crps,crps
 closed_form,False,False,False,False,False
@@ -44,28 +45,33 @@ conditional_free_guidance_training,False,False,False,False,False
 ddim_churn,1.0,1.0,1.0,1.0,1.0
 noise_schedule,linear,linear,linear,linear,linear
 regressor,,,,,
+tau,1.0,1.0,1.0,1.0,1.0
+n_ndp_heads,4,4,4,4,4
 n_components,10,10,10,10,10
 gamma,5.0,5.0,5.0,5.0,5.0
 rank,10,10,10,10,10
 mvnormal_method,lora,lora,lora,lora,lora
 n_train_samples,10,10,10,10,10
+loss_lambda,0.001,0.001,0.001,0.001,0.001
+noise_dim,10,10,10,10,10
 metrics_plots,False,False,False,False,False
-t_training,15993.515,21953.267,22019.385,19899.841,18424.908
-NumberParameters,6455491.0,6455491.0,6455491.0,6455491.0,6455491.0
-t_training_avg,7.6128662,7.5893964,7.6260903,7.6182536,7.2531891
-t_training_med,7.6458173,7.6298571,7.669383,7.6412691,7.2520776
-t_training_std,0.2463608,0.1723956,0.1689109,0.1677784,0.3467327
+filename_to_validate,"['results/KS/normal/Datetime_20250831_102648_Loss_1D_KS_UNet_diffusion_normal_T50_DDIM1.pt', 'results/KS/normal/Datetime_20250831_151304_Loss_1D_KS_UNet_diffusion_normal_T50_DDIM1.pt', 'results/KS/normal/Datetime_20250831_213836_Loss_1D_KS_UNet_diffusion_normal_T50_DDIM1.pt', 'results/KS/normal/Datetime_20250901_040514_Loss_1D_KS_UNet_diffusion_normal_T50_DDIM1.pt', 'results/KS/normal/Datetime_20250901_095634_Loss_1D_KS_UNet_diffusion_normal_T50_DDIM1.pt']","['results/KS/normal/Datetime_20250831_102648_Loss_1D_KS_UNet_diffusion_normal_T50_DDIM1.pt', 'results/KS/normal/Datetime_20250831_151304_Loss_1D_KS_UNet_diffusion_normal_T50_DDIM1.pt', 'results/KS/normal/Datetime_20250831_213836_Loss_1D_KS_UNet_diffusion_normal_T50_DDIM1.pt', 'results/KS/normal/Datetime_20250901_040514_Loss_1D_KS_UNet_diffusion_normal_T50_DDIM1.pt', 'results/KS/normal/Datetime_20250901_095634_Loss_1D_KS_UNet_diffusion_normal_T50_DDIM1.pt']","['results/KS/normal/Datetime_20250831_102648_Loss_1D_KS_UNet_diffusion_normal_T50_DDIM1.pt', 'results/KS/normal/Datetime_20250831_151304_Loss_1D_KS_UNet_diffusion_normal_T50_DDIM1.pt', 'results/KS/normal/Datetime_20250831_213836_Loss_1D_KS_UNet_diffusion_normal_T50_DDIM1.pt', 'results/KS/normal/Datetime_20250901_040514_Loss_1D_KS_UNet_diffusion_normal_T50_DDIM1.pt', 'results/KS/normal/Datetime_20250901_095634_Loss_1D_KS_UNet_diffusion_normal_T50_DDIM1.pt']","['results/KS/normal/Datetime_20250831_102648_Loss_1D_KS_UNet_diffusion_normal_T50_DDIM1.pt', 'results/KS/normal/Datetime_20250831_151304_Loss_1D_KS_UNet_diffusion_normal_T50_DDIM1.pt', 'results/KS/normal/Datetime_20250831_213836_Loss_1D_KS_UNet_diffusion_normal_T50_DDIM1.pt', 'results/KS/normal/Datetime_20250901_040514_Loss_1D_KS_UNet_diffusion_normal_T50_DDIM1.pt', 'results/KS/normal/Datetime_20250901_095634_Loss_1D_KS_UNet_diffusion_normal_T50_DDIM1.pt']","['results/KS/normal/Datetime_20250831_102648_Loss_1D_KS_UNet_diffusion_normal_T50_DDIM1.pt', 'results/KS/normal/Datetime_20250831_151304_Loss_1D_KS_UNet_diffusion_normal_T50_DDIM1.pt', 'results/KS/normal/Datetime_20250831_213836_Loss_1D_KS_UNet_diffusion_normal_T50_DDIM1.pt', 'results/KS/normal/Datetime_20250901_040514_Loss_1D_KS_UNet_diffusion_normal_T50_DDIM1.pt', 'results/KS/normal/Datetime_20250901_095634_Loss_1D_KS_UNet_diffusion_normal_T50_DDIM1.pt']"
+t_training,-1,-1,-1,-1,-1
 MSEValidation,1.5e-05,2.15e-05,1.01e-05,1.04e-05,1.47e-05
-RMSEValidation,0.0038705,0.0046357,0.0031756,0.0032297,0.0038353
-EnergyScoreValidation,0.0541854,0.0616593,0.0427316,0.0462227,0.0534625
+RMSEValidation,0.0038706,0.0046356,0.0031757,0.0032297,0.0038352
+EnergyScoreValidation,0.0541866,0.0616593,0.0427315,0.0462235,0.0534619
 CRPSValidation,0.0021992,0.0024741,0.0017326,0.0018713,0.0021676
-Gaussian NLLValidation,-3.9780269,-3.8834343,-4.2317457,-4.1310258,-3.9910331
-CoverageValidation,0.9996138,0.9995877,0.9998264,0.999796,0.9997656
-QICEValidation,0.095191,0.0902378,0.0905885,0.0972596,0.0949175
+Gaussian NLLValidation,-3.9780114,-3.8834255,-4.2317452,-4.1310315,-3.9910452
+C95Validation,0.9522222,0.9544445,0.9755556,0.9833333,0.9766667
+C90Validation,0.9,0.9044445,0.9211111,0.9444445,0.9277778
+C75Validation,0.5811111,0.5188889,0.5133333,0.7066667,0.5788889
+C50Validation,0.0177778,0.0144444,0.0055556,0.0277778,0.02
 MSETest,1.54e-05,2.37e-05,1.08e-05,1.12e-05,1.67e-05
-RMSETest,0.0039271,0.0048703,0.0032872,0.0033465,0.0040855
-EnergyScoreTest,0.0547978,0.0617387,0.0428639,0.0467503,0.0554066
-CRPSTest,0.0022156,0.0024678,0.0017295,0.0018911,0.002207
-Gaussian NLLTest,-3.9726222,-3.8868468,-4.2336707,-4.1244497,-3.9842446
-CoverageTest,0.9996602,0.9997461,0.9997149,0.9996602,0.9996993
-QICETest,0.0947625,0.0906977,0.0906117,0.0974172,0.0945398
+RMSETest,0.0039256,0.0048688,0.003287,0.0033457,0.0040898
+EnergyScoreTest,0.0547963,0.06173,0.0428661,0.0467449,0.0554343
+CRPSTest,0.0022154,0.0024674,0.0017297,0.0018908,0.0022084
+Gaussian NLLTest,-3.9724491,-3.8868654,-4.2334046,-4.1245584,-3.9838355
+C95Test,0.957,0.9680001,0.966,0.964,0.969
+C90Test,0.909,0.919,0.915,0.9310001,0.9220001
+C75Test,0.575,0.561,0.49,0.636,0.569
+C50Test,0.019,0.012,0.003,0.025,0.008
