@@ -5,6 +5,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 from scoringrules import crps_ensemble, energy_score
+from torch.distributions.lowrank_multivariate_normal import LowRankMultivariateNormal
+from torch.distributions.multivariate_normal import MultivariateNormal
 
 from models import Diffusion, generate_crps_samples, generate_diffusion_samples_low_dimensional
 from utils import losses, train_utils
@@ -23,7 +25,22 @@ def epistemic_uncertainty(
     For ``distributional_method == "normal"`` (single-Gaussian noise model):
         EU = V[μ_θ(x_t,t)] = b_t² · σ_θ²(x_t,t),   b_t = (1-α_t)/(√α_t·√(1-ᾱ_t))
     For ``distributional_method == "mixednormal"`` (K-component mixture):
-        EU = Σ_k π_k (μ_k − μ̄)²    (variance of component means)
+        EU = b_t² · Σ_k π_k (σ_k² + (μ_k − μ̄)²),   μ̄ = Σ_k π_k μ_k
+    For ``distributional_method == "mvnormal"`` (multivariate noise model):
+        EU = b_t² · diag(Σ_θ(x_t,t))
+
+    All three are the same quantity -- b_t² times the *marginal* variance of
+    the predicted noise -- as in evaluation/selective_prediction.py, so their
+    EU is on one scale.  For the mixture that marginal variance is the variance
+    of the mixture itself, i.e. the weighted mean of the component variances
+    plus the spread of the component means; taking only the spread of the means
+    would drop the part of the predicted noise variance the components
+    themselves carry.  For the multivariate head it is the diagonal of the
+    predicted covariance: the predicted correlations do not matter once the
+    uncertainty is averaged over the domain, and dropping them puts its EU on
+    the same per-point scale as the diagonal Normal head.  Both covariance
+    parametrisations (low-rank and Cholesky) are handled, with ``tau = 1`` as
+    in the Normal branch above.
 
     Averaged over uniformly-sampled diffusion timesteps and the loader.
     Returns NaN for distributional methods that don't fit either framework.
@@ -32,7 +49,7 @@ def epistemic_uncertainty(
     distribution p_Y(·|c) inside :func:`evaluate` (variance of samples).
     """
     dist_method = training_parameters.get("distributional_method")
-    if dist_method not in ("normal", "mixednormal"):
+    if dist_method not in ("normal", "mixednormal", "mvnormal"):
         return float("nan")
     if training_parameters.get("uncertainty_quantification") != "diffusion":
         return float("nan")
@@ -73,11 +90,29 @@ def epistemic_uncertainty(
                 if dist_method == "normal":
                     sigma_eps = output[..., 1]                       # (B, 1, target_dim)
                     epist_t = float(b_sq[t_val].item()) * (sigma_eps ** 2)
+                elif dist_method == "mvnormal":
+                    mu = output[..., 0]                              # (B, 1, target_dim)
+                    if output.shape[-1] == output.shape[-2] + 1:     # Cholesky
+                        mvnorm = MultivariateNormal(loc=mu, scale_tril=output[..., 1:])
+                    else:                                            # LoRA
+                        mvnorm = LowRankMultivariateNormal(
+                            mu, output[..., 2:], output[..., 1]
+                        )
+                    # Marginal variances only; the off-diagonal correlations are
+                    # dropped, so this is the same per-point quantity as the
+                    # sigma² of the diagonal Normal head above.
+                    epist_t = float(b_sq[t_val].item()) * mvnorm.variance
                 else:  # mixednormal — (B, 1, target_dim, K, 3)
                     mu = output[..., 0]
+                    sigma = output[..., 1]
                     pi = output[..., 2]
+                    # Variance of the mixture: the components' own variances
+                    # plus the spread of their means.
                     mu_bar  = (pi * mu).sum(dim=-1, keepdim=True)
-                    epist_t = (pi * (mu - mu_bar) ** 2).sum(dim=-1)
+                    mixture_var = (
+                        pi * (sigma ** 2 + (mu - mu_bar) ** 2)
+                    ).sum(dim=-1)
+                    epist_t = float(b_sq[t_val].item()) * mixture_var
 
                 batch_epist.append(epist_t.mean().item())
 
@@ -462,7 +497,6 @@ def start_evaluation(
             coverage_90,
             coverage_75,
             coverage_50,
-            qice,
             au_predictive,
             crps_over_time,
             rmse_over_time,
