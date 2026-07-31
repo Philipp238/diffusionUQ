@@ -197,6 +197,7 @@ def evaluate(
     regressor,
     standardized: bool = False,
     metrics_plots: bool = False,
+    name: str = "",
 )-> tuple:
     """Function to evaluate the given model.
 
@@ -215,16 +216,23 @@ def evaluate(
     uncertainty_quantification = training_parameters["uncertainty_quantification"]
     mse = 0
     es = 0
-    coverage = 0
+    coverage_95 = 0
+    coverage_90 = 0
+    coverage_75 = 0
+    coverage_50 = 0
     crps = 0
     gaussian_nll = 0
     au_predictive = 0  # sample-based aleatoric: variance of samples from p_Y(·|c)
     alpha = training_parameters["alpha"]
+    functional = True if name.startswith("1D") else False
+    
 
     mse_loss = torch.nn.MSELoss()
     gaussian_nll_loss = losses.GaussianNLL()
-    coverage_loss = losses.Coverage(alpha)
-    qice_loss = losses.QICE()
+    c95_loss = losses.Coverage(alpha = 0.05, functional=functional)
+    c90_loss = losses.Coverage(alpha = 0.1, functional=functional)
+    c75_loss = losses.Coverage(alpha = 0.25, functional=functional)
+    c50_loss = losses.Coverage(alpha = 0.5, functional=functional)
 
     crps_over_time, rmse_over_time, distr_over_time = [], [], []
 
@@ -333,12 +341,29 @@ def evaluate(
                 * batch_size
                 / len(loader.dataset)
             )
-            coverage += (
-                coverage_loss(prediction, target, ensemble_dim=-1).item()
+            coverage_95 += (
+                c95_loss(prediction, target, ensemble_dim=-1).item()
                 * batch_size
                 / len(loader.dataset)
             )
-            qice_loss.aggregate(prediction.cpu(), target.cpu())
+
+            coverage_90 += (
+                c90_loss(prediction, target, ensemble_dim=-1).item()
+                * batch_size
+                / len(loader.dataset)
+            )
+
+            coverage_75 += (
+            c75_loss(prediction, target, ensemble_dim=-1).item()
+            * batch_size
+            / len(loader.dataset)
+            )
+
+            coverage_50 += (
+            c50_loss(prediction, target, ensemble_dim=-1).item()
+            * batch_size
+            / len(loader.dataset)
+            )
 
             # Sample-based aleatoric uncertainty: variance of the predictive
             # distribution p_Y(·|c) obtained by iterative reverse sampling
@@ -352,15 +377,15 @@ def evaluate(
         crps_over_time = [x / len(loader.dataset) for x in crps_over_time]
         rmse_over_time = [np.sqrt(x / len(loader.dataset)) for x in rmse_over_time]
 
-        qice = qice_loss.compute()
-
     return (
         mse,
         es,
         crps,
-        coverage,
         gaussian_nll,
-        qice,
+        coverage_95,
+        coverage_90,
+        coverage_75,
+        coverage_50,
         au_predictive,
         crps_over_time,
         rmse_over_time,
@@ -432,8 +457,11 @@ def start_evaluation(
             mse,
             es,
             crps,
-            coverage,
             gaussian_nll,
+            coverage_95,
+            coverage_90,
+            coverage_75,
+            coverage_50,
             qice,
             au_predictive,
             crps_over_time,
@@ -447,6 +475,7 @@ def start_evaluation(
             regressor,
             standardized=data_parameters["standardize"],
             metrics_plots=metrics_plots,
+            name = data_parameters["dataset_name"]
         )
         # mse, es, crps, gaussian_nll, coverage, int_width = evaluate(model, training_parameters, loader, device, domain_range)
         t_elapsed = np.round(time.time() - t_eval_start, 3)
@@ -464,9 +493,20 @@ def start_evaluation(
             gaussian_nll, "Gaussian NLL" + name, results_dict, logging
         )
         train_utils.log_and_save_evaluation(
-            coverage, "Coverage" + name, results_dict, logging
+            coverage_95, "C95" + name, results_dict, logging
         )
-        train_utils.log_and_save_evaluation(qice, "QICE" + name, results_dict, logging)
+
+        train_utils.log_and_save_evaluation(
+            coverage_90, "C90" + name, results_dict, logging
+        )
+
+        train_utils.log_and_save_evaluation(
+            coverage_75, "C75" + name, results_dict, logging
+        )
+
+        train_utils.log_and_save_evaluation(
+            coverage_50, "C50" + name, results_dict, logging
+        )
 
         # AU: sample-based (variance of p_Y(·|c) samples) — data-dependent.
         # EU: analytic from the model's second-order distribution

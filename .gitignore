@@ -197,9 +197,11 @@ cython_debug/
 *.nc
 *.hdf5
 *.npy
+*.npz
 
 # Exclude Git subprojects
 data/weatherbench2
+evaluation/plots
 
 .vscode/
 .claude/

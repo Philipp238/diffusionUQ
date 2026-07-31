@@ -46,20 +46,26 @@ ddim_churn,1.0
 noise_schedule,linear
 regressor,
 tau,1.0
+n_ndp_heads,4
 n_components,10
 gamma,5.0
 rank,10
 mvnormal_method,lora
-n_train_samples,3
+n_train_samples,5
 loss_lambda,0.001
 noise_dim,10
 metrics_plots,False
-filename_to_validate,results/crps_ensemble/T2M/Datetime_20260325_155724_Loss_WeatherBench_UNet_crps_mvnormal_T50_DDIM1.pt
-t_training,-1
-MSETest,0.4880819
-RMSETest,0.6986286
-EnergyScoreTest,96.2155753
-CRPSTest,0.3612829
-Gaussian NLLTest,1.405244
-CoverageTest,0.8249483
-QICETest,0.0207661
+t_training,11440.491
+NumberParameters,15187356.0
+t_training_avg,
+t_training_med,
+t_training_std,
+MSETest,0.4738085
+RMSETest,0.6883375
+EnergyScoreTest,94.3161294
+CRPSTest,0.3550698
+Gaussian NLLTest,1.3361693
+C95Test,0.8348805
+C90Test,0.7887802
+C75Test,0.6753455
+C50Test,0.4850092
