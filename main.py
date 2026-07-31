@@ -304,7 +304,7 @@ if __name__ == "__main__":
                 distributional_method = training_parameters["distributional_method"]
                 closed_form = training_parameters["closed_form"]
                 noise_schedule = training_parameters['noise_schedule']
-                if uncertainty_quantification == 'diffusion':   
+                if uncertainty_quantification == 'diffusion':
                     diffusion = Diffusion(
                         noise_steps=training_parameters["n_timesteps"],
                         img_size=target_dim,
@@ -313,8 +313,9 @@ if __name__ == "__main__":
                         x_T_sampling_method=training_parameters['x_T_sampling_method'],
                         noise_schedule=noise_schedule,
                         beta_endpoints=training_parameters["beta_endpoints"],
-                        tau = training_parameters["tau"]
-                    )                        
+                        tau = training_parameters["tau"],
+                        variance_method=training_parameters.get("variance_method", "fixed_ddim"),
+                    )
                     beta = diffusion.beta # need it for iDDPM
                 else:
                     diffusion = None
@@ -404,6 +405,41 @@ if __name__ == "__main__":
             # Fix the seed again just that the evaluation without training yields the same results as training + evaluation
             np.random.seed(seed)
             torch.manual_seed(seed)
+
+            # Analytic-DPM: run one-pass MC estimate of Gamma_t over the
+            # training set and cache it next to the checkpoint. Also stores
+            # the tensor path on training_parameters so evaluate() can load it.
+            variance_method = training_parameters.get("variance_method", "fixed_ddim")
+            if variance_method in ("analytic_dpm", "analytic_dpm_diag") and \
+               training_parameters["uncertainty_quantification"] == "diffusion":
+                logging.info(f"Estimating Gamma_t for {variance_method} ...")
+                _diffusion_est = Diffusion(
+                    noise_steps=training_parameters["n_timesteps"],
+                    img_size=target_dim,
+                    ddim_churn=training_parameters['ddim_churn'],
+                    device=device,
+                    x_T_sampling_method=training_parameters['x_T_sampling_method'],
+                    noise_schedule=training_parameters['noise_schedule'],
+                    beta_endpoints=training_parameters["beta_endpoints"],
+                    tau=training_parameters["tau"],
+                    variance_method=variance_method,
+                )
+                _est_loader = DataLoader(
+                    training_dataset, batch_size=training_parameters["eval_batch_size"],
+                    shuffle=False,
+                )
+                gamma_t = _diffusion_est.estimate_gamma_t(
+                    model, _est_loader, regressor=regressor,
+                    n_mc_batches=training_parameters.get("gamma_t_mc_batches", None),
+                    per_dim=(variance_method == "analytic_dpm_diag"),
+                )
+                # Save gamma_t in the fresh run directory (never mutate the
+                # source checkpoint folder — that may be read-only or shared).
+                gamma_t_basename = os.path.basename(filename).replace(".pt", "_gamma_t.pt")
+                gamma_t_path = os.path.join(directory, gamma_t_basename)
+                torch.save(gamma_t.cpu(), gamma_t_path)
+                training_parameters["gamma_t_path"] = gamma_t_path
+                logging.info(f"Saved Gamma_t to {gamma_t_path} (shape {tuple(gamma_t.shape)})")
 
             if training_parameters["evaluate"]:
                 start_evaluation(

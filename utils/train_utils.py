@@ -19,6 +19,7 @@ from models import (
     MLP_diffusion_normal,
     MLP_diffusion_sample,
     MLP_diffusion_iDDPM,
+    MLP_diffusion_OCM,
     UNet_diffusion_mixednormal,
     UNet_diffusion_mvnormal,
     UNet_diffusion_normal,
@@ -63,6 +64,30 @@ def resume(model, filename):
         filename (_type_): The filename including the path to load the model.
     """
     model.load_state_dict(torch.load(filename))
+
+
+def _maybe_load_ocm_backbone(ocm_model, training_parameters, device):
+    """Load a stage-1 (deterministic) backbone checkpoint into an OCM wrapper.
+
+    The stage-1 checkpoint contains a bare backbone state dict (keys without
+    the ``backbone.`` prefix). We remap those onto ``ocm_model.backbone`` and
+    leave the moment head parameters at their random init. The OCM wrapper
+    already freezes ``backbone.parameters()`` in its constructor.
+    """
+    path = training_parameters.get("ocm_backbone_path", None)
+    if not path:
+        return
+    state = torch.load(path, map_location=device)
+    missing, unexpected = ocm_model.backbone.load_state_dict(state, strict=False)
+    if unexpected:
+        # If the checkpoint already includes ``backbone.`` prefixes, retry.
+        remapped = {k[len("backbone."):]: v for k, v in state.items()
+                    if k.startswith("backbone.")}
+        if remapped:
+            missing, unexpected = ocm_model.backbone.load_state_dict(remapped, strict=False)
+    # Silently tolerate missing keys (e.g. moment_projection not in stage-1);
+    # if the backbone had unexpected extras (e.g. from a distributional head),
+    # they are simply dropped for the frozen path.
 
 
 def get_criterion(training_parameters, device, beta: torch.Tensor | None =None):
@@ -140,9 +165,10 @@ def get_criterion(training_parameters, device, beta: torch.Tensor | None =None):
                         method="cholesky",
                     )
         elif training_parameters["distributional_method"] == "iDDPM":
-            assert not (beta is None) 
+            assert not (beta is None)
             criterion = losses.iDDPMLoss(beta=beta, loss_lambda=training_parameters["loss_lambda"])
-            
+        elif training_parameters["distributional_method"] == "OCM":
+            criterion = losses.OCMLoss()
         else:
             raise ValueError(
                 f'"distributional_method" must be any of the following: "deterministic", "normal", "sample", "iDDPM" or'
@@ -223,10 +249,18 @@ def setup_model(
                     concat=False,
                     hidden_dim=training_parameters["hidden_dim"],
                 )
+            elif training_parameters["distributional_method"] == "OCM":
+                hidden_model = MLP_diffusion_OCM(
+                    backbone=backbone,
+                    target_dim=target_dim,
+                    concat=False,
+                    hidden_dim=training_parameters["hidden_dim"],
+                )
+                _maybe_load_ocm_backbone(hidden_model, training_parameters, device)
             else:
                 raise ValueError(
                     f"Distributional method '{training_parameters['distributional_method']}' "
-                    f"is not supported for NDP on PDE tasks. Use: deterministic, normal, iDDPM."
+                    f"is not supported for NDP on PDE tasks. Use: deterministic, normal, iDDPM, OCM."
                 )
         else:
             if data_parameters["dataset_name"] == "WeatherBench":
@@ -392,6 +426,14 @@ def setup_model(
                     concat=concat_flag,
                     hidden_dim=training_parameters["hidden_dim"],
             )
+            elif training_parameters["distributional_method"] == "OCM":
+                hidden_model = MLP_diffusion_OCM(
+                    backbone=backbone,
+                    target_dim=target_dim,
+                    concat=concat_flag,
+                    hidden_dim=training_parameters["hidden_dim"],
+                )
+                _maybe_load_ocm_backbone(hidden_model, training_parameters, device)
         else:
             hidden_model = MLP(
                 target_dim=target_dim,

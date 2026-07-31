@@ -22,6 +22,8 @@ class Diffusion:
         noise_schedule="linear",
         beta_endpoints=(1e-4, 0.02),
         tau = 1, # Scaling factor for learned covariance
+        variance_method="fixed_ddim",
+        gamma_t=None,
     ):
         self.device = device
 
@@ -34,6 +36,70 @@ class Diffusion:
         self.x_T_sampling_method = x_T_sampling_method
         self.ddim_churn = ddim_churn
         self.tau = tau
+        # Reverse-process variance:
+        #   "fixed_ddim"         — original DDIM sigma (default)
+        #   "analytic_dpm"       — scalar Gamma_t per timestep (Bao et al. 2022)
+        #   "analytic_dpm_diag"  — diagonal Gamma_t (per timestep, per dim)
+        #   "ocm"                — per-input, per-dim variance from a learned head
+        # gamma_t: cached E[||eps_theta||^2 / d] or E[eps_theta_i^2] estimator.
+        #   Shape (T,) for "analytic_dpm", (T, d) for "analytic_dpm_diag".
+        self.variance_method = variance_method
+        if gamma_t is not None and not torch.is_tensor(gamma_t):
+            gamma_t = torch.as_tensor(gamma_t, dtype=torch.float32)
+        self.gamma_t = gamma_t.to(self.device) if gamma_t is not None else None
+        # Precompute the DDPM posterior variance schedule beta_tilde_t once.
+        # beta_tilde_1 = 0 by convention; we use t-1 index safely.
+        alpha_hat_prev = torch.cat(
+            [torch.ones(1, device=self.device), self.alpha_hat[:-1]], dim=0
+        )
+        self.beta_tilde = (1.0 - alpha_hat_prev) / (1.0 - self.alpha_hat) * self.beta
+
+    def _reverse_variance(self, t, x_shape, predicted_moment=None):
+        """Return the reverse-process variance sigma^2 for the given timesteps.
+
+        Returns a tensor shape-broadcastable to ``x_shape`` (i.e. same shape as x).
+
+        Fallback behavior: "analytic_*" without a cached gamma_t falls back to
+        beta_tilde (the DDPM lower bound), and logs no error — this matters
+        during training/validation before the post-hoc Gamma_t estimation runs.
+        """
+        beta_t = reshape_to_x_sample(self.beta[t], torch.zeros(x_shape, device=self.device))
+        beta_tilde_t = reshape_to_x_sample(self.beta_tilde[t], torch.zeros(x_shape, device=self.device))
+
+        if self.variance_method == "fixed_ddim":
+            raise RuntimeError("_reverse_variance called for fixed_ddim path")
+
+        if self.variance_method in ("analytic_dpm", "analytic_dpm_diag"):
+            if self.gamma_t is None:
+                return beta_tilde_t  # fallback until estimator has run
+            if self.variance_method == "analytic_dpm":
+                gamma = self.gamma_t[t]  # (B,)
+                gamma = reshape_to_x_sample(
+                    gamma, torch.zeros(x_shape, device=self.device)
+                )
+            else:
+                # gamma_t is (T, d_flat) — index by t then reshape to match x
+                gamma = self.gamma_t[t]  # (B, d_flat)
+                gamma = gamma.reshape(x_shape[0], *x_shape[1:])
+            sigma_sq = beta_tilde_t + (beta_t - beta_tilde_t) * (1.0 - gamma).clamp(0.0, 1.0)
+        elif self.variance_method == "ocm":
+            assert predicted_moment is not None, (
+                "OCM variance requires the model head's per-input moment prediction"
+            )
+            # predicted_moment estimates E[eps^2 | x_t] per dim (softplus output).
+            # Analytic-DPM diagonal formula: sigma^2 = beta_tilde + (beta - beta_tilde) * (1 - m).
+            sigma_sq = beta_tilde_t + (beta_t - beta_tilde_t) * (1.0 - predicted_moment).clamp(0.0, 1.0)
+        else:
+            raise ValueError(f"Unknown variance_method: {self.variance_method}")
+
+        # Clip so DDIM's sqrt(1 - alpha_hat_{t-1} - sigma^2) stays real.
+        alpha_hat_prev_t = reshape_to_x_sample(
+            torch.cat([torch.ones(1, device=self.device), self.alpha_hat[:-1]], dim=0)[t],
+            torch.zeros(x_shape, device=self.device),
+        )
+        upper = torch.minimum(beta_t, 1.0 - alpha_hat_prev_t - 1e-8)
+        sigma_sq = torch.clamp(sigma_sq, min=beta_tilde_t, max=upper.clamp_min(0.0))
+        return sigma_sq
 
     def sample_x_T(self, shape, pred, inference=True):
         if self.x_T_sampling_method in ["standard"]:
@@ -52,7 +118,7 @@ class Diffusion:
             )
         return x
 
-    def sample_x_t_inference_DDIM(self, x, t, predicted_noise, pred, i):
+    def sample_x_t_inference_DDIM(self, x, t, predicted_noise, pred, i, predicted_moment=None):
         alpha = reshape_to_x_sample(self.alpha[t], x)
         alpha_hat = reshape_to_x_sample(self.alpha_hat[t], x)
         if pred is None:
@@ -66,11 +132,17 @@ class Diffusion:
 
         if i > 1:
             alpha_hat_t_minus_1 = reshape_to_x_sample(self.alpha_hat[t - 1], x)
-            ddim_sigma = (
-                self.ddim_churn
-                * torch.sqrt((1 - alpha_hat_t_minus_1) / (1 - alpha_hat))
-                * torch.sqrt(1 - alpha)
-            )# * np.sqrt(self.tau)
+            if self.variance_method == "fixed_ddim":
+                ddim_sigma = (
+                    self.ddim_churn
+                    * torch.sqrt((1 - alpha_hat_t_minus_1) / (1 - alpha_hat))
+                    * torch.sqrt(1 - alpha)
+                )# * np.sqrt(self.tau)
+            else:
+                # Analytic-DPM / OCM: sigma^2 comes from the learned/estimated
+                # optimal reverse variance. tau is baked into the sqrt below.
+                sigma_sq = self._reverse_variance(t, x.shape, predicted_moment=predicted_moment)
+                ddim_sigma = torch.sqrt(sigma_sq)
 
             if self.x_T_sampling_method == "standard":
                 predicted_noise_ddim = predicted_noise
@@ -245,6 +317,81 @@ class Diffusion:
     def sample_timesteps(self, n):
         return torch.randint(low=1, high=self.noise_steps, size=(n,))
 
+    @torch.no_grad()
+    def estimate_gamma_t(
+        self,
+        model,
+        dataloader,
+        regressor=None,
+        n_mc_batches=None,
+        per_dim=False,
+    ):
+        """Monte-Carlo estimate of the Analytic-DPM confidence term Gamma_t.
+
+        Gamma_t = E_{x_0, eps}[||eps_theta(x_t, t)||^2 / d]        (scalar per t)
+              or E_{x_0, eps}[eps_theta_i^2] per dim i             (per_dim=True)
+
+        Loops over the dataloader for each t and averages. For UCI (d small,
+        T=50, N_train up to a few thousand) one pass over the training set per
+        timestep is more than enough. If n_mc_batches is set, we cap the number
+        of batches used per timestep.
+        """
+        model_was_training = model.training
+        model.eval()
+
+        # Peek at target dim from one batch (target is (B, 1, d) or (B, d)).
+        target_dim = None
+        for target, _ in dataloader:
+            target_dim = target[0].numel()
+            break
+        if target_dim is None:
+            raise ValueError("Dataloader is empty; cannot estimate gamma_t")
+
+        T = self.noise_steps
+        if per_dim:
+            gamma = torch.zeros(T, target_dim, device=self.device)
+        else:
+            gamma = torch.zeros(T, device=self.device)
+
+        # Cache all batches once
+        batches = []
+        for target, input_ in dataloader:
+            batches.append((target.to(self.device), input_.to(self.device)))
+            if n_mc_batches is not None and len(batches) >= n_mc_batches:
+                break
+
+        for t_val in range(1, T):
+            sq_sum = None
+            n_seen = 0
+            for target, input_ in batches:
+                B = target.shape[0]
+                t = torch.full((B,), t_val, dtype=torch.long, device=self.device)
+                pred = regressor(input_) if regressor is not None else None
+                x_t, _eps = self.noise_low_dimensional(target, t, pred=pred)
+                out = model(x_t, t, input_, pred=pred)
+                # Distributional heads return (..., 2) with mu at [...,0]; for
+                # deterministic backbone, out is the noise prediction directly.
+                if out.dim() > target.dim() and out.shape[-1] in (2, 3):
+                    eps_pred = out[..., 0]
+                else:
+                    eps_pred = out
+                eps_flat = eps_pred.reshape(B, -1)
+                if per_dim:
+                    sq = (eps_flat ** 2).sum(dim=0)  # (d,)
+                else:
+                    sq = (eps_flat ** 2).sum() / eps_flat.shape[1]  # scalar
+                sq_sum = sq if sq_sum is None else sq_sum + sq
+                n_seen += B
+            gamma[t_val] = sq_sum / n_seen
+
+        # t=0 slot is unused by the sampler (i=1 branch uses fixed sigma=0);
+        # leave it at 0. Clip to [0, 1] since 1 - gamma should be a valid weight.
+        gamma = gamma.clamp(0.0, 1.0)
+        self.gamma_t = gamma
+        if model_was_training:
+            model.train()
+        return gamma
+
     # def sample_low_dimensional(
     #     self, model, n, conditioning=None, cfg_scale=3, pred=None
     # ):
@@ -350,8 +497,13 @@ def generate_diffusion_samples_low_dimensional(
     metrics_plots=False,
     beta_endpoints=(1e-4, 0.02),
     tau = 1,
+    variance_method="fixed_ddim",
+    gamma_t=None,
 ):
-    if distributional_method == "deterministic":
+    # OCM requires the DistributionalDiffusion path so sample_low_dimensional
+    # can dispatch to the OCM branch (deterministic Diffusion has no OCM branch).
+    use_distributional = (distributional_method != "deterministic") or (variance_method == "ocm")
+    if not use_distributional:
         diffusion = Diffusion(
             noise_steps=n_timesteps,
             img_size=target_shape[1:],
@@ -361,6 +513,8 @@ def generate_diffusion_samples_low_dimensional(
             noise_schedule=noise_schedule,
             beta_endpoints=beta_endpoints,
             tau = tau,
+            variance_method=variance_method,
+            gamma_t=gamma_t,
         )
     else:
         diffusion = DistributionalDiffusion(
@@ -374,6 +528,8 @@ def generate_diffusion_samples_low_dimensional(
             noise_schedule=noise_schedule,
             beta_endpoints=beta_endpoints,
             tau = tau,
+            variance_method=variance_method,
+            gamma_t=gamma_t,
         )
 
     sampled_targets = torch.zeros(*target_shape, n_samples).to(input.device)
@@ -430,6 +586,8 @@ class DistributionalDiffusion(Diffusion):
         ddim_churn=1.0,
         beta_endpoints=(1e-4, 0.02),
         tau = 1,
+        variance_method="fixed_ddim",
+        gamma_t=None,
         **kwargs,
     ):
         super().__init__(
@@ -441,6 +599,8 @@ class DistributionalDiffusion(Diffusion):
             ddim_churn=ddim_churn,
             beta_endpoints=beta_endpoints,
             tau = tau,
+            variance_method=variance_method,
+            gamma_t=gamma_t,
         )
         self.distributional_method = distributional_method
         self.closed_form = closed_form
@@ -623,6 +783,17 @@ class DistributionalDiffusion(Diffusion):
                         pred,
                         i,
                         method=self.distributional_method,
+                    )
+                elif self.distributional_method == "OCM":
+                    # OCM head returns (mu, m_pred) with shape (..., 2).
+                    # Use mu as the noise prediction and m_pred to compute
+                    # the per-input, per-dim reverse-process variance.
+                    output = model(x, t, conditioning, pred=pred)
+                    predicted_noise = output[..., 0].reshape(x.shape)
+                    predicted_moment = output[..., 1].reshape(x.shape)
+                    x = self.sample_x_t_inference_DDIM(
+                        x, t, predicted_noise, pred, i,
+                        predicted_moment=predicted_moment,
                     )
                 else:
                     predicted_noise = self.sample_noise(model, x, t, conditioning, pred)

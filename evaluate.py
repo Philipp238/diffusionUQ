@@ -6,8 +6,85 @@ import torch
 import torch.nn as nn
 from scoringrules import crps_ensemble, energy_score
 
-from models import generate_crps_samples, generate_diffusion_samples_low_dimensional
+from models import Diffusion, generate_crps_samples, generate_diffusion_samples_low_dimensional
 from utils import losses, train_utils
+
+
+def epistemic_uncertainty(
+    model: nn.Module,
+    training_parameters: dict,
+    loader,
+    device,
+    regressor=None,
+    n_timesteps_eval: int = 20,
+) -> float:
+    """Epistemic uncertainty following arXiv:2510.04583, Appendix F.
+
+    For ``distributional_method == "normal"`` (single-Gaussian noise model):
+        EU = V[μ_θ(x_t,t)] = b_t² · σ_θ²(x_t,t),   b_t = (1-α_t)/(√α_t·√(1-ᾱ_t))
+    For ``distributional_method == "mixednormal"`` (K-component mixture):
+        EU = Σ_k π_k (μ_k − μ̄)²    (variance of component means)
+
+    Averaged over uniformly-sampled diffusion timesteps and the loader.
+    Returns NaN for distributional methods that don't fit either framework.
+
+    Aleatoric uncertainty is measured separately from the predictive
+    distribution p_Y(·|c) inside :func:`evaluate` (variance of samples).
+    """
+    dist_method = training_parameters.get("distributional_method")
+    if dist_method not in ("normal", "mixednormal"):
+        return float("nan")
+    if training_parameters.get("uncertainty_quantification") != "diffusion":
+        return float("nan")
+
+    T = training_parameters["n_timesteps"]
+    diffusion = Diffusion(
+        noise_steps=T,
+        img_size=(1, 1),  # only used for x_T sampling shape, not needed here
+        ddim_churn=training_parameters["ddim_churn"],
+        device=device,
+        x_T_sampling_method=training_parameters["x_T_sampling_method"],
+        noise_schedule=training_parameters["noise_schedule"],
+        beta_endpoints=training_parameters["beta_endpoints"],
+    )
+
+    alpha = diffusion.alpha
+    alpha_hat = diffusion.alpha_hat
+    b_sq = ((1.0 - alpha) ** 2) / (alpha * (1.0 - alpha_hat))
+
+    eval_ts = np.linspace(1, T - 1, n_timesteps_eval, dtype=int)
+    total_epist = 0.0
+    n_batches = 0
+
+    model.eval()
+    with torch.no_grad():
+        for target, input_ in loader:
+            target = target.to(device)
+            input_ = input_.to(device)
+            B = target.shape[0]
+            pred = regressor(input_) if regressor is not None else None
+
+            batch_epist = []
+            for t_val in eval_ts:
+                t_tensor = torch.full((B,), int(t_val), dtype=torch.long, device=device)
+                x_t, _ = diffusion.noise_low_dimensional(target, t_tensor, pred=pred)
+                output = model(x_t, t_tensor, input_, pred=pred)
+
+                if dist_method == "normal":
+                    sigma_eps = output[..., 1]                       # (B, 1, target_dim)
+                    epist_t = float(b_sq[t_val].item()) * (sigma_eps ** 2)
+                else:  # mixednormal — (B, 1, target_dim, K, 3)
+                    mu = output[..., 0]
+                    pi = output[..., 2]
+                    mu_bar  = (pi * mu).sum(dim=-1, keepdim=True)
+                    epist_t = (pi * (mu - mu_bar) ** 2).sum(dim=-1)
+
+                batch_epist.append(epist_t.mean().item())
+
+            total_epist += float(np.mean(batch_epist))
+            n_batches += 1
+
+    return total_epist / max(n_batches, 1)
 
 
 def generate_samples(
@@ -27,6 +104,8 @@ def generate_samples(
     metrics_plots:bool=False,
     beta_endpoints:tuple=(1e-4, 0.02),
     tau:float=1,
+    variance_method:str="fixed_ddim",
+    gamma_t=None,
 ) -> torch.Tensor:
     """Method to generate samples from the specified diffusion model.
 
@@ -81,6 +160,8 @@ def generate_samples(
                     metrics_plots=metrics_plots,
                     beta_endpoints=beta_endpoints,
                     tau=tau,
+                    variance_method=variance_method,
+                    gamma_t=gamma_t,
                 )
             )
             return out, crps_over_time, rmse_over_time, distr_over_time
@@ -102,6 +183,8 @@ def generate_samples(
                 metrics_plots=metrics_plots,
                 beta_endpoints=beta_endpoints,
                 tau=tau,
+                variance_method=variance_method,
+                gamma_t=gamma_t,
             )
     return out
 
@@ -135,6 +218,7 @@ def evaluate(
     coverage = 0
     crps = 0
     gaussian_nll = 0
+    au_predictive = 0  # sample-based aleatoric: variance of samples from p_Y(·|c)
     alpha = training_parameters["alpha"]
 
     mse_loss = torch.nn.MSELoss()
@@ -145,6 +229,15 @@ def evaluate(
     crps_over_time, rmse_over_time, distr_over_time = [], [], []
 
     cfg_scale = 3 if training_parameters["conditional_free_guidance_training"] else 0
+
+    # Load Gamma_t cache if this run uses Analytic-DPM.
+    variance_method = training_parameters.get("variance_method", "fixed_ddim")
+    gamma_t = None
+    if variance_method in ("analytic_dpm", "analytic_dpm_diag"):
+        gamma_t_path = training_parameters.get("gamma_t_path", None)
+        if gamma_t_path is not None:
+            gamma_t = torch.load(gamma_t_path, map_location=device)
+
     with torch.no_grad():
         for target, input in loader:
             input = input.to(device)
@@ -168,6 +261,8 @@ def evaluate(
                 metrics_plots=metrics_plots,
                 beta_endpoints=training_parameters["beta_endpoints"],
                 tau=training_parameters["tau"],
+                variance_method=variance_method,
+                gamma_t=gamma_t,
             )
 
             if (
@@ -245,6 +340,15 @@ def evaluate(
             )
             qice_loss.aggregate(prediction.cpu(), target.cpu())
 
+            # Sample-based aleatoric uncertainty: variance of the predictive
+            # distribution p_Y(·|c) obtained by iterative reverse sampling
+            # (arXiv:2510.04583, Appendix F).
+            au_predictive += (
+                prediction.var(dim=-1).mean().item()
+                * batch_size
+                / len(loader.dataset)
+            )
+
         crps_over_time = [x / len(loader.dataset) for x in crps_over_time]
         rmse_over_time = [np.sqrt(x / len(loader.dataset)) for x in rmse_over_time]
 
@@ -257,6 +361,7 @@ def evaluate(
         coverage,
         gaussian_nll,
         qice,
+        au_predictive,
         crps_over_time,
         rmse_over_time,
         distr_over_time,
@@ -330,6 +435,7 @@ def start_evaluation(
             coverage,
             gaussian_nll,
             qice,
+            au_predictive,
             crps_over_time,
             rmse_over_time,
             distr_over_time,
@@ -361,6 +467,23 @@ def start_evaluation(
             coverage, "Coverage" + name, results_dict, logging
         )
         train_utils.log_and_save_evaluation(qice, "QICE" + name, results_dict, logging)
+
+        # AU: sample-based (variance of p_Y(·|c) samples) — data-dependent.
+        # EU: analytic from the model's second-order distribution
+        #     (arXiv:2510.04583, Appendix F). NaN for methods that don't fit.
+        train_utils.log_and_save_evaluation(
+            au_predictive, "AleatoricUncertainty" + name, results_dict, logging
+        )
+        epist_var = epistemic_uncertainty(
+            model=model,
+            training_parameters=training_parameters,
+            loader=loader,
+            device=device,
+            regressor=regressor,
+        )
+        train_utils.log_and_save_evaluation(
+            epist_var, "EpistemicUncertainty" + name, results_dict, logging
+        )
 
         if metrics_plots:
             # Plot CRPS and RMSE over the denoising timesteps

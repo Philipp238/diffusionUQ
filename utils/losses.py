@@ -3,6 +3,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.distributions.lowrank_multivariate_normal import (
     LowRankMultivariateNormal,
     _batch_lowrank_logdet,
@@ -86,6 +87,29 @@ class iDDPMLoss(nn.Module):
         beta_wiggle = (1 - alpha_bar_t_minus_1) / (1 - alpha_bar) * beta
         
         return alpha, alpha_bar, beta_wiggle 
+
+class OCMLoss(nn.Module):
+    """Optimal Covariance Matching loss (simplified moment-matching variant).
+
+    Trains the moment head of ``MLP_diffusion_OCM`` to regress the squared
+    forward noise ``eps^2``. Since ``x_t = sqrt(alpha_bar) x_0 +
+    sqrt(1-alpha_bar) eps``, ``E[eps^2 | x_t]`` is exactly the quantity that
+    plugs into the Analytic-DPM diagonal formula; regressing eps^2 with an MSE
+    is an unbiased estimator of this conditional expectation.
+
+    Expects:
+        truth: (B, 1, d) or (B, d) — the true forward noise eps
+        prediction: (B, 1, d, 2) — [mu, m_pred] as produced by
+            ``MLP_diffusion_OCM``. The mean prediction ``mu`` is unused here
+            (assumed already trained via stage-1 deterministic MSE).
+    """
+
+    def forward(self, truth, prediction):
+        m_pred = prediction[..., 1]
+        # Broadcast eps to m_pred's shape; both should already match.
+        target = truth ** 2
+        return F.mse_loss(m_pred, target)
+
 
 class GaussianKernelScore(nn.Module):
     """Computes the Gaussian kernel score for a predictive normal distribution and corresponding observations."""
