@@ -1,0 +1,4 @@
+dataset,method,n_splits,RMSETest,EnergyScoreTest,CRPSTest,Gaussian NLLTest,CoverageTest,QICETest
+kin8nm,analytic_dpm,20,6.91 ± 0.19,4.03 ± 0.12,4.01 ± 0.12,-73.3 ± 12.87,71.23 ± 2.61,5.65 ± 0.46
+kin8nm,analytic_dpm_diag,20,6.91 ± 0.19,4.03 ± 0.12,4.01 ± 0.12,-73.3 ± 12.87,71.23 ± 2.61,5.65 ± 0.46
+kin8nm,ocm,20,6.92 ± 0.19,3.96 ± 0.11,3.94 ± 0.11,-101.15 ± 8.02,78.33 ± 2.07,4.41 ± 0.5

@@ -1,0 +1,18 @@
+,0,1,2,3,4
+dataset_name,protein-tertiary-structure,protein-tertiary-structure,protein-tertiary-structure,protein-tertiary-structure,protein-tertiary-structure
+yarin_gal_uci_split_indices,0,1,2,3,4
+seed,1234,1234,1234,1234,1234
+data_fraction,1.0,1.0,1.0,1.0,1.0
+n_estimators,3000,3000,3000,3000,3000
+n_repeats,30,30,30,30,30
+sde_name,vesde,vesde,vesde,vesde,vesde
+t_training,15.403,11.504,12.394,12.117,12.034
+MSETest,14.6917696,14.1805582,14.4256029,14.1752796,13.9760342
+RMSETest,3.8329844,3.7657082,3.7981052,3.7650073,3.7384534
+EnergyScoreTest,1.7357575,1.6864592,1.7140232,1.6970961,1.67452
+CRPSTest,1.7183361,1.6692988,1.696654,1.6795994,1.6572468
+Gaussian NLLTest,2.6390409,2.9928021,2.534502,2.5989041,2.5272179
+CoverageTest,0.9169036,0.9160289,0.9201837,0.9214957,0.9236825
+QICETest,0.0081128,0.0106363,0.007881,0.0100809,0.0078198
+AleatoricUncertaintyTest,13.333704,13.0234594,13.3454113,13.4458809,13.258008
+EpistemicUncertaintyTest,,,,,

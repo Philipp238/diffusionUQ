@@ -1,0 +1,4 @@
+dataset,method,n_splits,RMSETest,EnergyScoreTest,CRPSTest,Gaussian NLLTest,CoverageTest,QICETest
+yacht,analytic_dpm,20,0.94 ± 0.61,0.41 ± 0.2,0.41 ± 0.2,54.46 ± 63.04,0.32 ± 0.11,0.12 ± 0.01
+yacht,analytic_dpm_diag,20,0.94 ± 0.61,0.41 ± 0.2,0.41 ± 0.2,54.46 ± 63.04,0.32 ± 0.11,0.12 ± 0.01
+yacht,ocm,20,0.94 ± 0.61,0.41 ± 0.2,0.41 ± 0.2,45.37 ± 53.32,0.36 ± 0.12,0.11 ± 0.01
