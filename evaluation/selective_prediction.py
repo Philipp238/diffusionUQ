@@ -1,24 +1,35 @@
 """Selective prediction (rejection / retention curves) for KS, Burgers, T2M and UCI.
 
-Two models are evaluated and can be compared against each other:
+Several models are evaluated and can be compared against each other:
 
-    normal    our distributional diffusion (Normal head).  Per test example it
-              yields
-                  au  aleatoric uncertainty -- variance across the ensemble of
-                                              drawn samples
-                  eu  epistemic uncertainty -- the model's predicted noise
-                                              variance accumulated over the
-                                              reverse diffusion trajectory
-    ensemble  the deterministic diffusion used as a deep ensemble over several
-              training checkpoints.  Its uncertainty is the usual law-of-total-
-              variance split of the pooled sample distribution,
-                  au  mean over members of the within-member sample variance
-                  eu  variance across the member means (their disagreement)
+    normal       our distributional diffusion (diagonal Normal head).  Per test
+                 example it yields
+                     au  aleatoric uncertainty -- variance across the ensemble
+                                                 of drawn samples
+                     eu  epistemic uncertainty -- the model's predicted noise
+                                                 variance accumulated over the
+                                                 reverse diffusion trajectory
+    mixednormal  the same distributional diffusion with a Normal-mixture head.
+                 Its au is again the sample variance; its predicted noise
+                 variance is the *marginal* variance of the mixture, i.e. the
+                 weighted mean of the component variances plus the spread of
+                 the component means, so it is the same quantity as above.
+    mvnormal     the same distributional diffusion with a multivariate Normal
+                 head (low-rank or Cholesky covariance over the domain).  Only
+                 the marginal variances -- the diagonal of the predicted noise
+                 covariance -- enter eu; the off-diagonal correlations are
+                 ignored, which again makes eu the same per-point quantity as
+                 for the diagonal head.
+    ensemble     the deterministic diffusion used as a deep ensemble over
+                 several training checkpoints.  Its uncertainty is the usual
+                 law-of-total-variance split of the pooled sample distribution,
+                     au  mean over members of the within-member sample variance
+                     eu  variance across the member means (their disagreement)
 
-Both report tu = au + eu and the mse of their mean prediction against the
-target, each averaged over the whole spatial domain, so the two are directly
-comparable in terms of PRR and of the correlation between their au/eu. All four
-uncertainty terms are variances, so au and eu are on the same scale and their
+All of them report tu = au + eu and the mse of their mean prediction against the
+target, each averaged over the whole spatial domain, so they are directly
+comparable in terms of PRR and of the correlation between their au/eu. Every
+uncertainty term is a variance, so au and eu are on the same scale and their
 sum is meaningful.
 
 Unlike evaluation/eu.ipynb this does *not* roll the model out autoregressively:
@@ -33,11 +44,22 @@ node, where matplotlib's usetex backend has no complete texmf tree and drawing
 anything at all fails.
 
 How EU is collapsed over the reverse-diffusion steps is configurable for the
-distributional model: --eu-last-steps K restricts it to the K final (low-noise)
+distributional models: --eu-last-steps K restricts it to the K final (low-noise)
 steps, and --eu-reduction max takes the largest value over the retained steps
 instead of the mean. Note that under the linear schedule used here the EU weight
 peaks at the very last reverse step, so "max" is equivalent to --eu-last-steps 1.
 Neither option applies to the ensemble, whose EU has no diffusion-step axis.
+
+Distributional checkpoints
+    KS / Burgers  the seed-1 run of each head (results/<dataset>/<head>), with
+                  the head hyper-parameters and beta endpoints that run was
+                  trained under -- these differ between heads, so each is
+                  configured separately below.
+    T2M           the single run of each head.
+    UCI           the split-0 run of the Normal and the mixture head; no
+                  multivariate-Normal model was trained there (the target is a
+                  scalar, so it would coincide with the Normal head) and that
+                  model kind is skipped.
 
 Ensemble members
     KS / Burgers  the five deterministic checkpoints trained with seeds 1-5 on
@@ -49,12 +71,13 @@ Ensemble members
                   results/selective_prediction/UCI/<dataset>), so they differ
                   only in initialisation and the split-0 test set is unseen by
                   every member -- the same held-out data the distributional
-                  model is evaluated on, and the same split-0 CARD regressor.
+                  models are evaluated on, and the same split-0 CARD regressor.
 
 Run from the repo root:
     python evaluation/selective_prediction.py                     # all datasets
     python evaluation/selective_prediction.py --datasets KS
     python evaluation/selective_prediction.py --datasets KS --models ensemble
+    python evaluation/selective_prediction.py --models mixednormal,mvnormal
     python evaluation/selective_prediction.py --datasets UCI_concrete
     python evaluation/selective_prediction.py --datasets T2M --n-samples 64
     python evaluation/selective_prediction.py --eu-reduction max
@@ -83,7 +106,10 @@ from data.data_utils import get_uci_data
 from models import (
     Diffusion,
     MLP_CARD,
+    MLP_diffusion_mixednormal,
     MLP_diffusion_normal,
+    UNet_diffusion_mixednormal,
+    UNet_diffusion_mvnormal,
     UNet_diffusion_normal,
     UNetDiffusion,
     generate_diffusion_samples_low_dimensional,
@@ -93,7 +119,12 @@ from models.mlp_diffusion import MLP_diffusion_CARD
 NOISE_SCHEDULE = "linear"
 DISTRIBUTIONAL_METHOD = "normal"
 
-MODEL_KINDS = ("normal", "ensemble")
+# The distributional heads, all of which are run by ``run_distributional`` and
+# whose name doubles as the sampler's ``distributional_method``.
+DISTRIBUTIONAL_KINDS = ("mixednormal", "mvnormal")
+MODEL_KINDS = DISTRIBUTIONAL_KINDS
+#DISTRIBUTIONAL_KINDS = ("normal", "mixednormal", "mvnormal")
+#MODEL_KINDS = (*DISTRIBUTIONAL_KINDS, "ensemble")
 
 # Results directory name -> dataset name as used by data/UCI_Datasets and by the
 # checkpoint filenames.
@@ -120,9 +151,10 @@ UCI_ENSEMBLE_MEMBERS = 5
 def uci_entry(results_name, dataset_name):
     """Config for one UCI dataset, mirroring config/concrete.ini.
 
-    The distributional and the deterministic models were trained with the same
-    hyper-parameters, so both share the CARD backbone, the CARD x_T sampling and
-    the (0.001, 0.35) beta endpoints; only the checkpoints differ.
+    All distributional heads and the deterministic model were trained with the
+    same hyper-parameters, so they share the CARD backbone, the CARD x_T
+    sampling and the (0.001, 0.35) beta endpoints; only the checkpoints and the
+    head differ.  The mixture head was trained with three components.
     """
     common = dict(
         x_T_sampling_method="CARD",
@@ -142,6 +174,15 @@ def uci_entry(results_name, dataset_name):
             f"{dataset_name}{UCI_SPLIT}_MLP_diffusion_normal_T50_DDIM1.pt",
             **common,
         ),
+        mixednormal=dict(
+            ckpt_pattern=f"results/UCI/{results_name}/*/Datetime_*_Loss_"
+            f"{dataset_name}{UCI_SPLIT}_MLP_diffusion_mixednormal_T50_DDIM1.pt",
+            n_components=3,
+            **common,
+        ),
+        # The UCI targets are scalars, so a multivariate Normal head would
+        # reduce to the diagonal one and none was trained.
+        mvnormal=None,
         ensemble=dict(
             # One glob for all members: they share the split index and are told
             # apart only by the timestamp in the filename, which sorts them by
@@ -157,11 +198,15 @@ def uci_entry(results_name, dataset_name):
 
 
 # Per-dataset settings, mirroring evaluation/eu.ipynb and the training configs
-# in results/<dataset>/{normal,deterministic}/*.ini.  T2M is a 160x220 field, so
-# it needs a much smaller batch than the 1D PDEs.  The deterministic runs never
-# set beta_endpoints and so fell back to the (0.001, 0.35) default, whereas the
-# normal runs pinned (0.001, 0.2) -- each model has to be sampled with the
-# schedule it was trained under.
+# in results/<dataset>/{normal,mixednormal,mvnormal,deterministic}/*.ini.  T2M is
+# a 160x220 field, so it needs a much smaller batch than the 1D PDEs.  Every run
+# has to be sampled with the beta schedule and the head hyper-parameters it was
+# trained under, and those differ per head: the deterministic runs never set
+# beta_endpoints and so fell back to the (0.001, 0.35) default, the normal and
+# mixture runs pinned (0.001, 0.2), and the mvnormal runs used (0.001, 0.35) on
+# KS and T2M but (0.001, 0.2) on Burgers.  The number of mixture components
+# likewise differs per dataset.  For KS and Burgers the seed-1 run of each head
+# is taken, i.e. the earliest timestamp, matching the normal checkpoint.
 DATASETS = {
     "KS": dict(
         kind="pde",
@@ -175,6 +220,21 @@ DATASETS = {
             "Datetime_20250831_102648_Loss_1D_KS_UNet_diffusion_normal_T50_DDIM1.pt",
             x_T_sampling_method="standard",
             beta_endpoints=(0.001, 0.2),
+        ),
+        mixednormal=dict(
+            ckpt="results/KS/mixednormal/Datetime_20250831_190236_"
+            "Loss_1D_KS_UNet_diffusion_mixednormal_T50_DDIM1.pt",
+            x_T_sampling_method="standard",
+            beta_endpoints=(0.001, 0.2),
+            n_components=50,
+        ),
+        mvnormal=dict(
+            ckpt="results/KS/mvnormal/Datetime_20250901_062553_"
+            "Loss_1D_KS_UNet_diffusion_mvnormal_T50_DDIM1.pt",
+            x_T_sampling_method="standard",
+            beta_endpoints=(0.001, 0.35),
+            rank=1,
+            mvnormal_method="lora",
         ),
         ensemble=dict(
             ckpt_patterns=["results/KS/deterministic/Datetime_*_"
@@ -196,6 +256,21 @@ DATASETS = {
             x_T_sampling_method="standard",
             beta_endpoints=(0.001, 0.2),
         ),
+        mixednormal=dict(
+            ckpt="results/Burgers/mixednormal/Datetime_20250829_032152_"
+            "Loss_1D_Burgers_UNet_diffusion_mixednormal_T50_DDIM1.pt",
+            x_T_sampling_method="standard",
+            beta_endpoints=(0.001, 0.2),
+            n_components=2,
+        ),
+        mvnormal=dict(
+            ckpt="results/Burgers/mvnormal/Datetime_20250830_022256_"
+            "Loss_1D_Burgers_UNet_diffusion_mvnormal_T50_DDIM1.pt",
+            x_T_sampling_method="standard",
+            beta_endpoints=(0.001, 0.2),
+            rank=1,
+            mvnormal_method="lora",
+        ),
         ensemble=dict(
             ckpt_patterns=["results/Burgers/deterministic/Datetime_*_"
                            "Loss_1D_Burgers_UNet_diffusion_deterministic_T50_DDIM1.pt"],
@@ -215,6 +290,21 @@ DATASETS = {
             "Datetime_20250908_031720_Loss_WeatherBench_UNet_diffusion_normal_T50_DDIM1.pt",
             x_T_sampling_method="standard",
             beta_endpoints=(0.001, 0.2),
+        ),
+        mixednormal=dict(
+            ckpt="results/T2M/mixednormal/Datetime_20250909_124553_"
+            "Loss_WeatherBench_UNet_diffusion_mixednormal_T50_DDIM1.pt",
+            x_T_sampling_method="standard",
+            beta_endpoints=(0.001, 0.2),
+            n_components=10,
+        ),
+        mvnormal=dict(
+            ckpt="results/T2M/mvnormal/Datetime_20250911_114427_"
+            "Loss_WeatherBench_UNet_diffusion_mvnormal_T50_DDIM1.pt",
+            x_T_sampling_method="standard",
+            beta_endpoints=(0.001, 0.35),
+            rank=1,
+            mvnormal_method="lora",
         ),
         # Only a single deterministic T2M checkpoint was trained, so there is no
         # ensemble to aggregate.
@@ -241,13 +331,23 @@ class EUDiffusion(Diffusion):
     accumulated over the reverse trajectory into an epistemic-uncertainty
     profile.
 
+    All three distributional heads report the same quantity, the *marginal*
+    variance of the predicted noise at each point of the domain: sigma^2 for the
+    diagonal Normal, the mixture variance (component variances plus the spread
+    of the component means) for the mixture, and the diagonal of the predicted
+    covariance for the multivariate Normal, whose off-diagonal correlations are
+    ignored. So the EU of the three is on one scale, and on the scale of the
+    aleatoric sample variance.
+
     The UCI models were trained with ``closed_form=True``, which propagates the
     predicted noise covariance analytically through the DDIM update instead of
     drawing the noise and pushing it through. For a diagonal Normal head the two
     give the same per-step distribution -- the closed-form coefficient
     ``A = sqrt(1 - alpha_hat_{t-1} - ddim_sigma^2) - sqrt((1 - alpha_hat)/alpha)``
-    is exactly the coefficient the drawn noise picks up here -- so this sampler
-    is used for both.
+    is exactly the coefficient the drawn noise picks up here -- and the mixture
+    head's closed form draws a component first and then propagates that
+    component's diagonal covariance, which is likewise the same distribution as
+    drawing a component and then its noise, so this sampler is used for both.
     """
 
     def __init__(
@@ -305,6 +405,10 @@ class EUDiffusion(Diffusion):
                 diag = self.tau * predicted_noise[..., 1]
                 lora = np.sqrt(self.tau) * predicted_noise[..., 2:]
                 mvnorm = LowRankMultivariateNormal(mu, lora, diag)
+            # ``variance`` is the diagonal of the covariance, i.e. the marginal
+            # variance per point of the domain -- the same quantity the diagonal
+            # head reports.  The correlations the head predicts on top of it do
+            # not enter, since the EU is averaged over the domain anyway.
             eu = mvnorm.variance.squeeze()
             predicted_noise = mvnorm.sample()
 
@@ -533,9 +637,13 @@ def build_uci_backbone(cfg, target_dim, input_dim):
 def load_model(cfg, model_kind, ckpt_path, device, target_dim, input_dim):
     """Instantiate and load one checkpoint, matching utils.train_utils.setup_model.
 
-    ``model_kind`` is "normal" for the distributional model and "ensemble" for a
-    single deterministic ensemble member.
+    ``model_kind`` is one of the distributional heads (see
+    ``DISTRIBUTIONAL_KINDS``) or "ensemble" for a single deterministic ensemble
+    member, which is the bare backbone.  The head hyper-parameters -- the number
+    of mixture components, the covariance rank and parametrisation -- are read
+    off the per-dataset config, since they differ between the runs.
     """
+    model_cfg = cfg[model_kind]
     if cfg["kind"] == "uci":
         backbone = build_uci_backbone(cfg, target_dim, input_dim)
         if model_kind == "normal":
@@ -545,12 +653,39 @@ def load_model(cfg, model_kind, ckpt_path, device, target_dim, input_dim):
                 concat=True,
                 hidden_dim=cfg["hidden_dim"],
             )
+        elif model_kind == "mixednormal":
+            model = MLP_diffusion_mixednormal(
+                backbone=backbone,
+                target_dim=target_dim,
+                concat=True,
+                hidden_dim=cfg["hidden_dim"],
+                n_components=model_cfg["n_components"],
+            )
+        elif model_kind == "mvnormal":
+            raise ValueError("No multivariate Normal head was trained on UCI.")
         else:
             model = backbone
     else:
         backbone = build_field_backbone(cfg, target_dim)
         if model_kind == "normal":
             model = UNet_diffusion_normal(backbone=backbone, d=cfg["d"], target_dim=1)
+        elif model_kind == "mixednormal":
+            model = UNet_diffusion_mixednormal(
+                backbone=backbone,
+                d=cfg["d"],
+                target_dim=1,
+                n_components=model_cfg["n_components"],
+            )
+        elif model_kind == "mvnormal":
+            # target_dim is (channels, *domain); the head only needs the domain.
+            model = UNet_diffusion_mvnormal(
+                backbone=backbone,
+                d=cfg["d"],
+                target_dim=1,
+                domain_dim=target_dim[1:],
+                rank=model_cfg["rank"],
+                method=model_cfg["mvnormal_method"],
+            )
         else:
             model = backbone
     model.load_state_dict(torch.load(ckpt_path, map_location=device))
@@ -811,23 +946,35 @@ def prepare_test_data(dataset, args):
     return loader, target_dim, input_dim, n_used, batch_size
 
 
-def sampler_settings(model_cfg):
-    return dict(
+def sampler_settings(model_cfg, model_kind=None):
+    """Sampler kwargs for one model.
+
+    ``model_kind`` names the distributional head and is passed on as the
+    sampler's ``distributional_method``; it is omitted for the ensemble, which
+    is sampled deterministically.
+    """
+    settings = dict(
         x_T_sampling_method=model_cfg["x_T_sampling_method"],
         beta_endpoints=model_cfg["beta_endpoints"],
         noise_schedule=NOISE_SCHEDULE,
     )
+    if model_kind in DISTRIBUTIONAL_KINDS:
+        settings["distributional_method"] = model_kind
+    return settings
 
 
-def run_normal(dataset, args, device, loader, target_dim, input_dim, n_used):
+def run_distributional(
+    dataset, model_kind, args, device, loader, target_dim, input_dim, n_used
+):
+    """One distributional head: sample-variance AU and predicted-noise-variance EU."""
     cfg = DATASETS[dataset]
-    model_cfg = cfg["normal"]
+    model_cfg = cfg[model_kind]
 
     ckpt = args.ckpt or model_cfg.get("ckpt")
     if ckpt is None:
         ckpt = resolve_checkpoints([model_cfg["ckpt_pattern"]], expected=1)[0]
     ckpt_path = ckpt if os.path.isabs(ckpt) else os.path.join(REPO_ROOT, ckpt)
-    model = load_model(cfg, "normal", ckpt_path, device, target_dim, input_dim)
+    model = load_model(cfg, model_kind, ckpt_path, device, target_dim, input_dim)
     print(f"Loaded checkpoint {os.path.basename(ckpt_path)}.")
 
     regressor = None
@@ -835,7 +982,7 @@ def run_normal(dataset, args, device, loader, target_dim, input_dim, n_used):
         regressor = load_uci_regressor(cfg, cfg["split"], device, target_dim, input_dim)
 
     au, mse, eu_profile, target_mean = collect_statistics(
-        model, loader, args, device, sampler_settings(model_cfg), regressor
+        model, loader, args, device, sampler_settings(model_cfg, model_kind), regressor
     )
     eu = reduce_eu(eu_profile, args.eu_last_steps, args.eu_reduction)
 
@@ -891,7 +1038,7 @@ def run_ensemble(dataset, args, device, loader, target_dim, input_dim, n_used):
         loader,
         args,
         device,
-        sampler_settings(model_cfg),
+        sampler_settings(model_cfg, "ensemble"),
         regressors=regressors,
         n_per_member=n_per_member,
     )
@@ -922,10 +1069,14 @@ def run_dataset(dataset, model_kind, args, device):
         f"(batch {batch_size})."
     )
 
-    runner = run_normal if model_kind == "normal" else run_ensemble
-    au, eu, mse, extra = runner(
-        dataset, args, device, loader, target_dim, input_dim, n_used
-    )
+    if model_kind == "ensemble":
+        au, eu, mse, extra = run_ensemble(
+            dataset, args, device, loader, target_dim, input_dim, n_used
+        )
+    else:
+        au, eu, mse, extra = run_distributional(
+            dataset, model_kind, args, device, loader, target_dim, input_dim, n_used
+        )
     tu = au + eu
 
     retention_grid = np.linspace(0.5, 1.0, 51)
@@ -937,11 +1088,11 @@ def run_dataset(dataset, model_kind, args, device):
         prr = prediction_rejection_ratio(curve, oracle, random_curve, retention_grid)
         print(f"  {label:<24s} {prr: .4f}")
 
-    # The EU reduction only exists for the distributional model, so the ensemble
-    # files never carry a variant suffix.
+    # The EU reduction only exists for the distributional models, so the
+    # ensemble files never carry a variant suffix.
     suffix = (
         eu_variant_suffix(args.eu_last_steps, args.eu_reduction)
-        if model_kind == "normal"
+        if model_kind in DISTRIBUTIONAL_KINDS
         else ""
     )
 
@@ -984,9 +1135,10 @@ def main():
     parser.add_argument(
         "--models",
         default=",".join(MODEL_KINDS),
-        help="Comma-separated model kinds to evaluate: normal (our distributional "
-        "diffusion) and/or ensemble (deterministic diffusion over several "
-        f"checkpoints); default: {','.join(MODEL_KINDS)}.",
+        help="Comma-separated model kinds to evaluate: normal, mixednormal and/or "
+        "mvnormal (our distributional diffusion with the respective head) and/or "
+        "ensemble (deterministic diffusion over several checkpoints); default: "
+        f"{','.join(MODEL_KINDS)}.",
     )
     parser.add_argument(
         "--n-samples",
@@ -1019,21 +1171,21 @@ def main():
         type=int,
         default=None,
         help="Use only the last K reverse-diffusion steps (the low-noise ones) "
-        "for EU; default: all steps. Distributional model only.",
+        "for EU; default: all steps. Distributional models only.",
     )
     parser.add_argument(
         "--eu-reduction",
         choices=["mean", "max"],
         default="mean",
         help="How to collapse EU over the diffusion steps, after averaging over "
-        "the domain and the ensemble; default: mean. Distributional model only.",
+        "the domain and the ensemble; default: mean. Distributional models only.",
     )
     parser.add_argument("--seed", type=int, default=1)
     parser.add_argument(
         "--ckpt",
         default=None,
         help="Override the distributional checkpoint; only valid with a single "
-        "--datasets entry and --models normal.",
+        "--datasets entry and a single distributional --models entry.",
     )
     parser.add_argument(
         "--save-npz",
@@ -1053,8 +1205,15 @@ def main():
         raise SystemExit(
             f"Unknown model kind(s): {unknown_models}. Known: {list(MODEL_KINDS)}"
         )
-    if args.ckpt and (len(wanted) != 1 or model_kinds != ["normal"]):
-        raise SystemExit("--ckpt requires exactly one --datasets entry and --models normal.")
+    if args.ckpt and (
+        len(wanted) != 1
+        or len(model_kinds) != 1
+        or model_kinds[0] not in DISTRIBUTIONAL_KINDS
+    ):
+        raise SystemExit(
+            "--ckpt requires exactly one --datasets entry and exactly one "
+            f"distributional --models entry ({', '.join(DISTRIBUTIONAL_KINDS)})."
+        )
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using device {device}.")
@@ -1062,7 +1221,7 @@ def main():
     steps_desc = (
         "all steps" if args.eu_last_steps is None else f"last {args.eu_last_steps} steps"
     )
-    print(f"EU reduction: {args.eu_reduction} over {steps_desc} (distributional model).")
+    print(f"EU reduction: {args.eu_reduction} over {steps_desc} (distributional models).")
 
     for dataset in wanted:
         for model_kind in model_kinds:
