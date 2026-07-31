@@ -53,8 +53,10 @@ def get_dataset_metadata(
         splitstring = f"{split}"
     else:
         splitstring = ""
+    fraction = data_parameters.get("data_fraction", 1.0)
     filename_ending = (
         f"{data_parameters['dataset_name']}{splitstring}_"
+        f"frac{fraction}_"
         f"{training_parameters['model']}_"
         f"{training_parameters['uncertainty_quantification']}_"
         f"{training_parameters['distributional_method']}_"
@@ -88,6 +90,7 @@ def get_datasets(
             splits=split,
             standardize=data_parameters["standardize"],
             validation_ratio=validation_ratio_on_train_set,
+            data_fraction=data_parameters.get("data_fraction", 1.0),
         )
         dataset, _, _ = uci_data
 
@@ -227,7 +230,7 @@ def _preprocess_uci_feature_set(X, dataset_name):
     return X, dim_cat
 
 
-def get_uci_data(dataset_name, splits=None, standardize=False, validation_ratio=0.0):
+def get_uci_data(dataset_name, splits=None, standardize=False, validation_ratio=0.0, data_fraction=1.0):
     """
     Args:
         dataset_name (str): The name of the UCI dataset
@@ -275,6 +278,11 @@ def get_uci_data(dataset_name, splits=None, standardize=False, validation_ratio=
 
         X_train = X[[int(i) for i in index_train.tolist()]]
         y_train = y[[int(i) for i in index_train.tolist()]]
+
+        if data_fraction < 1.0:
+            n_subset = max(1, int(data_fraction * X_train.shape[0]))
+            X_train = X_train[:n_subset]
+            y_train = y_train[:n_subset]
 
         X_test = X[[int(i) for i in index_test.tolist()]]
         y_test = y[[int(i) for i in index_test.tolist()]]

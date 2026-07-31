@@ -14,7 +14,8 @@ def process_data_parameters(data_dict: dict) -> dict:
     processed_dict["select_timesteps"] = data_dict.get("select_timesteps", "zero")
     processed_dict["temporal_downscaling_factor"] = data_dict.get("temporal_downscaling_factor", 1)
     processed_dict["validation_ratio"] = data_dict.get("validation_ratio", 0.0)
-    
+    processed_dict["data_fraction"] = data_dict.get("data_fraction", 1.0)
+
     return processed_dict
 
 def process_training_parameters(train_dict: dict)-> dict:
@@ -68,6 +69,21 @@ def process_training_parameters(train_dict: dict)-> dict:
     processed_dict["noise_schedule"] = train_dict.get("noise_schedule", "linear")
     processed_dict["regressor"] = train_dict.get("regressor", None)
     processed_dict["tau"] = train_dict.get("tau",1.0)
+    # Reverse-process variance selection:
+    #   "fixed_ddim" (default)     — current DDIM sigma
+    #   "analytic_dpm"             — scalar Gamma_t cache from Bao et al. 2022
+    #   "analytic_dpm_diag"        — diagonal Gamma_t per (t, dim)
+    #   "ocm"                      — per-input, per-dim head (with distributional_method="OCM")
+    processed_dict["variance_method"] = train_dict.get("variance_method", "fixed_ddim")
+    # Number of batches used for the MC estimate of Gamma_t (post-hoc, once).
+    processed_dict["gamma_t_mc_batches"] = train_dict.get("gamma_t_mc_batches", None)
+    # OCM two-stage training: path to the stage-1 (deterministic) backbone
+    # checkpoint. When set with distributional_method="OCM", the backbone is
+    # loaded from this file and frozen; only the moment head is trained.
+    processed_dict["ocm_backbone_path"] = train_dict.get("ocm_backbone_path", None)
+    # Populated at runtime after Gamma_t estimation (kept as a column so
+    # append_results_dict does not KeyError when it iterates training_parameters).
+    processed_dict["gamma_t_path"] = train_dict.get("gamma_t_path", None)
 
     # Specific model parameters
     processed_dict["n_ndp_heads"] = train_dict.get("n_ndp_heads", 4)

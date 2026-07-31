@@ -247,6 +247,7 @@ def trainer(
     distributional_method = training_parameters["distributional_method"]
     closed_form = training_parameters["closed_form"]
     noise_schedule = training_parameters['noise_schedule']
+    variance_method = training_parameters.get("variance_method", "fixed_ddim")
     if uncertainty_quantification == 'diffusion':
         if distributional_method == "deterministic":
             diffusion = Diffusion(
@@ -257,7 +258,8 @@ def trainer(
                 x_T_sampling_method=training_parameters['x_T_sampling_method'],
                 noise_schedule=noise_schedule,
                 beta_endpoints=training_parameters["beta_endpoints"],
-                tau = training_parameters["tau"]
+                tau = training_parameters["tau"],
+                variance_method=variance_method,
             )
         else:
             diffusion = DistributionalDiffusion(
@@ -270,7 +272,8 @@ def trainer(
                 x_T_sampling_method=training_parameters['x_T_sampling_method'],
                 noise_schedule=noise_schedule,
                 beta_endpoints=training_parameters["beta_endpoints"],
-                tau = training_parameters["tau"]
+                tau = training_parameters["tau"],
+                variance_method=variance_method,
             )
             
         beta = diffusion.beta # need it for iDDPM

@@ -1,0 +1,4 @@
+dataset,method,n_splits,RMSETest,EnergyScoreTest,CRPSTest,Gaussian NLLTest,CoverageTest,QICETest
+concrete,analytic_dpm,20,4.82 ± 0.51,2.63 ± 0.3,2.62 ± 0.3,11.44 ± 5.99,0.55 ± 0.05,0.08 ± 0.01
+concrete,analytic_dpm_diag,20,4.82 ± 0.51,2.63 ± 0.3,2.62 ± 0.3,11.44 ± 5.99,0.55 ± 0.05,0.08 ± 0.01
+concrete,ocm,20,4.83 ± 0.5,2.59 ± 0.3,2.58 ± 0.3,9.19 ± 4.77,0.6 ± 0.05,0.07 ± 0.01

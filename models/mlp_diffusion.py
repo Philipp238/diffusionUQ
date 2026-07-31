@@ -255,11 +255,67 @@ class MLP_diffusion_iDDPM(nn.Module):
         beta_wiggle = (1 - alpha_hat_t_minus_1) / (1 - alpha_bar) * beta
 
 
-        sigma_parametrization = self.sigma_projection(x_t)
-        log_sigma = sigma_parametrization * torch.log(beta) + (1-sigma_parametrization) * torch.log(beta_wiggle)  # iDDPM never computes the variance but instead the log_variance
+        v = torch.sigmoid(self.sigma_projection(x_t))  # interpolation coeff bounded to (0, 1) as in iDDPM Eq. 15
+        log_sigma = v * torch.log(beta) + (1 - v) * torch.log(beta_wiggle)  # iDDPM never computes the variance but instead the log_variance
         sigma = torch.exp(log_sigma) + 1e-6  # we compute the actual variance such that it fits to our sampler
         output = torch.stack([mu, sigma], dim=-1)
         return output.unsqueeze(1)
+
+
+class MLP_diffusion_OCM(nn.Module):
+    """Optimal Covariance Matching head.
+
+    Wraps a pretrained epsilon-prediction backbone. The backbone's noise
+    prediction is used as-is (mean of the reverse-process Gaussian); a small
+    additional head predicts a per-input, per-dim moment estimate
+        m(x_t, t, y) ≈ E[eps_i^2 | x_t]
+    trained by regressing eps^2 (simplified OCM: direct moment matching on the
+    squared true noise; equivalent to the Analytic-DPM diagonal target in
+    expectation when the mean prediction is unbiased).
+
+    At sampling time the reverse-process variance is
+        sigma_i^2 = beta_tilde_t + (beta_t - beta_tilde_t) * clip(1 - m_i, 0, 1)
+    computed inside Diffusion._reverse_variance.
+
+    Output shape matches MLP_diffusion_normal: (B, 1, target_dim, 2) with
+    [..., 0] = mu (noise prediction), [..., 1] = m_pred (moment estimate).
+    """
+
+    def __init__(self, backbone, target_dim=1, concat=False, hidden_dim=128):
+        super().__init__()
+        if isinstance(target_dim, tuple):
+            target_dim = math.prod(target_dim)
+        self.backbone = backbone
+        in_dim = 2 * hidden_dim if concat else hidden_dim
+        self.moment_projection = nn.Linear(in_dim, target_dim)
+        self.softplus = nn.Softplus()
+        # Freeze the backbone by default (two-stage training).
+        for p in self.backbone.parameters():
+            p.requires_grad = False
+
+    def unfreeze_backbone(self):
+        for p in self.backbone.parameters():
+            p.requires_grad = True
+
+    def forward(self, x_t, t, y=None, pred=None):
+        # Predict the noise mean via the (frozen) backbone.
+        mu = self.backbone(x_t, t, y, pred=pred)
+        # Reshape to (B, target_dim) matching moment output layout.
+        target_shape = mu.shape
+
+        # Compute features for the moment head (uses the same backbone body).
+        feats = self.backbone.forward_body(x_t, t, y, pred)
+        m_flat = self.moment_projection(feats)
+        m_pred = self.softplus(m_flat) + EPS  # positive per-dim moment estimate
+
+        # Broadcast m_pred to match mu's leading structure. mu is either
+        # (B, 1, target_dim) for MLP backbones or (B, target_dim) for NDP.
+        m_pred = m_pred.view(target_shape)
+        output = torch.stack([mu, m_pred], dim=-1)
+        # Match the (B, 1, target_dim, 2) convention used by other heads.
+        if output.dim() == 3:  # (B, target_dim, 2) -> add singleton channel
+            output = output.unsqueeze(1)
+        return output
 
 
 class MLP_diffusion_sample(nn.Module):

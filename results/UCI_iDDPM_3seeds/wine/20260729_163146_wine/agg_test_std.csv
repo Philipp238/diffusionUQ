@@ -1,0 +1,2 @@
+n_timesteps,n_epochs,distributional_method,n_components,RMSETest,EnergyScoreTest,CRPSTest,Gaussian NLLTest,CoverageTest,QICETest
+50,5000,iDDPM,3,0.66 ± 0.06,0.32 ± 0.03,0.32 ± 0.03,1456.7 ± 2123.85,0.54 ± 0.1,0.08 ± 0.02

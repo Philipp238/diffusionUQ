@@ -1,0 +1,2 @@
+dataset_name,RMSETest,EnergyScoreTest,CRPSTest,Gaussian NLLTest,CoverageTest,QICETest
+protein-tertiary-structure,3.78 ± 0.04,1.7 ± 0.02,1.68 ± 0.02,2.66 ± 0.19,0.92 ± 0.0,0.01 ± 0.0

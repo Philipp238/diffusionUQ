@@ -13,6 +13,7 @@ from models.mlp_diffusion import (
     MLP_diffusion_normal,
     MLP_diffusion_sample,
     MLP_diffusion_iDDPM,
+    MLP_diffusion_OCM,
 )
 from models.unet import (
     UNet_diffusion_mixednormal,
