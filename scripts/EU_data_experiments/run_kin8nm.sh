@@ -1,2 +1,2 @@
 #!/bin/sh
-conda run -n diffUQ python main.py -c CARD_EU_experiments/kin8nm.ini
+conda run -n diffUQ python main.py -c EU_data_experiments/kin8nm.ini

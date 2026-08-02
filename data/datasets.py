@@ -47,6 +47,7 @@ class PDE1D(Dataset):
         select_timesteps: str = "zero",
         seed: int = 0,
         train_split: float = 0.9,
+        data_fraction: float = 1.0,
     ) -> None:
         """Initialize the PDE dataset.
 
@@ -61,6 +62,7 @@ class PDE1D(Dataset):
             select_timesteps (str, optional): Timestep selection method. Defaults to "zero".
             seed (int, optional): Seed. Defaults to 0.
             train_split (float, optional): Train-test-val split. Defaults to 0.9.
+            data_fraction (float, optional): Fraction of the training split to keep. Defaults to 1.0.
 
         Raises:
             ValueError: Scaling factors must be integers.
@@ -89,6 +91,7 @@ class PDE1D(Dataset):
         self.data_dir = data_dir
         self.select_timesteps = select_timesteps
         self.last_t_steps = last_t_steps
+        self.data_fraction = data_fraction
 
         # Get normalization
         self.mean = self.dataset.attrs.get("mean", None)
@@ -121,7 +124,11 @@ class PDE1D(Dataset):
         indices = rng.choice(self.n, size=self.n, replace=False)
         n_train = int(self.n * self.train_split)
         if self.var == "train":
-            return indices[:n_train]
+            train_indices = indices[:n_train]
+            if self.data_fraction < 1.0:
+                n_subset = max(1, int(self.data_fraction * len(train_indices)))
+                train_indices = train_indices[:n_subset]
+            return train_indices
         elif self.var == "val":
             return indices[n_train:]
         else:
@@ -269,6 +276,7 @@ class WeatherBench(Dataset):
         downscaling_factor: int = 1,
         last_t_steps: int = 2,
         preload: bool = True,
+        data_fraction: float = 1.0,
     ):
         """Initialize WeatherBench2 dataset.
 
@@ -279,11 +287,13 @@ class WeatherBench(Dataset):
             downscaling_factor (int, optional): Grid downscaling factor. Defaults to 1.
             last_t_steps (int, optional): Last t timesteps to use. Defaults to 2.
             preload (bool, optional): Whether to preload the whole dataset into RAM. Defaults to True.
+            data_fraction (float, optional): Fraction of the training split to keep. Defaults to 1.0.
         """
         self.var = var
         self.normalize = normalize
         self.last_t_steps = last_t_steps
         self.downscaling_factor = downscaling_factor
+        self.data_fraction = data_fraction
 
         time_slice = self.get_split(self.var)
         zarr_path = os.path.join(data_path, "era5.zarr")
@@ -301,6 +311,8 @@ class WeatherBench(Dataset):
             self.data_array = None
 
         self.time_len = self.dataset.time[4:-last_t_steps][::4].size  # Adjust for UTC00
+        if self.var == "train" and self.data_fraction < 1.0:
+            self.time_len = max(1, int(self.data_fraction * self.time_len))
         self.n_vars = len(WB_INPUT)
 
     @staticmethod

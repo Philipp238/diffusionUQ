@@ -1,2 +1,2 @@
 #!/bin/sh
-python main.py -c CARD_single_split/protein.ini
+python main.py -c EU_data_experiments/burgers.ini

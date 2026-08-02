@@ -132,6 +132,7 @@ def get_data(
     select_timesteps = data_parameters["select_timesteps"]
     temporal_downscaling_factor = data_parameters["temporal_downscaling_factor"]
     downscaling_factor = data_parameters["downscaling_factor"]
+    data_fraction = data_parameters.get("data_fraction", 1.0)
     if dataset_name in ["1D_Advection", "1D_ReacDiff", "1D_Burgers", "1D_KS"]:
         train_dataset = PDE1D(
             data_dir=dataset_path,
@@ -142,6 +143,7 @@ def get_data(
             select_timesteps=select_timesteps,
             temporal_downscaling_factor=temporal_downscaling_factor,
             seed = seed,
+            data_fraction = data_fraction,
         )
         val_dataset = PDE1D(
             data_dir=dataset_path,
@@ -168,7 +170,7 @@ def get_data(
             (3, *train_dataset.get_dimensions()),
         )
     elif dataset_name == "WeatherBench":
-        train_dataset = WeatherBench(var = "train", normalize = standardize, downscaling_factor = downscaling_factor)
+        train_dataset = WeatherBench(var = "train", normalize = standardize, downscaling_factor = downscaling_factor, data_fraction = data_fraction)
         val_dataset = WeatherBench(var = "val", normalize = standardize, downscaling_factor = downscaling_factor)
         test_dataset = WeatherBench(var = "test", normalize = standardize, downscaling_factor = downscaling_factor)
         target_dim, input_dim = (
