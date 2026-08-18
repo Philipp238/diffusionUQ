@@ -292,37 +292,35 @@ if __name__ == "__main__":
                 )
 
                 regressor = train_utils.setup_model(
-                    regressor_parameters_dict[0], device, target_dim, input_dim, beta = None
+                    data_parameters, regressor_parameters_dict[0], device, target_dim, input_dim, beta=None
                 )
                 train_utils.resume(regressor, os.path.join(folder_path, weight_file))
                 regressor.eval()
             else:
                 regressor = None
 
+            # Get beta from diffusion; setup_model needs it (for iDDPM) both when
+            # loading a checkpoint for validation and when re-instantiating the
+            # model after distributed training.
+            if training_parameters["uncertainty_quantification"] == 'diffusion':
+                diffusion = Diffusion(
+                    noise_steps=training_parameters["n_timesteps"],
+                    img_size=target_dim,
+                    ddim_churn=training_parameters['ddim_churn'],
+                    device=device,
+                    x_T_sampling_method=training_parameters['x_T_sampling_method'],
+                    noise_schedule=training_parameters['noise_schedule'],
+                    beta_endpoints=training_parameters["beta_endpoints"],
+                    tau = training_parameters["tau"],
+                    variance_method=training_parameters.get("variance_method", "fixed_ddim"),
+                )
+                beta = diffusion.beta # need it for iDDPM
+            else:
+                diffusion = None
+                beta = None
+
             if training_parameters.get("filename_to_validate", None):
                 # In case you ONLY want to validate all models in a certain directory; loads the model (instead of training it)
-                # Get beta from diffusion
-                uncertainty_quantification = training_parameters["uncertainty_quantification"]
-                distributional_method = training_parameters["distributional_method"]
-                closed_form = training_parameters["closed_form"]
-                noise_schedule = training_parameters['noise_schedule']
-                if uncertainty_quantification == 'diffusion':
-                    diffusion = Diffusion(
-                        noise_steps=training_parameters["n_timesteps"],
-                        img_size=target_dim,
-                        ddim_churn=training_parameters['ddim_churn'],
-                        device=device,
-                        x_T_sampling_method=training_parameters['x_T_sampling_method'],
-                        noise_schedule=noise_schedule,
-                        beta_endpoints=training_parameters["beta_endpoints"],
-                        tau = training_parameters["tau"],
-                        variance_method=training_parameters.get("variance_method", "fixed_ddim"),
-                    )
-                    beta = diffusion.beta # need it for iDDPM
-                else:
-                    diffusion = None
-                    beta = None
-
                 model = train_utils.setup_model(
                     data_parameters, training_parameters, device, target_dim, input_dim, beta
                 )
@@ -367,7 +365,9 @@ if __name__ == "__main__":
                             world_size,
                         ),
                         nprocs=world_size)
-                    model = train_utils.setup_model(data_parameters,training_parameters, device, target_dim, input_dim)
+                    model = train_utils.setup_model(
+                        data_parameters, training_parameters, device, target_dim, input_dim, beta
+                    )
                     filename = os.path.join(directory, f"Datetime_{d_time_train}_Loss_{filename_ending}.pt")
                     train_utils.resume(model, filename)
                 # Load dumped dictionary
