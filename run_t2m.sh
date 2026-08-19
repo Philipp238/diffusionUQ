@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name=diff_t2m
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=4
-#SBATCH --gres=gpu:1
+#SBATCH --cpus-per-task=8
+#SBATCH --gres=gpu:2
 #SBATCH --constraint=RTXA6000
 #SBATCH --time=72:00:00
 
@@ -17,4 +17,5 @@ echo "Job:         $SLURM_JOB_ID on $(hostname)"
 echo "Python:      $(which python)"
 nvidia-smi --query-gpu=name,memory.total --format=csv,noheader || true
 
-python main.py -c T2M/deterministic.ini
+python main.py -c T2M/normal.ini
+

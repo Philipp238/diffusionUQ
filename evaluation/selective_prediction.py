@@ -64,8 +64,8 @@ Distributional checkpoints
 Ensemble members
     KS / Burgers  the five deterministic checkpoints trained with seeds 1-5 on
                   the same data, so the test set is unseen by every member.
-    T2M           only one deterministic checkpoint exists, so it has no
-                  ensemble and is skipped for that model.
+    T2M           likewise five deterministic checkpoints with seeds 1-5, all
+                  under results/T2M/deterministic.
     UCI           five deterministic checkpoints trained with seeds 1-5 on
                   Yarin-Gal split 0 (config/CARD_single_split, checkpoints under
                   results/selective_prediction/UCI/<dataset>), so they differ
@@ -121,10 +121,8 @@ DISTRIBUTIONAL_METHOD = "normal"
 
 # The distributional heads, all of which are run by ``run_distributional`` and
 # whose name doubles as the sampler's ``distributional_method``.
-DISTRIBUTIONAL_KINDS = ("mixednormal", "mvnormal")
-MODEL_KINDS = DISTRIBUTIONAL_KINDS
-#DISTRIBUTIONAL_KINDS = ("normal", "mixednormal", "mvnormal")
-#MODEL_KINDS = (*DISTRIBUTIONAL_KINDS, "ensemble")
+DISTRIBUTIONAL_KINDS = ("normal", "mixednormal", "mvnormal")
+MODEL_KINDS = (*DISTRIBUTIONAL_KINDS, "ensemble")
 
 # Results directory name -> dataset name as used by data/UCI_Datasets and by the
 # checkpoint filenames.
@@ -306,9 +304,17 @@ DATASETS = {
             rank=1,
             mvnormal_method="lora",
         ),
-        # Only a single deterministic T2M checkpoint was trained, so there is no
-        # ensemble to aggregate.
-        ensemble=None,
+        # Five deterministic checkpoints trained with seeds 1-5, all gathered in
+        # results/T2M/deterministic.  The seed-1 run predates the ``frac<f>``
+        # segment the later filenames carry, hence the wildcard in front of
+        # ``UNet``; the timestamp still sorts them into seed order.
+        ensemble=dict(
+            ckpt_patterns=["results/T2M/deterministic/Datetime_*_"
+                           "Loss_WeatherBench_*UNet_diffusion_deterministic_T50_DDIM1.pt"],
+            n_members=5,
+            x_T_sampling_method="standard",
+            beta_endpoints=(0.001, 0.35),
+        ),
     ),
 }
 
